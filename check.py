@@ -29,7 +29,8 @@ try:
     msg = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY).messages.create(
         model=config.ANTHROPIC_MODEL, max_tokens=20,
         messages=[{"role": "user", "content": "Thuaj vetëm: Gati"}])
-    ok(f"{config.ANTHROPIC_MODEL}: {msg.content[0].text.strip()}")
+    text = "".join(b.text for b in msg.content if getattr(b, "type", "") == "text").strip()
+    ok(f"{config.ANTHROPIC_MODEL}: {text or 'ok'}")
 except Exception as exc:
     fail(exc)
 
