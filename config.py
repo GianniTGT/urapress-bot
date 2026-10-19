@@ -42,7 +42,7 @@ POST_STATUS = _get("POST_STATUS", "publish")  # publish | draft
 # --- Quellen & Ablauf -------------------------------------------------------
 FEEDS = [f.strip() for f in _get(
     "FEEDS",
-    "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/",
+    "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/,https://partner-feeds.20min.ch/rss/20minuten,https://www.b92.net/rss/b92/info,https://telegrafi.com/feeds/feed.rss?geo=CH",
 
 ).split(",") if f.strip()]
 SCAN_TIME = _get("SCAN_TIME", "07:30")          # HH:MM
