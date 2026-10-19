@@ -135,8 +135,25 @@ async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     db.update_draft(draft_id, image_kind="manual", image_ref=str(path), wp_media_id=None)
-    await update.message.reply_text(f"📷 Foto u shtua te #{draft_id}. Shtyp ✅ Posto.",
-                                    reply_markup=keyboard(draft_id))
+    # Foto-Reply veröffentlicht direkt – kein zweites "Posto".
+    if not db.claim(draft_id, "publishing"):
+        await update.message.reply_text(f"ℹ️ #{draft_id} është trajtuar tashmë.")
+        return
+    if update.message.reply_to_message:
+        try:
+            await update.message.reply_to_message.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+    await update.message.reply_text(f"📷 Foto u shtua te #{draft_id}. Duke publikuar …")
+    try:
+        post = await asyncio.to_thread(pipeline.publish_draft, draft_id)
+    except Exception as exc:
+        log.exception("Publizieren fehlgeschlagen")
+        db.update_draft(draft_id, status="pending", error=str(exc))
+        await update.message.reply_text(f"⚠️ #{draft_id} nuk u publikua: {exc}\nProvo me ✅ Posto.",
+                                        reply_markup=keyboard(draft_id))
+        return
+    await update.message.reply_text(f"✅ #{draft_id} u publikua me foto:\n{post['link']}")
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
