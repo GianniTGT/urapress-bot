@@ -1,0 +1,43 @@
+<?php
+/**
+ * Karta e një artikulli.
+ *
+ * Args: variant (lead|default|row), size (madhësia e fotos), excerpt (bool), heading (h2|h3).
+ *
+ * @package UraPress
+ */
+
+$urapress_args    = wp_parse_args(
+	$args ?? array(),
+	array(
+		'variant' => 'default',
+		'size'    => 'urapress-card',
+		'excerpt' => false,
+		'heading' => 'h3',
+	)
+);
+$urapress_variant = $urapress_args['variant'];
+$urapress_heading = in_array( $urapress_args['heading'], array( 'h2', 'h3' ), true ) ? $urapress_args['heading'] : 'h3';
+$urapress_cat     = urapress_primary_category();
+
+urapress_shown( get_the_ID() );
+?>
+<article <?php post_class( 'up-card up-card--' . $urapress_variant ); ?>>
+	<a class="up-card__media" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
+		<?php if ( has_post_thumbnail() ) : ?>
+			<?php the_post_thumbnail( $urapress_args['size'], array( 'alt' => '', 'loading' => 'lead' === $urapress_variant ? 'eager' : 'lazy' ) ); ?>
+		<?php else : ?>
+			<span class="up-card__noimg"><svg viewBox="0 0 520 60" aria-hidden="true"><path d="M10 10 Q260 70 510 10" fill="none" stroke="#16181D" stroke-width="10" stroke-linecap="round"/></svg></span>
+		<?php endif; ?>
+	</a>
+	<div class="up-card__body">
+		<?php if ( $urapress_cat && 'row' !== $urapress_variant ) : ?>
+			<a class="up-card__cat" href="<?php echo esc_url( get_category_link( $urapress_cat ) ); ?>"><?php echo esc_html( $urapress_cat->name ); ?></a>
+		<?php endif; ?>
+		<<?php echo $urapress_heading; // phpcs:ignore ?> class="up-card__title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></<?php echo $urapress_heading; // phpcs:ignore ?>>
+		<?php if ( $urapress_args['excerpt'] ) : ?>
+			<p class="up-card__excerpt"><?php echo esc_html( get_the_excerpt() ); ?></p>
+		<?php endif; ?>
+		<span class="up-card__meta"><?php echo urapress_time(); // phpcs:ignore ?></span>
+	</div>
+</article>
