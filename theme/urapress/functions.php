@@ -317,10 +317,10 @@ function urapress_house_ads() {
 		array(
 			'id'     => 'ride2balkan',
 			'url'    => 'https://ride2balkan.com',
-			'accent' => '#E4572E',
+			'accent' => '#138A5E',
 			'kicker' => 'Udhëto në atdhe',
-			'title'  => 'Nga Zvicra në Kosovë, Shqipëri e Maqedoni – me bashkëudhëtarë',
-			'text'   => 'Gjej një vend në veturë ose ndaj shpenzimet e rrugës. Më lirë dhe më shoqërueshëm.',
+			'title'  => 'Bern → Pejë, Luzern → Gjakovë: gjej udhëtim me bashkëudhëtarë',
+			'text'   => 'Ndaj shpenzimet e rrugës drejt Ballkanit – transparente dhe e sigurt. Çdo udhëtim i 11-të pa tarifë shërbimi.',
 			'cta'    => 'Gjej udhëtim',
 		),
 		array(
@@ -344,10 +344,10 @@ function urapress_house_ads() {
 		array(
 			'id'     => 'aino',
 			'url'    => 'https://ainohaustechnik.ch',
-			'accent' => '#0B6FA4',
-			'kicker' => 'Teknikë shtëpie në Zvicër',
-			'title'  => 'AINO Haustechnik GmbH – profesionistë për shtëpinë tuaj',
-			'text'   => 'Për renovime dhe ndërtime të reja – kërkoni ofertën tuaj pa obligim.',
+			'accent' => '#E8501F',
+			'kicker' => 'Sanitari & ngrohje në Bernë',
+			'title'  => 'Banjo e re, boiler apo defekt urgjent? AINO Haustechnik',
+			'text'   => 'Riparime, servis dhe rinovim banjoje e kuzhine – në Bernë dhe rrethinë. Ofertë e qartë, punë e pastër.',
 			'cta'    => 'Kërko ofertë',
 		),
 		array(
