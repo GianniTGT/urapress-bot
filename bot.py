@@ -21,6 +21,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
 import ai_writer
 import config
 import db
+import facebook
 import pipeline
 
 logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s: %(message)s", level=logging.INFO)
@@ -36,10 +37,13 @@ def is_admin(update: Update) -> bool:
 
 
 def keyboard(draft_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[
+    rows = [[
         InlineKeyboardButton("✅ Posto", callback_data=f"posto:{draft_id}"),
         InlineKeyboardButton("❌ Refuzo", callback_data=f"refuzo:{draft_id}"),
-    ]])
+    ]]
+    if facebook.enabled():
+        rows.insert(0, [InlineKeyboardButton("📘 Posto + FB", callback_data=f"pfb:{draft_id}")])
+    return InlineKeyboardMarkup(rows)
 
 
 def preview_text(d: dict) -> str:
@@ -213,7 +217,7 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
         return
 
-    if action == "posto":
+    if action in ("posto", "pfb"):
         if not db.claim(draft_id, "publishing"):
             await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
             return
@@ -226,7 +230,15 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await q.message.reply_text(f"⚠️ #{draft_id} nuk u publikua: {exc}\nProvo përsëri me ✅ Posto.")
             return
         await q.edit_message_reply_markup(reply_markup=None)
-        await q.message.reply_text(f"✅ #{draft_id} u publikua:\n{post['link']}")
+        msg = f"✅ #{draft_id} u publikua:\n{post['link']}"
+        if action == "pfb":
+            try:
+                fb_url = await asyncio.to_thread(pipeline.post_to_facebook, draft_id)
+                msg += f"\n📘 Facebook: {fb_url}"
+            except Exception as exc:
+                log.exception("Facebook fehlgeschlagen")
+                msg += f"\n⚠️ Facebook dështoi: {exc}"
+        await q.message.reply_text(msg)
 
 
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -240,7 +252,7 @@ def main() -> None:
     app.add_handler(CommandHandler("skano", cmd_scan))
     app.add_handler(CommandHandler("statusi", cmd_status))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
-    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|refuzo):\d+$"))
+    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))
     app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),

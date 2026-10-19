@@ -39,6 +39,11 @@ WP_USER = _get("WP_USER", "")
 WP_APP_PASSWORD = _get("WP_APP_PASSWORD", "")
 POST_STATUS = _get("POST_STATUS", "publish")  # publish | draft
 
+# --- Facebook (optional) ----------------------------------------------------
+# Seiten-ID und langlebiger Seiten-Zugriffstoken (Page Access Token) der FB-Seite.
+FB_PAGE_ID = _get("FB_PAGE_ID", "")
+FB_PAGE_TOKEN = _get("FB_PAGE_TOKEN", "")
+
 # --- Quellen & Ablauf -------------------------------------------------------
 FEEDS = [f.strip() for f in _get(
     "FEEDS",

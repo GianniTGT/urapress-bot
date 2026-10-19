@@ -104,6 +104,27 @@ def publish_draft(draft_id: int) -> dict:
     return post
 
 
+def post_to_facebook(draft_id: int) -> str:
+    """Postet einen bereits veröffentlichten Artikel auf die Facebook-Seite (mit Foto). Gibt die FB-URL zurück."""
+    import facebook
+
+    d = db.get_draft(draft_id)
+    link = d["wp_post_url"]
+    if not link:
+        raise RuntimeError("Artikeli nuk është publikuar ende në WordPress")
+    image_url = None
+    if d["wp_media_id"]:
+        try:
+            image_url = WordPress().media_url(d["wp_media_id"]) or None
+        except Exception as exc:
+            log.warning("FB-Bild-URL nicht ermittelbar: %s", exc)
+    message = d["title"]
+    if d["excerpt"]:
+        message += "\n\n" + d["excerpt"]
+    message += "\n\n" + link
+    return facebook.post(message, link, image_url)
+
+
 def attach_photo(draft_id: int, path: Path) -> str:
     """Hängt ein Foto an einen bereits veröffentlichten Beitrag. Gibt den Beitrags-Link zurück."""
     d = db.get_draft(draft_id)

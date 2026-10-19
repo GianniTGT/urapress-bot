@@ -67,3 +67,6 @@ class WordPress:
 
     def set_featured_media(self, post_id: int, media_id: int) -> dict:
         return self._req("POST", f"/posts/{post_id}", json={"featured_media": media_id})
+
+    def media_url(self, media_id: int) -> str:
+        return self._req("GET", f"/media/{media_id}").get("source_url", "")
