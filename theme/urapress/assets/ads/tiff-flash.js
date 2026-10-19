@@ -21,7 +21,7 @@
     document.body.appendChild(wrap);
     if (window.UraGlow && window.UraGlow.start) window.UraGlow.start(c);
     // kurz zeigen, dann sanft ausblenden und entfernen
-    requestAnimationFrame(function () { wrap.classList.add("is-on"); });
+    setTimeout(function () { wrap.classList.add("is-on"); }, 30);
     setTimeout(function () { wrap.classList.remove("is-on"); wrap.classList.add("is-off"); }, 3600);
     setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 4600);
   }
