@@ -125,12 +125,38 @@ def select_stories(candidates: list[dict], n: int, already_posted: list[str]) ->
     return picks[:n]
 
 
+
+COPY_LIMIT = 0.12  # Anteil 6-Wort-Folgen aus dem Original, ab dem der Text als Kopie gilt
+
+
+def _ngrams(text: str, n: int = 6) -> set:
+    words = re.findall(r"\w+", text.lower())
+    return {tuple(words[i:i + n]) for i in range(len(words) - n + 1)}
+
+
+def _copy_ratio(source: str, data: dict) -> float:
+    out = " ".join([data.get("titulli", "")] + list(data.get("paragrafet") or []))
+    out_grams = _ngrams(out)
+    if not out_grams:
+        return 0.0
+    return len(out_grams & _ngrams(source)) / len(out_grams)
+
 def rewrite(story: dict) -> dict:
     user = (
         f"Quelle: {story['source']}\nOriginaltitel: {story['title']}\n\n"
         f"Originaltext:\n{story['text'][:7000]}"
     )
     data = _ask(REWRITE_SYSTEM, user)
+    ratio = _copy_ratio(story["text"], data)
+    if ratio > COPY_LIMIT:
+        log.warning("Entwurf zu nah am Original (%.0f%%), zweiter Versuch", ratio * 100)
+        strict = user + ("\n\nWICHTIG: Der letzte Entwurf war zu nah am Original. Schreibe alles "
+                         "komplett neu mit eigenen Sätzen. Übernimm keine Wortgruppen aus dem "
+                         "Original, nur die Fakten.")
+        data = _ask(REWRITE_SYSTEM, strict)
+        ratio = _copy_ratio(story["text"], data)
+        if ratio > COPY_LIMIT:
+            raise ValueError(f"Text zu nah am Original ({ratio:.0%}), übersprungen")
     if data.get("kategoria") not in CATEGORIES:
         data["kategoria"] = CATEGORIES[0]
     persona = data.get("persona")
