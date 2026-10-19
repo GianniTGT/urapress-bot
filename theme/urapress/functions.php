@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.1.0' );
+define( 'URAPRESS_VERSION', '1.2.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -40,7 +40,7 @@ function urapress_setup() {
 	add_theme_support( 'post-thumbnails' );
 	add_theme_support( 'automatic-feed-links' );
 	add_theme_support( 'responsive-embeds' );
-	add_theme_support( 'html5', array( 'search-form', 'gallery', 'caption', 'style', 'script' ) );
+	add_theme_support( 'html5', array( 'search-form', 'comment-form', 'comment-list', 'gallery', 'caption', 'style', 'script' ) );
 
 	add_image_size( 'urapress-lead', 1200, 675, true );
 	add_image_size( 'urapress-card', 640, 360, true );
@@ -307,3 +307,119 @@ function urapress_open_graph() {
 	}
 }
 add_action( 'wp_head', 'urapress_open_graph', 5 );
+
+/* ------------------------------------------------------------------ */
+/* Reklamat e veta (house ads) – ndrysho tekstet/lidhjet këtu          */
+/* ------------------------------------------------------------------ */
+
+function urapress_house_ads() {
+	return array(
+		array(
+			'id'     => 'ride2balkan',
+			'url'    => 'https://ride2balkan.com',
+			'accent' => '#E4572E',
+			'kicker' => 'Udhëto në atdhe',
+			'title'  => 'Nga Zvicra në Kosovë, Shqipëri e Maqedoni – me bashkëudhëtarë',
+			'text'   => 'Gjej një vend në veturë ose ndaj shpenzimet e rrugës. Më lirë dhe më shoqërueshëm.',
+			'cta'    => 'Gjej udhëtim',
+		),
+		array(
+			'id'     => 'tiffcore',
+			'url'    => 'https://tiffcore.ch',
+			'accent' => '#1D5FD1',
+			'kicker' => 'Për firmat e zanatit',
+			'title'  => 'Oferta, fatura dhe orët e punës – në një vend',
+			'text'   => 'TiffCore është softueri zviceran për firma ndërtimi, instalimi dhe zanati.',
+			'cta'    => 'Provo TiffCore',
+		),
+		array(
+			'id'     => 'tiffcar',
+			'url'    => 'https://tiffcar.ch',
+			'accent' => '#0F7A6E',
+			'kicker' => 'Për auto-sallonet',
+			'title'  => 'Veturat, klientët dhe shitjet nën kontroll',
+			'text'   => 'TiffCar e lehtëson punën e përditshme të tregtarëve të veturave – nga hyrja e veturës deri te kontrata.',
+			'cta'    => 'Zbulo TiffCar',
+		),
+		array(
+			'id'     => 'aino',
+			'url'    => 'https://ainohaustechnik.ch',
+			'accent' => '#0B6FA4',
+			'kicker' => 'Teknikë shtëpie në Zvicër',
+			'title'  => 'AINO Haustechnik GmbH – profesionistë për shtëpinë tuaj',
+			'text'   => 'Për renovime dhe ndërtime të reja – kërkoni ofertën tuaj pa obligim.',
+			'cta'    => 'Kërko ofertë',
+		),
+		array(
+			'id'     => 'tiff',
+			'url'    => 'https://tiff-software-solutions.com',
+			'accent' => '#16181D',
+			'kicker' => 'Softuer nga Zvicra',
+			'title'  => 'Zgjidhje digjitale për biznesin tënd',
+			'text'   => 'Aplikacione, ueb-faqe dhe softuer sipas nevojës – nga TIFF Software Solutions.',
+			'cta'    => 'Na kontaktoni',
+		),
+	);
+}
+
+/** Kthen $count reklama në radhë të rastësishme (pa përsëritje brenda faqes). */
+function urapress_pick_ads( $count = 1 ) {
+	static $used = array();
+	$ads = array_filter( urapress_house_ads(), fn( $a ) => ! in_array( $a['id'], $used, true ) );
+	if ( count( $ads ) < $count ) {
+		$used = array();
+		$ads  = urapress_house_ads();
+	}
+	shuffle( $ads );
+	$picked = array_slice( $ads, 0, $count );
+	foreach ( $picked as $a ) {
+		$used[] = $a['id'];
+	}
+	return $picked;
+}
+
+/** Shfaq një reklamë. $layout: card | wide */
+function urapress_render_ad( $ad, $layout = 'card' ) {
+	$url = add_query_arg(
+		array(
+			'utm_source'   => 'urapress',
+			'utm_medium'   => 'banner',
+			'utm_campaign' => $ad['id'],
+		),
+		$ad['url']
+	);
+	printf(
+		'<aside class="up-hads up-hads--%1$s" style="--ad:%2$s">' .
+		'<span class="up-hads__label">%3$s</span>' .
+		'<span class="up-hads__kicker">%4$s</span>' .
+		'<strong class="up-hads__title">%5$s</strong>' .
+		'<span class="up-hads__text">%6$s</span>' .
+		'<a class="up-hads__cta" href="%7$s" target="_blank" rel="sponsored noopener">%8$s →</a>' .
+		'</aside>',
+		esc_attr( $layout ),
+		esc_attr( $ad['accent'] ),
+		esc_html__( 'Reklamë', 'urapress' ),
+		esc_html( $ad['kicker'] ),
+		esc_html( $ad['title'] ),
+		esc_html( $ad['text'] ),
+		esc_url( $url ),
+		esc_html( $ad['cta'] )
+	);
+}
+
+/* Skripti për "Përgjigju" në komente. */
+function urapress_comment_reply_script() {
+	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
+		wp_enqueue_script( 'comment-reply' );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'urapress_comment_reply_script' );
+
+/* Fusha "Website" hiqet nga formulari i komenteve (më pak spam). */
+add_filter(
+	'comment_form_default_fields',
+	function ( $fields ) {
+		unset( $fields['url'] );
+		return $fields;
+	}
+);

@@ -36,12 +36,15 @@
 			</div>
 		</section>
 
-		<?php $urapress_ad_page = get_page_by_path( 'reklamo' ); ?>
-		<div class="up-ad">
-			<div class="up-ad__label"><?php esc_html_e( 'Hapësirë reklamuese', 'urapress' ); ?></div>
-			<strong><?php esc_html_e( 'Arrini komunitetin shqiptar në Zvicër', 'urapress' ); ?></strong>
-			<br>
-			<a class="up-ad__cta" href="<?php echo esc_url( $urapress_ad_page ? get_permalink( $urapress_ad_page ) : 'mailto:reklama@urapress.ch' ); ?>"><?php esc_html_e( 'Reklamo këtu', 'urapress' ); ?></a>
+		<?php
+		foreach ( urapress_pick_ads( 1 ) as $urapress_ad ) {
+			urapress_render_ad( $urapress_ad );
+		}
+		$urapress_ad_page = get_page_by_path( 'reklamo' );
+		?>
+		<div class="up-ad up-ad--small">
+			<strong><?php esc_html_e( 'Reklamoni biznesin tuaj këtu', 'urapress' ); ?></strong><br>
+			<a class="up-section__more" href="<?php echo esc_url( $urapress_ad_page ? get_permalink( $urapress_ad_page ) : 'mailto:reklama@urapress.ch' ); ?>"><?php esc_html_e( 'Më shumë', 'urapress' ); ?> →</a>
 		</div>
 	<?php endif; ?>
 </aside>

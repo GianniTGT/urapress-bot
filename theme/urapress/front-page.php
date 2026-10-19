@@ -77,9 +77,18 @@ $urapress_top = new WP_Query(
 
 	<?php if ( is_active_sidebar( 'ads-home' ) ) : ?>
 		<section class="up-section"><?php dynamic_sidebar( 'ads-home' ); ?></section>
+	<?php else : ?>
+		<section class="up-section up-ads-row" aria-label="<?php esc_attr_e( 'Reklama', 'urapress' ); ?>">
+			<?php
+			foreach ( urapress_pick_ads( 3 ) as $urapress_ad ) {
+				urapress_render_ad( $urapress_ad );
+			}
+			?>
+		</section>
 	<?php endif; ?>
 
 	<?php
+	$urapress_blocks = 0;
 	foreach ( urapress_main_categories() as $urapress_name ) :
 		$urapress_term = urapress_category_by_name( $urapress_name );
 		if ( ! $urapress_term ) {
@@ -127,6 +136,14 @@ $urapress_top = new WP_Query(
 				?>
 			</div>
 		</section>
+		<?php
+		$urapress_blocks++;
+		if ( 2 === $urapress_blocks ) {
+			foreach ( urapress_pick_ads( 1 ) as $urapress_ad ) {
+				urapress_render_ad( $urapress_ad, 'wide' );
+			}
+		}
+		?>
 	<?php endforeach; ?>
 
 <?php endif; ?>

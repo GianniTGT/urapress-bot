@@ -3,7 +3,7 @@ Theme Name: UraPress
 Theme URI: https://urapress.ch
 Author: UraPress
 Description: Tema e lajmeve për UraPress – Ura mes Atdheut dhe Dijasporës.
-Version: 1.1.0
+Version: 1.2.0
 Requires at least: 6.4
 Requires PHP: 8.1
 License: GPL-2.0-or-later
@@ -321,4 +321,67 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-logo__arch { margin-left: 0; }
 	.up-card--overlay-lead .up-card__title { font-size: 26px; }
 	.up-card--overlay-lead .up-card__body { padding: 18px; }
+}
+
+/* ---------- Reklamat e veta ---------- */
+.up-hads {
+	position: relative; display: flex; flex-direction: column; gap: 8px;
+	padding: 22px 20px 20px; border: 1px solid var(--up-line); border-top: 4px solid var(--ad, var(--up-red));
+	border-radius: var(--up-radius); background: #fff;
+}
+.up-hads__label { position: absolute; top: 8px; right: 10px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--up-muted); }
+.up-hads__kicker { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ad, var(--up-red)); }
+.up-hads__title { font-size: 19px; line-height: 1.25; color: var(--up-ink); font-weight: 800; }
+.up-hads__text { font-size: 15px; color: var(--up-muted); line-height: 1.5; }
+.up-hads__cta {
+	align-self: flex-start; margin-top: 6px; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+	border-radius: 999px; background: var(--ad, var(--up-red)); color: #fff; font-weight: 700; font-size: 15px;
+}
+.up-hads__cta:hover { color: #fff; filter: brightness(1.1); }
+.up-hads--wide { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 24px; padding: 22px 24px; margin: 28px 0; }
+.up-hads--wide .up-hads__kicker { flex-basis: 100%; }
+.up-hads--wide .up-hads__title { flex: 1 1 320px; font-size: 21px; }
+.up-hads--wide .up-hads__text { flex: 1 1 320px; }
+.up-hads--wide .up-hads__cta { margin-top: 0; }
+.up-ads-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.up-ad--small { padding: 14px; }
+.up-ad--small strong { font-size: 15px; }
+@media (max-width: 1024px) { .up-ads-row { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Komentet ---------- */
+.up-comments { margin: 36px 0; }
+.up-comments__list, .up-comments__list .children { list-style: none; margin: 0; padding: 0; }
+.up-comments__list .children { margin-left: 28px; border-left: 2px solid var(--up-line); padding-left: 16px; }
+.up-comments__list .comment-body { padding: 16px 0; border-bottom: 1px solid var(--up-line); }
+.up-comments__list .comment-author { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--up-ink); }
+.up-comments__list .comment-author img { border-radius: 50%; }
+.up-comments__list .comment-author .says { display: none; }
+.up-comments__list .comment-metadata { font-size: 13px; margin: 2px 0 8px 50px; }
+.up-comments__list .comment-metadata a { color: var(--up-muted); }
+.up-comments__list .comment-content { margin-left: 50px; font-size: 17px; }
+.up-comments__list .comment-content p { margin: 0 0 .6em; }
+.up-comments__list .reply { margin-left: 50px; font-size: 14px; font-weight: 700; }
+.up-comments__list .reply a { color: var(--up-red); }
+.up-comments__list .comment-awaiting-moderation { display: block; margin-left: 50px; font-size: 14px; color: var(--up-muted); font-style: italic; }
+.up-comments__empty, .up-comments__note { color: var(--up-muted); font-size: 15px; }
+.up-comments .comment-respond { margin-top: 24px; padding: 22px; background: var(--up-soft); border-radius: var(--up-radius); }
+.up-comments .comment-reply-title { font-size: 20px; margin: 0 0 8px; }
+.up-comments .comment-reply-title small { margin-left: 10px; font-size: 14px; }
+.up-comments .comment-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+.up-comments .comment-form > p { margin: 0 0 14px; grid-column: 1 / -1; }
+.up-comments .comment-form .comment-form-author { grid-column: 1; }
+.up-comments .comment-form .comment-form-email { grid-column: 2; }
+.up-comments label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 4px; color: var(--up-ink); }
+.up-comments input[type="text"], .up-comments input[type="email"], .up-comments textarea {
+	width: 100%; font: inherit; font-size: 16px; padding: 11px 12px; border: 1px solid #C9CCD3; border-radius: var(--up-radius); background: #fff;
+}
+.up-comments input:focus, .up-comments textarea:focus { outline: 2px solid var(--up-red); outline-offset: 1px; border-color: transparent; }
+.up-comments .comment-form-cookies-consent { display: flex; gap: 8px; align-items: flex-start; }
+.up-comments .comment-form-cookies-consent label { font-weight: 400; color: var(--up-muted); }
+.up-btn { min-height: 46px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--up-red); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+.up-btn:hover { background: var(--up-red-dark); }
+@media (max-width: 760px) {
+	.up-comments .comment-form { grid-template-columns: minmax(0, 1fr); }
+	.up-comments .comment-form .comment-form-author, .up-comments .comment-form .comment-form-email { grid-column: 1; }
+	.up-comments__list .comment-content, .up-comments__list .comment-metadata, .up-comments__list .reply { margin-left: 0; }
 }

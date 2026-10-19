@@ -67,6 +67,12 @@ get_header();
 		</article>
 
 		<?php
+		foreach ( urapress_pick_ads( 1 ) as $urapress_ad ) {
+			urapress_render_ad( $urapress_ad, 'wide' );
+		}
+		if ( comments_open() || get_comments_number() ) {
+			comments_template();
+		}
 		if ( $urapress_cat ) :
 			$urapress_related = new WP_Query(
 				array(
