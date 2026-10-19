@@ -3,7 +3,7 @@ Theme Name: UraPress
 Theme URI: https://urapress.ch
 Author: UraPress
 Description: Tema e lajmeve për UraPress – Ura mes Atdheut dhe Dijasporës.
-Version: 1.2.0
+Version: 1.3.0
 Requires at least: 6.4
 Requires PHP: 8.1
 License: GPL-2.0-or-later
@@ -325,27 +325,36 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 
 /* ---------- Reklamat e veta ---------- */
 .up-hads {
-	position: relative; display: flex; flex-direction: column; gap: 8px;
-	padding: 22px 20px 20px; border: 1px solid var(--up-line); border-top: 4px solid var(--ad, var(--up-red));
+	position: relative; display: flex; flex-direction: column; overflow: hidden;
+	border: 1px solid var(--up-line); border-top: 4px solid var(--ad, var(--up-red));
 	border-radius: var(--up-radius); background: #fff;
 }
+.up-hads__img { display: block; aspect-ratio: 16 / 9; background: var(--up-soft); }
+.up-hads__img img { width: 100%; height: 100%; object-fit: cover; }
+.up-hads__body { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 20px; flex: 1; }
 .up-hads__label { position: absolute; top: 8px; right: 10px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--up-muted); }
+.up-hads.has-img .up-hads__label { top: -26px; right: 8px; background: rgba(0,0,0,.6); color: #fff; padding: 2px 6px; border-radius: 3px; }
 .up-hads__kicker { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ad, var(--up-red)); }
 .up-hads__title { font-size: 19px; line-height: 1.25; color: var(--up-ink); font-weight: 800; }
 .up-hads__text { font-size: 15px; color: var(--up-muted); line-height: 1.5; }
 .up-hads__cta {
-	align-self: flex-start; margin-top: 6px; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+	align-self: flex-start; margin-top: auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
 	border-radius: 999px; background: var(--ad, var(--up-red)); color: #fff; font-weight: 700; font-size: 15px;
 }
 .up-hads__cta:hover { color: #fff; filter: brightness(1.1); }
-.up-hads--wide { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 24px; padding: 22px 24px; margin: 28px 0; }
-.up-hads--wide .up-hads__kicker { flex-basis: 100%; }
-.up-hads--wide .up-hads__title { flex: 1 1 320px; font-size: 21px; }
-.up-hads--wide .up-hads__text { flex: 1 1 320px; }
-.up-hads--wide .up-hads__cta { margin-top: 0; }
+.up-hads--wide { flex-direction: row; margin: 28px 0; }
+.up-hads--wide .up-hads__img { flex: 0 0 38%; aspect-ratio: auto; min-height: 200px; }
+.up-hads--wide .up-hads__body { padding: 24px; justify-content: center; }
+.up-hads--wide.has-img .up-hads__label { top: 8px; right: 10px; background: none; color: var(--up-muted); padding: 0; }
+.up-hads--wide .up-hads__title { font-size: 22px; }
+.up-hads--wide .up-hads__cta { margin-top: 8px; }
 .up-ads-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .up-ad--small { padding: 14px; }
 .up-ad--small strong { font-size: 15px; }
+@media (max-width: 760px) {
+	.up-hads--wide { flex-direction: column; }
+	.up-hads--wide .up-hads__img { flex: none; aspect-ratio: 16 / 9; min-height: 0; }
+}
 @media (max-width: 1024px) { .up-ads-row { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------- Komentet ---------- */

@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.2.0' );
+define( 'URAPRESS_VERSION', '1.3.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -312,7 +312,7 @@ add_action( 'wp_head', 'urapress_open_graph', 5 );
 /* Reklamat e veta (house ads) – ndrysho tekstet/lidhjet këtu          */
 /* ------------------------------------------------------------------ */
 
-function urapress_house_ads() {
+function urapress_default_ads() {
 	return array(
 		array(
 			'id'     => 'ride2balkan',
@@ -326,11 +326,11 @@ function urapress_house_ads() {
 		array(
 			'id'     => 'tiffcore',
 			'url'    => 'https://tiffcore.ch',
-			'accent' => '#1D5FD1',
-			'kicker' => 'Për firmat e zanatit',
-			'title'  => 'Oferta, fatura dhe orët e punës – në një vend',
-			'text'   => 'TiffCore është softueri zviceran për firma ndërtimi, instalimi dhe zanati.',
-			'cta'    => 'Provo TiffCore',
+			'accent' => '#17694A',
+			'kicker' => 'Për firmat e sanitarisë dhe ngrohjes',
+			'title'  => 'Nga raporti në kantier deri te fatura QR – TiffCore',
+			'text'   => 'Monteri e regjistron në celular, zyra e faturon. Pa instalim, mbështetje nga Berna. 30 ditë falas.',
+			'cta'    => 'Provo falas',
 		),
 		array(
 			'id'     => 'tiffcar',
@@ -362,13 +362,188 @@ function urapress_house_ads() {
 	);
 }
 
+
+/* Reklamat menaxhohen në WordPress: menyja "Reklamat". */
+function urapress_register_ads() {
+	register_post_type(
+		'urapress_ad',
+		array(
+			'labels'        => array(
+				'name'               => 'Reklamat',
+				'singular_name'      => 'Reklamë',
+				'add_new'            => 'Neue Anzeige',
+				'add_new_item'       => 'Neue Anzeige erstellen',
+				'edit_item'          => 'Anzeige bearbeiten',
+				'all_items'          => 'Alle Anzeigen',
+				'featured_image'     => 'Bild der Anzeige',
+				'set_featured_image' => 'Bild wählen',
+			),
+			'public'        => false,
+			'show_ui'       => true,
+			'show_in_menu'  => true,
+			'menu_position' => 21,
+			'menu_icon'     => 'dashicons-megaphone',
+			'supports'      => array( 'title', 'thumbnail' ),
+		)
+	);
+}
+add_action( 'init', 'urapress_register_ads' );
+
+function urapress_ad_fields() {
+	return array(
+		'kicker' => array( 'Zeile über dem Titel (klein, farbig)', 'text' ),
+		'text'   => array( 'Text (1–2 Sätze)', 'textarea' ),
+		'cta'    => array( 'Beschriftung des Buttons', 'text' ),
+		'url'    => array( 'Link (https://…)', 'url' ),
+		'accent' => array( 'Farbe', 'color' ),
+	);
+}
+
+function urapress_ad_metabox() {
+	add_meta_box(
+		'urapress_ad_box',
+		'Inhalt der Anzeige',
+		function ( $post ) {
+			wp_nonce_field( 'urapress_ad_save', 'urapress_ad_nonce' );
+			echo '<p style="color:#555">Der <strong>Titel</strong> oben ist die Schlagzeile. Das Bild setzt du rechts unter „Bild der Anzeige“ (ideal 800×450). Aktiv = veröffentlicht, pausieren = als Entwurf speichern.</p>';
+			foreach ( urapress_ad_fields() as $key => list( $label, $type ) ) {
+				$val = get_post_meta( $post->ID, '_up_ad_' . $key, true );
+				if ( 'accent' === $key && ! $val ) {
+					$val = '#D7141A';
+				}
+				printf( '<p><label for="up_ad_%1$s" style="display:block;font-weight:600;margin-bottom:4px">%2$s</label>', esc_attr( $key ), esc_html( $label ) );
+				if ( 'textarea' === $type ) {
+					printf( '<textarea id="up_ad_%1$s" name="up_ad_%1$s" rows="3" style="width:100%%">%2$s</textarea></p>', esc_attr( $key ), esc_textarea( $val ) );
+				} else {
+					printf( '<input id="up_ad_%1$s" name="up_ad_%1$s" type="%2$s" value="%3$s" style="%4$s"></p>', esc_attr( $key ), esc_attr( $type ), esc_attr( $val ), 'color' === $type ? 'width:80px;height:36px' : 'width:100%' );
+				}
+			}
+		},
+		'urapress_ad',
+		'normal',
+		'high'
+	);
+}
+add_action( 'add_meta_boxes', 'urapress_ad_metabox' );
+
+function urapress_ad_save( $post_id ) {
+	if ( ! isset( $_POST['urapress_ad_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['urapress_ad_nonce'] ) ), 'urapress_ad_save' ) ) {
+		return;
+	}
+	if ( ! current_user_can( 'edit_post', $post_id ) ) {
+		return;
+	}
+	foreach ( array_keys( urapress_ad_fields() ) as $key ) {
+		$raw = wp_unslash( $_POST[ 'up_ad_' . $key ] ?? '' );
+		$val = match ( $key ) {
+			'url'    => esc_url_raw( $raw ),
+			'accent' => sanitize_hex_color( $raw ) ?: '#D7141A',
+			'text'   => sanitize_textarea_field( $raw ),
+			default  => sanitize_text_field( $raw ),
+		};
+		update_post_meta( $post_id, '_up_ad_' . $key, $val );
+	}
+}
+add_action( 'save_post_urapress_ad', 'urapress_ad_save' );
+
+/* Spalte mit Bild in der Liste der Anzeigen. */
+add_filter( 'manage_urapress_ad_posts_columns', fn( $c ) => array_merge( array_slice( $c, 0, 1 ), array( 'up_img' => 'Bild' ), array_slice( $c, 1 ) ) );
+add_action(
+	'manage_urapress_ad_posts_custom_column',
+	function ( $col, $id ) {
+		if ( 'up_img' === $col ) {
+			echo get_the_post_thumbnail( $id, array( 80, 45 ) ); // phpcs:ignore
+		}
+	},
+	10,
+	2
+);
+
+/* Einmalig: die Startanzeigen als bearbeitbare Einträge anlegen (mit Bild). */
+function urapress_seed_ads() {
+	if ( get_option( 'urapress_ads_seeded' ) || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	update_option( 'urapress_ads_seeded', 1 );
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	foreach ( urapress_default_ads() as $ad ) {
+		$id = wp_insert_post(
+			array(
+				'post_type'   => 'urapress_ad',
+				'post_status' => 'publish',
+				'post_title'  => $ad['title'],
+			)
+		);
+		if ( ! $id || is_wp_error( $id ) ) {
+			continue;
+		}
+		foreach ( array_keys( urapress_ad_fields() ) as $key ) {
+			update_post_meta( $id, '_up_ad_' . $key, $ad[ $key ] );
+		}
+		$file = get_template_directory() . '/assets/ads/' . $ad['id'] . '.jpg';
+		if ( file_exists( $file ) ) {
+			$tmp = wp_tempnam( $ad['id'] . '.jpg' );
+			copy( $file, $tmp );
+			$att = media_handle_sideload( array( 'name' => 'reklame-' . $ad['id'] . '.jpg', 'tmp_name' => $tmp ), $id );
+			if ( ! is_wp_error( $att ) ) {
+				set_post_thumbnail( $id, $att );
+			}
+		}
+	}
+}
+add_action( 'admin_init', 'urapress_seed_ads' );
+
+/** Alle aktiven Anzeigen: aus WordPress, sonst die Startanzeigen des Themes. */
+function urapress_house_ads() {
+	static $ads = null;
+	if ( null !== $ads ) {
+		return $ads;
+	}
+	$posts = get_posts(
+		array(
+			'post_type'      => 'urapress_ad',
+			'post_status'    => 'publish',
+			'posts_per_page' => 30,
+		)
+	);
+	$ads = array();
+	foreach ( $posts as $p ) {
+		$ad = array(
+			'id'    => 'ad' . $p->ID,
+			'title' => get_the_title( $p ),
+			'image' => get_the_post_thumbnail_url( $p, 'urapress-card' ),
+		);
+		foreach ( array_keys( urapress_ad_fields() ) as $key ) {
+			$ad[ $key ] = get_post_meta( $p->ID, '_up_ad_' . $key, true );
+		}
+		if ( $ad['url'] ) {
+			$ads[] = $ad;
+		}
+	}
+	if ( ! $ads && ! get_option( 'urapress_ads_seeded' ) ) {
+		foreach ( urapress_default_ads() as $ad ) {
+			$file       = '/assets/ads/' . $ad['id'] . '.jpg';
+			$ad['image'] = file_exists( get_template_directory() . $file ) ? get_template_directory_uri() . $file : '';
+			$ads[]      = $ad;
+		}
+	}
+	return $ads;
+}
+
 /** Kthen $count reklama në radhë të rastësishme (pa përsëritje brenda faqes). */
 function urapress_pick_ads( $count = 1 ) {
 	static $used = array();
-	$ads = array_filter( urapress_house_ads(), fn( $a ) => ! in_array( $a['id'], $used, true ) );
+	$all = urapress_house_ads();
+	if ( ! $all ) {
+		return array();
+	}
+	$count = min( $count, count( $all ) );
+	$ads   = array_filter( $all, fn( $a ) => ! in_array( $a['id'], $used, true ) );
 	if ( count( $ads ) < $count ) {
 		$used = array();
-		$ads  = urapress_house_ads();
+		$ads  = $all;
 	}
 	shuffle( $ads );
 	$picked = array_slice( $ads, 0, $count );
@@ -389,13 +564,15 @@ function urapress_render_ad( $ad, $layout = 'card' ) {
 		$ad['url']
 	);
 	printf(
-		'<aside class="up-hads up-hads--%1$s" style="--ad:%2$s">' .
+		'<aside class="up-hads up-hads--%1$s%9$s" style="--ad:%2$s">' .
+		'%10$s' .
+		'<div class="up-hads__body">' .
 		'<span class="up-hads__label">%3$s</span>' .
 		'<span class="up-hads__kicker">%4$s</span>' .
 		'<strong class="up-hads__title">%5$s</strong>' .
 		'<span class="up-hads__text">%6$s</span>' .
 		'<a class="up-hads__cta" href="%7$s" target="_blank" rel="sponsored noopener">%8$s →</a>' .
-		'</aside>',
+		'</div></aside>',
 		esc_attr( $layout ),
 		esc_attr( $ad['accent'] ),
 		esc_html__( 'Reklamë', 'urapress' ),
@@ -403,7 +580,9 @@ function urapress_render_ad( $ad, $layout = 'card' ) {
 		esc_html( $ad['title'] ),
 		esc_html( $ad['text'] ),
 		esc_url( $url ),
-		esc_html( $ad['cta'] )
+		esc_html( $ad['cta'] ),
+		empty( $ad['image'] ) ? '' : ' has-img',
+		empty( $ad['image'] ) ? '' : sprintf( '<a class="up-hads__img" href="%s" target="_blank" rel="sponsored noopener" tabindex="-1" aria-hidden="true"><img src="%s" alt="" loading="lazy"></a>', esc_url( $url ), esc_url( $ad['image'] ) )
 	);
 }
 
