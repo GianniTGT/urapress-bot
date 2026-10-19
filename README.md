@@ -115,3 +115,17 @@ für die ausgewählten Meldungen automatisch von der Webseite (trafilatura).
 | `check.py` | Verbindungstest |
 
 **Hinweis Urheberrecht:** Der Bot übernimmt nur Fakten, schreibt komplett neu, nennt Quelle + Link und verwendet **nie** Bilder der Quellseiten.
+
+---
+
+## Alternative: Betrieb auf Railway (ohne Server/SSH)
+
+1. railway.app → **New Project → Deploy from GitHub repo** → `GianniTGT/urapress-bot`
+2. Service → **Variables**: die Werte aus `.env.example` eintragen (mindestens `TELEGRAM_BOT_TOKEN`, `ANTHROPIC_API_KEY`, `TELEGRAM_CHAT_ID`) und zusätzlich:
+   ```
+   DATA_DIR=/data
+   ```
+3. Service → **Volumes → New Volume**, Mount Path `/data` (damit Datenbank und Bilder einen Neustart überleben)
+4. Railway startet den Bot automatisch (`Procfile` → `worker: python bot.py`). Logs unter **Deployments → View Logs**.
+
+Jeder Push auf GitHub `main` wird automatisch neu deployt.
