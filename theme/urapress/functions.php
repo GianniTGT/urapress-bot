@@ -94,6 +94,11 @@ function urapress_assets() {
 		'urapress-nav',
 		"(function(){var b=document.querySelector('.up-menu-toggle'),n=document.querySelector('.up-nav');if(!b||!n)return;b.addEventListener('click',function(){var o=n.classList.toggle('is-open');b.setAttribute('aria-expanded',o?'true':'false');});})();"
 	);
+
+	// Leuchtendes Tiff-Logo-Aufblitzen (zufällig, einmal pro Besuch). Braucht die Glow-Engine.
+	$ads_dir = get_template_directory_uri() . '/assets/ads/';
+	wp_enqueue_script( 'urapress-glow', $ads_dir . 'glow.js', array(), '1', true );
+	wp_enqueue_script( 'urapress-flash', $ads_dir . 'tiff-flash.js', array( 'urapress-glow' ), '1', true );
 }
 add_action( 'wp_enqueue_scripts', 'urapress_assets' );
 

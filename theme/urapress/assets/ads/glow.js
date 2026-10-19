@@ -127,6 +127,8 @@
     var list = document.querySelectorAll("canvas.up-hads__glow");
     for (var i = 0; i < list.length; i++) start(list[i]);
   }
+  // Engine auch für andere Skripte (z. B. das Logo-Aufblitzen) verfügbar machen.
+  window.UraGlow = { start: start };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 })();

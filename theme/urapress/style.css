@@ -334,6 +334,16 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 /* Leuchtendes TiffCore-Logo (Animation) */
 .up-hads__img--glow { background: radial-gradient(120% 120% at 50% 45%, #0d2e21 0%, #101816 70%, #0b1412 100%); overflow: hidden; }
 .up-hads__img--glow .up-hads__glow { display: block; width: 100%; height: 100%; }
+/* Logo-Aufblitzen (zufällig, gross in der Mitte) */
+.ura-flash { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center;
+	pointer-events: none; opacity: 0; transition: opacity .6s ease;
+	background: radial-gradient(40% 40% at 50% 50%, rgba(8,14,12,.55) 0%, rgba(8,14,12,0) 70%); }
+.ura-flash.is-on { opacity: 1; }
+.ura-flash.is-off { opacity: 0; }
+.ura-flash__canvas { pointer-events: auto; width: min(62vmin, 540px); height: min(62vmin, 540px);
+	transform: scale(.4) rotate(-14deg); transition: transform .7s cubic-bezier(.2,1.3,.4,1); }
+.ura-flash.is-on .ura-flash__canvas { transform: scale(1) rotate(0deg); }
+.ura-flash.is-off .ura-flash__canvas { transform: scale(1.15) rotate(6deg); transition: transform .9s ease; }
 .up-hads__body { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 20px; flex: 1; }
 .up-hads__label { position: absolute; top: 8px; right: 10px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--up-muted); }
 .up-hads.has-img .up-hads__label { top: -26px; right: 8px; background: rgba(0,0,0,.6); color: #fff; padding: 2px 6px; border-radius: 3px; }
