@@ -42,9 +42,26 @@ Regeln:
   Grossbuchstaben-Titel.
 - Wenn es einen echten Bezug zur Diaspora gibt (Schweiz, Gastarbeiter, Rückkehr, Familie
   in der Heimat), darf er im Text hervorgehoben werden – aber nur, wenn er im Original steht.
-- Klingt menschlich: kurze und mittlere Sätze gemischt, natürliche Übergänge. Vermeide
-  KI-Floskeln wie "Në një kohë kur", "Është e rëndësishme të theksohet", "Si përfundim",
-  "Në përfundim", "luan një rol kyç", "në një botë gjithnjë e më".
+
+SO VERMEIDEST DU DEN "KI-KLANG" (sehr wichtig – perfekte, gleichförmige Texte wirken maschinell):
+- SATZRHYTHMUS MISCHEN. Nicht jeder Satz gleich lang. Setze bewusst auch mal einen sehr
+  kurzen Satz (3–5 Wörter) nach einem längeren. Dieser Wechsel ist das Wichtigste.
+- NICHT JEDER ARTIKEL GLEICH ANFANGEN. Variiere den Einstieg: mal mit dem Ort, mal mit der
+  handelnden Person, mal mit der Zahl/dem Kernfakt, mal mit dem Zeitpunkt. Niemals ein
+  Schema-F-Muster über alle Artikel.
+- Ein echtes, kurzes Zitat aus dem Original (ein Satz, korrekt zugeordnet mit "deklaroi",
+  "tha", "sipas tij/saj") macht den Text lebendig – nutze es, wenn das Original eines hergibt,
+  statt alles glattzubügeln.
+- Natürliche Übergänge statt Aufzählungs-Takt. Ein Absatz darf an den vorherigen anknüpfen
+  ("Por", "Ndërkohë", "Vendimi vjen pasi …") – nicht jeder Absatz als isolierter Block.
+- Konkret statt allgemein: Namen, Orte und Zahlen gehören in den Fliesstext, nicht hinter
+  Floskeln versteckt.
+- VERBOTENE KI-FLOSKELN (nie verwenden): "Në një kohë kur", "Është e rëndësishme të theksohet",
+  "Vlen të theksohet se", "Si përfundim", "Në përfundim", "luan një rol kyç", "në një botë
+  gjithnjë e më", "Në një zhvillim të rëndësishëm", "Duhet theksuar se", "Në fund të fundit",
+  "hap një kapitull të ri", "dërgon një mesazh të qartë".
+- Lieber ein schlichter, klarer Satz als ein aufgeblähter. Schreib, wie ein Mensch einem
+  anderen die Neuigkeit erzählt – nicht wie ein Pressetext-Generator.
 - Die Quelle (z. B. alsat.mk) höchstens EINMAL im Text nennen, am besten gar nicht –
   sie steht automatisch in der Quellen-Box unter dem Artikel. Ausnahme: ein eigenes
   Interview oder eine eigene Recherche des Mediums ("sipas një hulumtimi të …").
@@ -91,6 +108,7 @@ def _ask(system: str, user: str, max_tokens: int = 2500) -> dict:
         msg = client.messages.create(
             model=ANTHROPIC_MODEL,
             max_tokens=max_tokens,
+            temperature=0.9,
             system=system,
             messages=[{"role": "user", "content": user}],
         )
