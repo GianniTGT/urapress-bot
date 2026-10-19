@@ -64,3 +64,6 @@ class WordPress:
         if featured_media:
             payload["featured_media"] = featured_media
         return self._req("POST", "/posts", json=payload)
+
+    def set_featured_media(self, post_id: int, media_id: int) -> dict:
+        return self._req("POST", f"/posts/{post_id}", json={"featured_media": media_id})

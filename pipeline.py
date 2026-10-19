@@ -102,3 +102,14 @@ def publish_draft(draft_id: int) -> dict:
     db.update_draft(draft_id, status="posted", wp_post_id=post["id"], wp_post_url=post["link"],
                     error=None)
     return post
+
+
+def attach_photo(draft_id: int, path: Path) -> str:
+    """Hängt ein Foto an einen bereits veröffentlichten Beitrag. Gibt den Beitrags-Link zurück."""
+    d = db.get_draft(draft_id)
+    wp = WordPress()
+    media = wp.upload_image(path, title=d["title"], caption="", alt=d["title"])
+    wp.set_featured_media(d["wp_post_id"], media["id"])
+    db.update_draft(draft_id, image_kind="manual", image_ref=str(path), wp_media_id=media["id"])
+    return d["wp_post_url"]
+

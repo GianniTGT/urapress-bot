@@ -117,12 +117,23 @@ async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("📷 Dërgoje foton si përgjigje (Reply) te mesazhi i lajmit.")
         return
     d = db.get_draft(draft_id)
-    if not d or d["status"] != "pending":
-        await update.message.reply_text(f"ℹ️ #{draft_id} nuk është më në pritje.")
+    if not d or d["status"] not in ("pending", "posted"):
+        await update.message.reply_text(f"ℹ️ #{draft_id} nuk mund të ndryshohet më.")
         return
     tg_file = await update.message.photo[-1].get_file()
     path = config.IMAGE_DIR / f"manual-{draft_id}.jpg"
     await tg_file.download_to_drive(path)
+
+    if d["status"] == "posted" and d["wp_post_id"]:
+        try:
+            link = await asyncio.to_thread(pipeline.attach_photo, draft_id, path)
+        except Exception as exc:
+            log.exception("Foto anhängen fehlgeschlagen")
+            await update.message.reply_text(f"⚠️ Foto nuk u vendos te #{draft_id}: {exc}")
+            return
+        await update.message.reply_text(f"📷 Foto u vendos te #{draft_id}:\n{link}")
+        return
+
     db.update_draft(draft_id, image_kind="manual", image_ref=str(path), wp_media_id=None)
     await update.message.reply_text(f"📷 Foto u shtua te #{draft_id}. Shtyp ✅ Posto.",
                                     reply_markup=keyboard(draft_id))
