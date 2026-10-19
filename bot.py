@@ -9,12 +9,14 @@ Befehle im Telegram-Chat:
 import asyncio
 import html
 import logging
+import re
 from datetime import time as dtime
 from zoneinfo import ZoneInfo
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
+from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
+                          MessageHandler, filters)
 
 import config
 import db
@@ -44,7 +46,8 @@ def preview_text(d: dict) -> str:
     photo = {
         "wp": f"🖼 Foto nga Mediateka: {e(d['person'] or '')}",
         "ai": f"🖼 {config.AI_IMAGE_CAPTION}",
-        "none": "🖼 Pa foto",
+        "manual": "🖼 Foto nga redaksia",
+        "none": "🖼 Pa foto – dërgo një foto si përgjigje (Reply) këtij mesazhi",
     }[d["image_kind"]]
     body = "\n\n".join(d["paragraphs"])
     if len(body) > 2900:
@@ -93,6 +96,38 @@ async def run_scan(bot) -> None:
 
 
 # --- Handler ------------------------------------------------------------------
+def _draft_id_from(msg) -> int | None:
+    """Liest die Nummer #N aus dem Vorschau-Text (Antwort-Nachricht oder eigene Bildunterschrift)."""
+    texts = []
+    if msg.reply_to_message:
+        texts.append(msg.reply_to_message.text or msg.reply_to_message.caption or "")
+    texts.append(msg.caption or "")
+    for text in texts:
+        m = re.search(r"#(\d+)", text)
+        if m:
+            return int(m.group(1))
+    return None
+
+
+async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    draft_id = _draft_id_from(update.message)
+    if not draft_id:
+        await update.message.reply_text("📷 Dërgoje foton si përgjigje (Reply) te mesazhi i lajmit.")
+        return
+    d = db.get_draft(draft_id)
+    if not d or d["status"] != "pending":
+        await update.message.reply_text(f"ℹ️ #{draft_id} nuk është më në pritje.")
+        return
+    tg_file = await update.message.photo[-1].get_file()
+    path = config.IMAGE_DIR / f"manual-{draft_id}.jpg"
+    await tg_file.download_to_drive(path)
+    db.update_draft(draft_id, image_kind="manual", image_ref=str(path), wp_media_id=None)
+    await update.message.reply_text(f"📷 Foto u shtua te #{draft_id}. Shtyp ✅ Posto.",
+                                    reply_markup=keyboard(draft_id))
+
+
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         f"Përshëndetje! Bot-i i UraPress.ch\n\n"
@@ -162,6 +197,7 @@ def main() -> None:
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("skano", cmd_scan))
     app.add_handler(CommandHandler("statusi", cmd_status))
+    app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|refuzo):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))

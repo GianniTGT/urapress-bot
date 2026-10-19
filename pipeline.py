@@ -87,9 +87,10 @@ def publish_draft(draft_id: int) -> dict:
     wp = WordPress()
 
     media_id = d["wp_media_id"]
-    if d["image_kind"] == "ai" and not media_id:
+    if d["image_kind"] in ("ai", "manual") and not media_id:
+        caption = AI_IMAGE_CAPTION if d["image_kind"] == "ai" else ""
         media = wp.upload_image(Path(d["image_ref"]), title=d["title"],
-                                caption=AI_IMAGE_CAPTION, alt=d["title"])
+                                caption=caption, alt=d["title"])
         media_id = media["id"]
         db.update_draft(draft_id, wp_media_id=media_id)
 
