@@ -373,9 +373,9 @@ function urapress_default_ads() {
 			'id'     => 'tiffcar',
 			'url'    => 'https://tiffcar.ch',
 			'accent' => '#0F7A6E',
-			'kicker' => 'Për auto-sallonet',
+			'kicker' => 'Për auto-sallone dhe ofiçina',
 			'title'  => 'Veturat, klientët dhe shitjet nën kontroll',
-			'text'   => 'TiffCar e lehtëson punën e përditshme të tregtarëve të veturave – nga hyrja e veturës deri te kontrata.',
+			'text'   => 'TiffCar e lehtëson punën e përditshme të auto-salloneve dhe ofiçinave – nga pranimi i veturës deri te fatura.',
 			'cta'    => 'Zbulo TiffCar',
 		),
 		array(
