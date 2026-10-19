@@ -102,16 +102,29 @@ def _extract_json(text: str) -> dict:
     raise ValueError(f"Keine JSON-Antwort von Claude: {text[:300]}")
 
 
+def _create(max_tokens: int, system: str, user: str):
+    """messages.create mit temperature, fällt bei älterer SDK ohne temperature zurück."""
+    kwargs = dict(
+        model=ANTHROPIC_MODEL,
+        max_tokens=max_tokens,
+        temperature=0.9,
+        system=system,
+        messages=[{"role": "user", "content": user}],
+    )
+    try:
+        return client.messages.create(**kwargs)
+    except TypeError as exc:
+        if "temperature" not in str(exc):
+            raise
+        log.warning("anthropic-SDK ohne 'temperature' – ohne Temperatur erneut")
+        kwargs.pop("temperature", None)
+        return client.messages.create(**kwargs)
+
+
 def _ask(system: str, user: str, max_tokens: int = 2500) -> dict:
     last_error = None
     for attempt in range(2):
-        msg = client.messages.create(
-            model=ANTHROPIC_MODEL,
-            max_tokens=max_tokens,
-            temperature=0.9,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-        )
+        msg = _create(max_tokens, system, user)
         text = "".join(getattr(b, "text", "") for b in msg.content if getattr(b, "type", "") == "text")
         if msg.stop_reason == "max_tokens":
             log.warning("Antwort abgeschnitten (max_tokens) – Versuch %d", attempt + 1)
