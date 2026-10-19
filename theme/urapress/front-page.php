@@ -65,9 +65,17 @@ $urapress_top = new WP_Query(
 			<div class="up-section__head"><h2 class="up-section__title"><?php esc_html_e( 'Më shumë lajme', 'urapress' ); ?></h2></div>
 			<div class="up-grid-4">
 				<?php
+				$urapress_n = 0;
 				while ( $urapress_latest->have_posts() ) :
 					$urapress_latest->the_post();
 					get_template_part( 'template-parts/card' );
+					$urapress_n++;
+					// Eine Anzeige als Kachel mitten im Raster (nach der 4.).
+					if ( 4 === $urapress_n ) {
+						foreach ( urapress_pick_ads( 1 ) as $urapress_ad ) {
+							urapress_render_ad( $urapress_ad );
+						}
+					}
 				endwhile;
 				wp_reset_postdata();
 				?>
