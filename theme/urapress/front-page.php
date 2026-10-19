@@ -70,9 +70,14 @@ $urapress_top = new WP_Query(
 					$urapress_latest->the_post();
 					get_template_part( 'template-parts/card' );
 					$urapress_n++;
-					// Eine Anzeige als Kachel mitten im Raster (nach der 4.).
+					// Fest die TiffCore-Anzeige (Leucht-Animation) als Kachel im Raster (nach der 4.).
 					if ( 4 === $urapress_n ) {
-						foreach ( urapress_pick_ads( 1 ) as $urapress_ad ) {
+						$urapress_ad = urapress_ad_by_url( 'tiffcore.ch' );
+						if ( ! $urapress_ad ) {
+							$urapress_pick = urapress_pick_ads( 1 );
+							$urapress_ad   = $urapress_pick ? $urapress_pick[0] : null;
+						}
+						if ( $urapress_ad ) {
 							urapress_render_ad( $urapress_ad );
 						}
 					}

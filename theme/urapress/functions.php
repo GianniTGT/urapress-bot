@@ -533,6 +533,16 @@ function urapress_house_ads() {
 }
 
 /** Kthen $count reklama në radhë të rastësishme (pa përsëritje brenda faqes). */
+/** Eine bestimmte Anzeige anhand eines Textes in der URL holen (z. B. "tiffcore.ch"). */
+function urapress_ad_by_url( $needle ) {
+	foreach ( urapress_house_ads() as $ad ) {
+		if ( ! empty( $ad['url'] ) && false !== stripos( $ad['url'], $needle ) ) {
+			return $ad;
+		}
+	}
+	return null;
+}
+
 function urapress_pick_ads( $count = 1 ) {
 	static $used = array();
 	$all = urapress_house_ads();
