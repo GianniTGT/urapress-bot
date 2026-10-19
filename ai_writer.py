@@ -69,18 +69,45 @@ Antworte NUR mit JSON in diesem Format:
 }}"""
 
 
+def _extract_json(text: str) -> dict:
+    """Findet das erste vollständige JSON-Objekt im Text (auch in ```json-Blöcken)."""
+    text = re.sub(r"```(?:json)?", "", text)
+    start = text.find("{")
+    while start != -1:
+        depth = 0
+        for i in range(start, len(text)):
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        return json.loads(text[start:i + 1])
+                    except json.JSONDecodeError:
+                        break
+        start = text.find("{", start + 1)
+    raise ValueError(f"Keine JSON-Antwort von Claude: {text[:300]}")
+
+
 def _ask(system: str, user: str, max_tokens: int = 2500) -> dict:
-    msg = client.messages.create(
-        model=ANTHROPIC_MODEL,
-        max_tokens=max_tokens,
-        system=system,
-        messages=[{"role": "user", "content": user}],
-    )
-    text = "".join(b.text for b in msg.content if b.type == "text")
-    match = re.search(r"\{.*\}", text, re.S)
-    if not match:
-        raise ValueError(f"Keine JSON-Antwort von Claude: {text[:300]}")
-    return json.loads(match.group(0))
+    last_error = None
+    for attempt in range(2):
+        msg = client.messages.create(
+            model=ANTHROPIC_MODEL,
+            max_tokens=max_tokens,
+            system=system,
+            messages=[{"role": "user", "content": user}],
+        )
+        text = "".join(getattr(b, "text", "") for b in msg.content if getattr(b, "type", "") == "text")
+        if msg.stop_reason == "max_tokens":
+            log.warning("Antwort abgeschnitten (max_tokens) – Versuch %d", attempt + 1)
+            max_tokens = int(max_tokens * 1.8)
+        try:
+            return _extract_json(text)
+        except ValueError as exc:
+            last_error = exc
+            log.warning("JSON nicht lesbar (Versuch %d): %s", attempt + 1, str(exc)[:200])
+    raise last_error
 
 
 def select_stories(candidates: list[dict], n: int, already_posted: list[str]) -> list[dict]:
