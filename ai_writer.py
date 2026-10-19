@@ -45,9 +45,14 @@ Regeln:
 - Klingt menschlich: kurze und mittlere Sätze gemischt, natürliche Übergänge. Vermeide
   KI-Floskeln wie "Në një kohë kur", "Është e rëndësishme të theksohet", "Si përfundim",
   "Në përfundim", "luan një rol kyç", "në një botë gjithnjë e më".
+- Die Quelle (z. B. alsat.mk) höchstens EINMAL im Text nennen, am besten gar nicht –
+  sie steht automatisch in der Quellen-Box unter dem Artikel. Ausnahme: ein eigenes
+  Interview oder eine eigene Recherche des Mediums ("sipas një hulumtimi të …").
 - Erster Absatz beantwortet: wer, was, wo, wann.
 - Länge: 3–6 Absätze, insgesamt ca. 180–350 Wörter.
-- Titel: max. 90 Zeichen, informativ.
+- Titel: max. 90 Zeichen, informativ, als ganzer Satz oder klare Aussage. Keine
+  Abkürzungen oder Kürzel aus dem Originaltitel (nicht "Kos:", "MK:", "VIDEO", "FOTO",
+  "LAJMI I FUNDIT"), Ländernamen ausschreiben (Kosova, Shqipëria, Maqedonia e Veriut).
 
 Kategorie: genau eine aus {CATEGORIES}.
 
