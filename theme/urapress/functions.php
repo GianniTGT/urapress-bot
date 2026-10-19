@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.0.0' );
+define( 'URAPRESS_VERSION', '1.0.1' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -146,7 +146,7 @@ function urapress_logo( $tag = 'div' ) {
 	printf(
 		'<%1$s class="up-logo-wrap" style="margin:0"><a class="up-logo" href="%2$s" rel="home" aria-label="%3$s">' .
 		'<span class="up-logo__word" aria-hidden="true"><span>ura</span>press</span>' .
-		'<svg class="up-logo__arch" viewBox="0 0 520 50" preserveAspectRatio="none" aria-hidden="true"><path d="M10 8 Q260 62 510 8" fill="none" stroke="#D7141A" stroke-width="9" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>' .
+		'<svg class="up-logo__arch" viewBox="0 0 560 56" aria-hidden="true"><path d="M14 14 Q280 64 546 14" fill="none" stroke="#D7141A" stroke-width="8" stroke-linecap="round"/><circle cx="14" cy="14" r="10" fill="currentColor"/><circle cx="546" cy="14" r="10" fill="currentColor"/></svg>' .
 		'</a></%1$s>',
 		$tag,
 		esc_url( home_url( '/' ) ),

@@ -3,7 +3,7 @@ Theme Name: UraPress
 Theme URI: https://urapress.ch
 Author: UraPress
 Description: Tema e lajmeve për UraPress – Ura mes Atdheut dhe Dijasporës.
-Version: 1.0.0
+Version: 1.0.1
 Requires at least: 6.4
 Requires PHP: 8.1
 License: GPL-2.0-or-later
@@ -58,10 +58,12 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 /* ---------- Header / logo ---------- */
 .up-header { border-bottom: 1px solid var(--up-line); background: #fff; }
 .up-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 18px; padding-bottom: 14px; }
-.up-logo { display: inline-flex; flex-direction: column; align-items: stretch; line-height: 1; }
-.up-logo__word { font-weight: 900; font-size: 46px; letter-spacing: -1.5px; color: var(--up-ink); }
+.up-logo { display: inline-flex; flex-direction: column; align-items: flex-start; line-height: 1; font-size: 46px; }
+.up-logo__word { font-weight: 900; font-size: 1em; letter-spacing: -0.03em; color: var(--up-ink); }
 .up-logo__word span { color: var(--up-red); }
-.up-logo__arch { display: block; width: 100%; height: 14px; margin-top: 2px; }
+.up-logo { color: var(--up-ink); }
+.up-logo__arch { display: block; width: 4.6em; height: auto; margin: 0.08em 0 0 -0.2em; color: var(--up-ink); }
+.up-footer .up-logo__arch { color: #FFFFFF; }
 .up-logo:hover .up-logo__word { color: var(--up-ink); }
 .up-header__tools { display: flex; align-items: center; gap: 8px; }
 
@@ -194,7 +196,8 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-footer a { color: #E6E8EC; }
 .up-footer a:hover { color: #fff; }
 .up-footer__top { display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; padding-bottom: 28px; border-bottom: 1px solid #2E323B; }
-.up-footer .up-logo__word { color: #fff; font-size: 40px; }
+.up-footer .up-logo { font-size: 40px; }
+.up-footer .up-logo__word { color: #fff; }
 .up-footer__slogan { margin-top: 10px; max-width: 320px; }
 .up-footer ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .up-footer__cats { max-width: 560px; }
@@ -216,7 +219,7 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 @media (max-width: 760px) {
 	body { font-size: 16px; }
 	.up-header__inner { padding: 12px 0 10px; }
-	.up-logo__word { font-size: 34px; }
+	.up-logo { font-size: 34px; }
 	.up-header__tools .up-search { display: none; }
 	.up-menu-toggle {
 		display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
