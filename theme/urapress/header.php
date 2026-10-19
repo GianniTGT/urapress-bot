@@ -9,7 +9,7 @@
 <head>
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#D7141A">
+<meta name="theme-color" content="#16181D">
 <?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
@@ -64,32 +64,5 @@
 	</div>
 </nav>
 
-<?php
-$urapress_ticker = new WP_Query(
-	array(
-		'posts_per_page'      => 4,
-		'ignore_sticky_posts' => true,
-		'no_found_rows'       => true,
-	)
-);
-if ( $urapress_ticker->have_posts() ) :
-	?>
-	<div class="up-ticker" aria-label="<?php esc_attr_e( 'Lajmet e fundit', 'urapress' ); ?>">
-		<div class="up-wrap up-ticker__inner">
-			<span class="up-ticker__label"><?php esc_html_e( 'Të fundit', 'urapress' ); ?></span>
-			<ul>
-				<?php
-				while ( $urapress_ticker->have_posts() ) :
-					$urapress_ticker->the_post();
-					?>
-					<li><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a><span><?php echo urapress_time(); // phpcs:ignore ?></span></li>
-				<?php endwhile; ?>
-			</ul>
-		</div>
-	</div>
-	<?php
-	wp_reset_postdata();
-endif;
-?>
 
 <div id="content" class="up-main">

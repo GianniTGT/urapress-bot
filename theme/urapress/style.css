@@ -394,3 +394,16 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-comments .comment-form .comment-form-author, .up-comments .comment-form .comment-form-email { grid-column: 1; }
 	.up-comments__list .comment-content, .up-comments__list .comment-metadata, .up-comments__list .reply { margin-left: 0; }
 }
+
+/* 1.4.0 – moderner, heller Kopf (rote Leiste und Laufband entfernt) */
+.up-topbar { background: #fff; color: var(--up-muted); border-bottom: 1px solid var(--up-line); }
+.up-topbar a { color: var(--up-muted); }
+.up-topbar a:hover { color: var(--up-ink); }
+.up-header { border-bottom: 0; }
+.up-nav { background: #fff; border-bottom: 1px solid var(--up-line); }
+.up-nav li a { text-transform: none; font-size: 16px; font-weight: 600; letter-spacing: 0; }
+.up-nav li a:hover,
+.up-nav li.current-menu-item > a,
+.up-nav li.current-cat > a,
+.up-nav li.current-menu-parent > a { color: var(--up-ink); border-bottom-color: var(--up-ink); }
+
