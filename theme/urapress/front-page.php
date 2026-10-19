@@ -34,7 +34,7 @@ $urapress_top = new WP_Query(
 					'template-parts/card',
 					null,
 					array(
-						'variant' => 'lead',
+						'variant' => 'overlay-lead',
 						'size'    => 'urapress-lead',
 						'excerpt' => true,
 						'heading' => 'h2',
@@ -42,7 +42,7 @@ $urapress_top = new WP_Query(
 				);
 				echo '<div class="up-hero__side">';
 			} else {
-				get_template_part( 'template-parts/card' );
+				get_template_part( 'template-parts/card', null, array( 'variant' => 'overlay' ) );
 			}
 			$urapress_i++;
 		endwhile;
@@ -62,7 +62,7 @@ $urapress_top = new WP_Query(
 	if ( $urapress_latest->have_posts() ) :
 		?>
 		<section class="up-section">
-			<div class="up-section__head"><h2 class="up-section__title"><?php esc_html_e( 'Të fundit', 'urapress' ); ?></h2></div>
+			<div class="up-section__head"><h2 class="up-section__title"><?php esc_html_e( 'Më shumë lajme', 'urapress' ); ?></h2></div>
 			<div class="up-grid-4">
 				<?php
 				while ( $urapress_latest->have_posts() ) :

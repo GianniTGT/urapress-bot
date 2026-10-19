@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.0.1' );
+define( 'URAPRESS_VERSION', '1.1.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -59,6 +59,21 @@ function urapress_content_width() {
 	$GLOBALS['content_width'] = 780;
 }
 add_action( 'after_setup_theme', 'urapress_content_width', 0 );
+
+/* Rubrikat krijohen automatikisht një herë, që menyja të jetë e plotë që në fillim. */
+function urapress_ensure_categories() {
+	if ( get_option( 'urapress_cats_v1' ) ) {
+		return;
+	}
+	foreach ( urapress_main_categories() as $name ) {
+		if ( ! urapress_category_by_name( $name ) ) {
+			wp_insert_term( $name, 'category' );
+		}
+	}
+	update_option( 'urapress_cats_v1', 1 );
+}
+add_action( 'after_switch_theme', 'urapress_ensure_categories' );
+add_action( 'admin_init', 'urapress_ensure_categories' );
 
 /* ------------------------------------------------------------------ */
 /* Styles & scripts                                                   */

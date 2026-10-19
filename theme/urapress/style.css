@@ -3,7 +3,7 @@ Theme Name: UraPress
 Theme URI: https://urapress.ch
 Author: UraPress
 Description: Tema e lajmeve për UraPress – Ura mes Atdheut dhe Dijasporës.
-Version: 1.0.1
+Version: 1.1.0
 Requires at least: 6.4
 Requires PHP: 8.1
 License: GPL-2.0-or-later
@@ -218,7 +218,7 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 }
 @media (max-width: 760px) {
 	body { font-size: 16px; }
-	.up-header__inner { padding: 12px 0 10px; }
+	.up-header__inner { padding-top: 12px; padding-bottom: 10px; }
 	.up-logo { font-size: 34px; }
 	.up-header__tools .up-search { display: none; }
 	.up-menu-toggle {
@@ -243,3 +243,82 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 @media (min-width: 761px) { .up-nav__mobile-search { display: none; } }
 .up-nav__mobile-search .up-search input[type="search"],
 .up-empty .up-search input[type="search"] { flex: 1; width: auto; min-width: 0; }
+
+/* =====================================================================
+   v1.1 – Koka si portalet e mëdha: logo në mes, meny e kuqe, shiriti i lajmeve
+   ===================================================================== */
+.up-header { background: #fff; border-bottom: 0; }
+.up-header__inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px; padding-top: 22px; padding-bottom: 18px; }
+.up-header__left { display: flex; align-items: center; gap: 10px; justify-self: start; }
+.up-header__center { justify-self: center; }
+.up-header__right { justify-self: end; display: flex; gap: 22px; font-weight: 700; font-size: 15px; }
+.up-header__right a { color: var(--up-ink); }
+.up-header__right a:hover { color: var(--up-red); }
+.up-header .up-search input[type="search"] { width: 170px; }
+.up-logo { font-size: 54px; }
+
+.up-nav { background: var(--up-red); border-bottom: 0; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.up-nav ul { justify-content: center; }
+.up-nav li a { color: #fff; border-bottom: 4px solid transparent; margin-bottom: 0; padding: 15px 10px 13px; }
+.up-nav li a:hover { color: #fff; background: var(--up-red-dark); border-bottom-color: transparent; }
+.up-nav li.current-menu-item > a,
+.up-nav li.current-cat > a,
+.up-nav li.current-menu-parent > a { color: #fff; border-bottom-color: var(--up-ink); }
+.up-nav__inner { margin: 0; }
+
+.up-ticker { background: var(--up-soft); border-bottom: 1px solid var(--up-line); font-size: 14px; }
+.up-ticker__inner { display: flex; align-items: stretch; gap: 16px; min-height: 52px; }
+.up-ticker__label { align-self: center; background: var(--up-ink); color: #fff; font-weight: 800; text-transform: uppercase; font-size: 12px; letter-spacing: .06em; padding: 6px 10px; border-radius: 3px; white-space: nowrap; }
+.up-ticker ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; flex: 1; min-width: 0; }
+.up-ticker li { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 6px 0; }
+.up-ticker li a { font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.up-ticker li span { font-size: 12px; color: var(--up-muted); }
+
+/* Karta me titull mbi foto (si lajmpress) */
+.up-card--overlay { position: relative; border-radius: var(--up-radius); overflow: hidden; gap: 0; }
+.up-card--overlay .up-card__media { aspect-ratio: auto; height: 100%; min-height: 220px; border-radius: 0; }
+.up-card--overlay .up-card__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,.82) 100%); }
+.up-card--overlay .up-card__body { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.up-card--overlay .up-card__body a { pointer-events: auto; }
+.up-card--overlay .up-card__cat { align-self: flex-start; background: var(--up-red); color: #fff; padding: 3px 8px; border-radius: 3px; font-size: 11px; }
+.up-card--overlay .up-card__title a { color: #fff; }
+.up-card--overlay .up-card__title a:hover { color: #fff; text-decoration: underline; }
+.up-card--overlay .up-card__title { font-size: 18px; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+.up-card--overlay .up-card__meta { color: rgba(255,255,255,.8); }
+.up-card--overlay .up-card__excerpt { color: rgba(255,255,255,.88); }
+.up-card--overlay-lead { min-height: 460px; }
+.up-card--overlay-lead .up-card__title { font-size: 36px; line-height: 1.1; letter-spacing: -.5px; }
+.up-card--overlay-lead .up-card__body { padding: 28px; }
+.up-hero { gap: 6px; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+.up-hero__side { gap: 6px; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+.up-hero__side .up-card--overlay .up-card__title { font-size: 16px; }
+.up-hero__side .up-card--overlay .up-card__excerpt { display: none; }
+
+@media (max-width: 1024px) {
+	.up-header__right { display: none; }
+	.up-header__inner { grid-template-columns: auto 1fr auto; }
+	.up-ticker ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.up-ticker li:nth-child(n+3) { display: none; }
+	.up-card--overlay-lead { min-height: 380px; }
+	.up-hero { grid-template-columns: minmax(0, 1fr); }
+	.up-hero__side { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
+	.up-hero__side .up-card--overlay { min-height: 220px; }
+}
+@media (max-width: 760px) {
+	.up-header__inner { grid-template-columns: auto 1fr; padding-top: 12px; padding-bottom: 10px; }
+	.up-header__center { justify-self: start; order: -1; }
+	.up-header__left { justify-self: end; }
+	.up-header__left .up-search { display: none; }
+	.up-logo { font-size: 36px; }
+	.up-nav { background: #fff; box-shadow: none; border-bottom: 3px solid var(--up-red); }
+	.up-nav li a { color: var(--up-ink); border-bottom: 1px solid var(--up-line); }
+	.up-nav li a:hover { background: var(--up-soft); color: var(--up-red); }
+	.up-ticker ul { grid-template-columns: minmax(0, 1fr); }
+	.up-ticker li:nth-child(n+2) { display: none; }
+	.up-hero__side { grid-template-columns: minmax(0, 1fr); }
+	.up-hero__side .up-card--overlay { min-height: 200px; }
+	.up-card--overlay-lead { min-height: 340px; }
+	.up-logo__arch { margin-left: 0; }
+	.up-card--overlay-lead .up-card__title { font-size: 26px; }
+	.up-card--overlay-lead .up-card__body { padding: 18px; }
+}

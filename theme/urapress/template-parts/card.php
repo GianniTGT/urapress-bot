@@ -22,7 +22,7 @@ $urapress_cat     = urapress_primary_category();
 
 urapress_shown( get_the_ID() );
 ?>
-<article <?php post_class( 'up-card up-card--' . $urapress_variant ); ?>>
+<article <?php post_class( 'up-card up-card--' . $urapress_variant . ( 0 === strpos( $urapress_variant, 'overlay' ) ? ' up-card--overlay' : '' ) ); ?>>
 	<a class="up-card__media" href="<?php the_permalink(); ?>" tabindex="-1" aria-hidden="true">
 		<?php if ( has_post_thumbnail() ) : ?>
 			<?php the_post_thumbnail( $urapress_args['size'], array( 'alt' => '', 'loading' => 'lead' === $urapress_variant ? 'eager' : 'lazy' ) ); ?>
