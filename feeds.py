@@ -12,6 +12,8 @@ import db
 
 log = logging.getLogger(__name__)
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; urapress-bot/1.0; +https://urapress.ch)"}
+BROWSER_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                                 "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 MIN_TEXT_LENGTH = 300   # darunter gilt der Feed-Text als Anriss → Volltext von der Webseite
 MAX_PER_FEED = 25       # nur die neuesten Einträge pro Quelle (Alsat liefert >50)
 
@@ -88,6 +90,8 @@ def fetch_fulltext(url: str) -> str:
     import trafilatura
 
     resp = requests.get(url, headers=HEADERS, timeout=25)
+    if resp.status_code == 403:  # manche Seiten blocken Bot-Namen, Browser-Kennung wird akzeptiert
+        resp = requests.get(url, headers=BROWSER_HEADERS, timeout=25)
     resp.raise_for_status()
     text = trafilatura.extract(resp.text, include_comments=False, include_tables=False,
                                favor_precision=True) or ""
@@ -97,9 +101,12 @@ def fetch_fulltext(url: str) -> str:
 def ensure_fulltext(story: dict) -> dict:
     """Ergänzt den Volltext, falls der Feed nur einen Anriss liefert. Wirft Fehler, wenn zu kurz."""
     if story.get("needs_fulltext"):
-        full = fetch_fulltext(story["link"])
-        if len(full) > len(story["text"]):
-            story["text"] = full
+        try:
+            full = fetch_fulltext(story["link"])
+            if len(full) > len(story["text"]):
+                story["text"] = full
+        except Exception as exc:  # Volltext nicht ladbar → Feed-Text verwenden, falls lang genug
+            log.warning("Volltext nicht ladbar, nutze Feed-Text: %s (%s)", story["link"], exc)
         story["needs_fulltext"] = False
     if len(story["text"]) < MIN_TEXT_LENGTH:
         raise ValueError("Artikeltext zu kurz (nur Anriss verfügbar)")
