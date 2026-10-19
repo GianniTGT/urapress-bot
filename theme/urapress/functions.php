@@ -563,6 +563,17 @@ function urapress_render_ad( $ad, $layout = 'card' ) {
 		),
 		$ad['url']
 	);
+	// TiffCore/Tiff: leuchtendes Logo als Animation (Canvas) statt Standbild.
+	$host = (string) wp_parse_url( $ad['url'], PHP_URL_HOST );
+	$glow = (bool) preg_match( '~(^|\.)(tiffcore\.ch|tiff-software-solutions\.com)$~i', $host );
+	if ( $glow ) {
+		wp_enqueue_script( 'urapress-glow', get_template_directory_uri() . '/assets/ads/glow.js', array(), '1', true );
+		$visual = sprintf( '<a class="up-hads__img up-hads__img--glow" href="%s" target="_blank" rel="sponsored noopener" tabindex="-1" aria-hidden="true"><canvas class="up-hads__glow" aria-hidden="true"></canvas></a>', esc_url( $url ) );
+	} elseif ( ! empty( $ad['image'] ) ) {
+		$visual = sprintf( '<a class="up-hads__img" href="%s" target="_blank" rel="sponsored noopener" tabindex="-1" aria-hidden="true"><img src="%s" alt="" loading="lazy"></a>', esc_url( $url ), esc_url( $ad['image'] ) );
+	} else {
+		$visual = '';
+	}
 	printf(
 		'<aside class="up-hads up-hads--%1$s%9$s" style="--ad:%2$s">' .
 		'%10$s' .
@@ -581,8 +592,8 @@ function urapress_render_ad( $ad, $layout = 'card' ) {
 		esc_html( $ad['text'] ),
 		esc_url( $url ),
 		esc_html( $ad['cta'] ),
-		empty( $ad['image'] ) ? '' : ' has-img',
-		empty( $ad['image'] ) ? '' : sprintf( '<a class="up-hads__img" href="%s" target="_blank" rel="sponsored noopener" tabindex="-1" aria-hidden="true"><img src="%s" alt="" loading="lazy"></a>', esc_url( $url ), esc_url( $ad['image'] ) )
+		'' === $visual ? '' : ' has-img',
+		$visual
 	);
 }
 
