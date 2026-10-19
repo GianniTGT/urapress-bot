@@ -1,0 +1,16 @@
+[Unit]
+Description=UraPress.ch News-Bot (Telegram-Freigabe)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=urapress
+WorkingDirectory=/opt/urapress-bot
+ExecStart=/opt/urapress-bot/venv/bin/python bot.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
