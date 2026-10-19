@@ -18,6 +18,7 @@ from telegram.constants import ParseMode
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
 
+import ai_writer
 import config
 import db
 import pipeline
@@ -73,7 +74,7 @@ async def send_draft(bot, d: dict) -> None:
                            reply_markup=keyboard(d["id"]), link_preview_options=NO_PREVIEW)
 
 
-async def run_scan(bot) -> None:
+async def run_scan(bot, theme: str | None = None) -> None:
     if not config.TELEGRAM_CHAT_ID:
         log.warning("TELEGRAM_CHAT_ID fehlt – Scan übersprungen")
         return
@@ -82,13 +83,17 @@ async def run_scan(bot) -> None:
         return
     async with scan_lock:
         try:
-            ids, errors = await asyncio.to_thread(pipeline.build_drafts)
+            ids, errors = await asyncio.to_thread(pipeline.build_drafts, theme)
         except Exception as exc:
             log.exception("Scan fehlgeschlagen")
             await bot.send_message(config.TELEGRAM_CHAT_ID, f"⚠️ Skanimi dështoi: {exc}")
             return
         if not ids:
-            await bot.send_message(config.TELEGRAM_CHAT_ID, "ℹ️ Sot nuk ka lajme të reja nga burimet.")
+            if theme and theme in ai_writer.THEMES:
+                await bot.send_message(config.TELEGRAM_CHAT_ID,
+                                       f"ℹ️ Sot nuk ka lajme për temën «{ai_writer.THEMES[theme]['label']}».")
+            else:
+                await bot.send_message(config.TELEGRAM_CHAT_ID, "ℹ️ Sot nuk ka lajme të reja nga burimet.")
         for draft_id in ids:
             await send_draft(bot, db.get_draft(draft_id))
         for err in errors:
@@ -167,8 +172,17 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 async def cmd_scan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         return
-    await update.message.reply_text("🔎 Duke skanuar burimet …")
-    await run_scan(context.bot)
+    theme = None
+    if context.args:
+        theme = ai_writer.resolve_theme(context.args[0])
+        if not theme:
+            await update.message.reply_text(
+                "Temat: /skano religjion · /skano sport · /skano politik\n"
+                "(ose thjesht /skano për të gjitha)")
+            return
+    label = ai_writer.THEMES[theme]["label"] if theme else None
+    await update.message.reply_text(f"🔎 Duke skanuar burimet{f' · {label}' if label else ''} …")
+    await run_scan(context.bot, theme)
 
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:

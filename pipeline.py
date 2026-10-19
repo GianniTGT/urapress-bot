@@ -22,14 +22,14 @@ def _wp_or_none() -> WordPress | None:
         return None
 
 
-def build_drafts() -> tuple[list[int], list[str]]:
-    """Gibt (Entwurfs-IDs, Fehlermeldungen) zurück."""
+def build_drafts(theme: str | None = None) -> tuple[list[int], list[str]]:
+    """Gibt (Entwurfs-IDs, Fehlermeldungen) zurück. theme: optionales Thema für die Auswahl."""
     errors: list[str] = []
     candidates = feeds.fetch_candidates(FEEDS, MAX_AGE_HOURS)
     if not candidates:
         return [], errors
 
-    picks = ai_writer.select_stories(candidates, ARTICLES_PER_DAY, db.recent_titles())
+    picks = ai_writer.select_stories(candidates, ARTICLES_PER_DAY, db.recent_titles(), theme=theme)
     wp = _wp_or_none()
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     ids: list[int] = []

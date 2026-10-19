@@ -137,16 +137,57 @@ def _ask(system: str, user: str, max_tokens: int = 2500) -> dict:
     raise last_error
 
 
-def select_stories(candidates: list[dict], n: int, already_posted: list[str]) -> list[dict]:
-    if len(candidates) <= n:
+# Themen für /skano <thema> – gezielt statt zufällig auswählen.
+THEMES = {
+    "religjion": {
+        "label": "Fe & Religjion",
+        "aliases": ["religion", "religjion", "religjioni", "fe", "feja", "fetare", "fetë", "besim", "besimi", "islam", "islami"],
+        "guide": "lajme fetare: Islami dhe bashkësia islame, jeta fetare e shqiptarëve, xhamia dhe kisha, "
+                 "hoxhë/imamë dhe klerikë, festat dhe kremtimet fetare, por edhe besimet e tjera të shqiptarëve",
+    },
+    "sport": {
+        "label": "Sport",
+        "aliases": ["sport", "sporti", "sports"],
+        "guide": "lajme sportive: futboll dhe basketboll, kombëtaret e Kosovës dhe Shqipërisë, sportistë shqiptarë "
+                 "brenda dhe jashtë vendit, ndeshje, transferime, rezultate dhe arritje",
+    },
+    "politik": {
+        "label": "Politikë",
+        "aliases": ["politik", "politike", "politikë", "politika", "politics", "politik"],
+        "guide": "lajme politike: qeveria, parlamenti, zgjedhjet dhe partitë, BE-ja dhe marrëdhëniet ndërkombëtare, "
+                 "deklarata të politikanëve të Kosovës, Shqipërisë dhe Maqedonisë së Veriut",
+    },
+}
+
+
+def resolve_theme(word: str | None) -> str | None:
+    w = (word or "").strip().lower()
+    if not w:
+        return None
+    for key, t in THEMES.items():
+        if w == key or w in t["aliases"]:
+            return key
+    return None
+
+
+def select_stories(candidates: list[dict], n: int, already_posted: list[str], theme: str | None = None) -> list[dict]:
+    if len(candidates) <= n and not theme:
         return candidates
     lines = [
         f"[{i}] ({c['source']}, {c['published'][:16]}, {', '.join(c['categories'])}) "
         f"{c['title']}\n    {c['text'][:350].replace(chr(10), ' ')}"
         for i, c in enumerate(candidates)
     ]
+    fokus = ""
+    if theme and theme in THEMES:
+        fokus = (
+            f"FOKUS SOT: Wähle NUR Meldungen zum Thema «{THEMES[theme]['label']}» – {THEMES[theme]['guide']}.\n"
+            "Meldungen, die nicht zu diesem Thema passen, NICHT wählen. Mehrere zum selben Thema sind hier erlaubt.\n"
+            "Wenn gar keine passende Meldung dabei ist, gib eine leere Liste zurück.\n\n"
+        )
     user = (
-        f"Wähle {n} Meldungen (weniger, wenn nicht genug gute dabei sind).\n\n"
+        fokus
+        + f"Wähle {n} Meldungen (weniger, wenn nicht genug gute dabei sind).\n\n"
         f"Bereits publiziert / vorgeschlagen:\n- " + "\n- ".join(already_posted or ["(keine)"])
         + "\n\nKandidaten:\n" + "\n".join(lines)
     )
