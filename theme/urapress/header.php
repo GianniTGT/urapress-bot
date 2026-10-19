@@ -16,13 +16,6 @@
 <?php wp_body_open(); ?>
 <a class="skip-link screen-reader-text" href="#content"><?php esc_html_e( 'Kalo te përmbajtja', 'urapress' ); ?></a>
 
-<div class="up-topbar">
-	<div class="up-wrap">
-		<span><?php echo esc_html( urapress_sq_date( (int) current_time( 'timestamp' ), true ) ); ?></span>
-		<span class="up-topbar__slogan"><?php esc_html_e( 'Ura mes Atdheut dhe Dijasporës', 'urapress' ); ?></span>
-	</div>
-</div>
-
 <header class="up-header">
 	<div class="up-wrap up-header__inner">
 		<div class="up-header__left">
