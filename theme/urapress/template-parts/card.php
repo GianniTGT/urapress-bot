@@ -29,6 +29,12 @@ urapress_shown( get_the_ID() );
 		<?php else : ?>
 			<span class="up-card__noimg"><svg viewBox="0 0 520 60" aria-hidden="true"><path d="M10 10 Q260 70 510 10" fill="none" stroke="#16181D" stroke-width="10" stroke-linecap="round"/></svg></span>
 		<?php endif; ?>
+		<?php $urapress_nc = (int) get_comments_number(); ?>
+		<?php if ( $urapress_nc > 0 ) : ?>
+			<span class="up-card__comments" aria-hidden="true">
+				<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/></svg><?php echo esc_html( $urapress_nc ); ?>
+			</span>
+		<?php endif; ?>
 	</a>
 	<div class="up-card__body">
 		<?php if ( $urapress_cat && 'row' !== $urapress_variant ) : ?>

@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.5.0' );
+define( 'URAPRESS_VERSION', '1.6.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -257,6 +257,38 @@ function urapress_fallback_menu() {
 		printf( '<li class="%s"><a href="%s">%s</a></li>', esc_attr( $current ), esc_url( get_category_link( $term ) ), esc_html( $term->name ) );
 	}
 	echo '</ul>';
+}
+
+/** Artikel-IDs für den Aufmacher, nach Rubrik gemischt – damit oben verschiedene Themen sichtbar sind. */
+function urapress_diverse_ids( $count, $pool = 24 ) {
+	$q = new WP_Query(
+		array(
+			'posts_per_page'      => $pool,
+			'post_status'         => 'publish',
+			'ignore_sticky_posts' => false,
+			'fields'              => 'ids',
+		)
+	);
+	$picked = array();
+	$used   = array();
+	$rest   = array();
+	foreach ( $q->posts as $id ) {
+		$cat = urapress_primary_category( $id );
+		$key = $cat ? $cat->term_id : 0;
+		if ( count( $picked ) < $count && ! in_array( $key, $used, true ) ) {
+			$picked[] = $id;
+			$used[]   = $key;
+		} else {
+			$rest[] = $id;
+		}
+	}
+	foreach ( $rest as $id ) {
+		if ( count( $picked ) >= $count ) {
+			break;
+		}
+		$picked[] = $id;
+	}
+	return array_slice( $picked, 0, $count );
 }
 
 /** IDs e artikujve që janë shfaqur tashmë në faqen kryesore (pa dublime). */

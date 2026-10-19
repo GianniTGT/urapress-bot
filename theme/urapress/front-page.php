@@ -7,13 +7,18 @@
 
 get_header();
 
-$urapress_top = new WP_Query(
-	array(
-		'posts_per_page'      => 5,
-		'post_status'         => 'publish',
-		'ignore_sticky_posts' => false,
+$urapress_lead_ids = urapress_diverse_ids( 5 );
+$urapress_top      = $urapress_lead_ids
+	? new WP_Query(
+		array(
+			'post__in'            => $urapress_lead_ids,
+			'orderby'             => 'post__in',
+			'posts_per_page'      => 5,
+			'post_status'         => 'publish',
+			'ignore_sticky_posts' => true,
+		)
 	)
-);
+	: new WP_Query( array( 'posts_per_page' => 5, 'post_status' => 'publish' ) );
 ?>
 <main class="up-wrap">
 

@@ -108,6 +108,10 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-card:hover .up-card__media img { transform: scale(1.03); }
 .up-card__noimg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
 .up-card__noimg svg { width: 40%; opacity: .25; }
+/* Kommentar-Zahl klein auf dem Foto */
+.up-card__comments { position: absolute; bottom: 8px; right: 8px; z-index: 2; display: inline-flex; align-items: center; gap: 4px;
+	padding: 2px 8px; border-radius: 999px; background: rgba(22,24,29,.78); color: #fff; font-size: 12px; font-weight: 700; line-height: 1.6; }
+.up-card__comments svg { display: block; }
 .up-card__cat { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--up-red); }
 .up-card__title { font-size: 19px; font-weight: 800; margin: 0; line-height: 1.25; }
 .up-card__title a { color: var(--up-ink); }
