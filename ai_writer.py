@@ -72,20 +72,16 @@ Antworte NUR mit JSON in diesem Format:
 def _extract_json(text: str) -> dict:
     """Findet das erste vollständige JSON-Objekt im Text (auch in ```json-Blöcken)."""
     text = re.sub(r"```(?:json)?", "", text)
-    start = text.find("{")
-    while start != -1:
-        depth = 0
-        for i in range(start, len(text)):
-            if text[i] == "{":
-                depth += 1
-            elif text[i] == "}":
-                depth -= 1
-                if depth == 0:
-                    try:
-                        return json.loads(text[start:i + 1])
-                    except json.JSONDecodeError:
-                        break
-        start = text.find("{", start + 1)
+    decoder = json.JSONDecoder()
+    pos = text.find("{")
+    while pos != -1:
+        try:
+            obj, _ = decoder.raw_decode(text, pos)
+            if isinstance(obj, dict):
+                return obj
+        except json.JSONDecodeError:
+            pass
+        pos = text.find("{", pos + 1)
     raise ValueError(f"Keine JSON-Antwort von Claude: {text[:300]}")
 
 
