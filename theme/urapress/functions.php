@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.3.0' );
+define( 'URAPRESS_VERSION', '1.4.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.

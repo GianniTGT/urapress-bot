@@ -3,7 +3,7 @@ Theme Name: UraPress
 Theme URI: https://urapress.ch
 Author: UraPress
 Description: Tema e lajmeve për UraPress – Ura mes Atdheut dhe Dijasporës.
-Version: 1.3.0
+Version: 1.4.0
 Requires at least: 6.4
 Requires PHP: 8.1
 License: GPL-2.0-or-later
@@ -407,3 +407,5 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-nav li.current-cat > a,
 .up-nav li.current-menu-parent > a { color: var(--up-ink); border-bottom-color: var(--up-ink); }
 
+.up-nav li a { color: var(--up-ink); background: transparent; }
+.up-nav li a:hover { background: transparent; }
