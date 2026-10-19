@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.4.0' );
+define( 'URAPRESS_VERSION', '1.5.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -97,8 +97,8 @@ function urapress_assets() {
 
 	// Leuchtendes Tiff-Logo-Aufblitzen (zufällig, einmal pro Besuch). Braucht die Glow-Engine.
 	$ads_dir = get_template_directory_uri() . '/assets/ads/';
-	wp_enqueue_script( 'urapress-glow', $ads_dir . 'glow.js', array(), '1', true );
-	wp_enqueue_script( 'urapress-flash', $ads_dir . 'tiff-flash.js', array( 'urapress-glow' ), '1', true );
+	wp_enqueue_script( 'urapress-glow', $ads_dir . 'glow.js', array(), URAPRESS_VERSION, true );
+	wp_enqueue_script( 'urapress-flash', $ads_dir . 'tiff-flash.js', array( 'urapress-glow' ), URAPRESS_VERSION, true );
 }
 add_action( 'wp_enqueue_scripts', 'urapress_assets' );
 
@@ -582,7 +582,7 @@ function urapress_render_ad( $ad, $layout = 'card' ) {
 	$host = (string) wp_parse_url( $ad['url'], PHP_URL_HOST );
 	$glow = (bool) preg_match( '~(^|\.)(tiffcore\.ch|tiff-software-solutions\.com)$~i', $host );
 	if ( $glow ) {
-		wp_enqueue_script( 'urapress-glow', get_template_directory_uri() . '/assets/ads/glow.js', array(), '1', true );
+		wp_enqueue_script( 'urapress-glow', get_template_directory_uri() . '/assets/ads/glow.js', array(), URAPRESS_VERSION, true );
 		$visual = sprintf( '<a class="up-hads__img up-hads__img--glow" href="%s" target="_blank" rel="sponsored noopener" tabindex="-1" aria-hidden="true"><canvas class="up-hads__glow" aria-hidden="true"></canvas></a>', esc_url( $url ) );
 	} elseif ( ! empty( $ad['image'] ) ) {
 		$visual = sprintf( '<a class="up-hads__img" href="%s" target="_blank" rel="sponsored noopener" tabindex="-1" aria-hidden="true"><img src="%s" alt="" loading="lazy"></a>', esc_url( $url ), esc_url( $ad['image'] ) );
