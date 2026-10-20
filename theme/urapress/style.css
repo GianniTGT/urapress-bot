@@ -567,3 +567,39 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-njs__title { font-size: 32px; }
 	.up-njs__form { padding: 18px; }
 }
+
+/* =====================================================================
+   1.8.1 – Rubriken: Halbkugel unter jedem Wort (Variante D1), alle auf einer Linie
+   ===================================================================== */
+@media (min-width: 761px) {
+	.up-nav { box-shadow: none; border-bottom: 1px solid var(--up-line); }
+	.up-nav__inner { display: block; margin: 0; }
+	.up-nav ul { justify-content: space-between; width: 100%; }
+	.up-nav li a {
+		position: relative; padding: 14px 6px 20px; margin: 0; border-bottom: 0;
+		font-size: 15.5px; font-weight: 700; color: var(--up-ink); background: transparent;
+	}
+	.up-nav li a::before { content: none; }
+	.up-nav li a::after {
+		content: ""; position: absolute; left: 50%; bottom: 6px; width: 14px; height: 7px; transform: translateX(-50%);
+		background: var(--c, var(--up-red)); border-radius: 0 0 14px 14px; transition: width .2s, height .2s, bottom .2s;
+	}
+	.up-nav li a:hover { color: var(--c, var(--up-ink)); background: transparent; }
+	.up-nav li a:hover::after { width: 22px; height: 11px; }
+	.up-nav li.current-menu-item > a,
+	.up-nav li.current-cat > a,
+	.up-nav li.current-menu-parent > a { color: var(--c, var(--up-ink)); }
+	.up-nav li.current-menu-item > a::after,
+	.up-nav li.current-cat > a::after,
+	.up-nav li.current-menu-parent > a::after { width: 34px; height: 17px; bottom: -4px; }
+}
+/* Breiter Bildschirm: Kugel darf über den Rand hängen */
+@media (min-width: 1181px) { .up-nav ul { overflow: visible; } }
+/* Schmaler PC/Tablet: etwas kleiner, Kugel bleibt innen */
+@media (min-width: 761px) and (max-width: 1180px) {
+	.up-nav li a { font-size: 14px; padding: 13px 5px 20px; }
+	.up-nav li.current-menu-item > a::after,
+	.up-nav li.current-cat > a::after,
+	.up-nav li.current-menu-parent > a::after { width: 26px; height: 13px; bottom: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .up-nav li a::after { transition: none; } }
