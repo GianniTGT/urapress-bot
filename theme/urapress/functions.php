@@ -7,7 +7,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.7.2' );
+define( 'URAPRESS_VERSION', '1.8.0' );
+require_once __DIR__ . '/inc/njoftime.php';
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -306,6 +307,7 @@ function urapress_fallback_menu() {
 		$current = is_category( $term->term_id ) ? 'current-cat' : '';
 		printf( '<li class="%s"><a href="%s">%s</a></li>', esc_attr( $current ), esc_url( get_category_link( $term ) ), esc_html( $term->name ) );
 	}
+	printf( '<li class="up-nav__nj%s"><a href="%s">Njoftime</a></li>', is_post_type_archive( 'njoftim' ) || is_singular( 'njoftim' ) ? ' current-cat' : '', esc_url( get_post_type_archive_link( 'njoftim' ) ) );
 	echo '</ul>';
 }
 

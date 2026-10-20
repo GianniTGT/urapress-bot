@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS seen (
     source   TEXT,
     seen_at  TEXT
 );
+CREATE TABLE IF NOT EXISTS njoftime (
+    id           INTEGER PRIMARY KEY,   -- WordPress-ID der Kleinanzeige
+    notified_at  TEXT
+);
 CREATE TABLE IF NOT EXISTS drafts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     source_name   TEXT,
@@ -119,3 +123,14 @@ def stats() -> dict:
         rows = c.execute("SELECT status, COUNT(*) n FROM drafts GROUP BY status").fetchall()
         seen = c.execute("SELECT COUNT(*) FROM seen").fetchone()[0]
     return {"seen": seen, **{r["status"]: r["n"] for r in rows}}
+
+
+def nj_new_ids(ids: list[int]) -> list[int]:
+    """Gibt die IDs zurück, die noch nicht nach Telegram gemeldet wurden, und merkt sie sich."""
+    out = []
+    with closing(_conn()) as c, c:
+        for i in ids:
+            if c.execute("SELECT 1 FROM njoftime WHERE id=?", (i,)).fetchone() is None:
+                c.execute("INSERT INTO njoftime(id, notified_at) VALUES (?,?)", (i, _now()))
+                out.append(i)
+    return out

@@ -70,3 +70,13 @@ class WordPress:
 
     def media_url(self, media_id: int) -> str:
         return self._req("GET", f"/media/{media_id}").get("source_url", "")
+
+    # --- Njoftime (Kleinanzeigen) --------------------------------------------
+    def pending_njoftime(self) -> list[dict]:
+        return self._req("GET", "/njoftime", params={"status": "pending", "context": "edit", "per_page": 20})
+
+    def set_njoftim_status(self, nj_id: int, status: str) -> dict:
+        return self._req("POST", f"/njoftime/{nj_id}", json={"status": status})
+
+    def trash_njoftim(self, nj_id: int) -> dict:
+        return self._req("DELETE", f"/njoftime/{nj_id}")

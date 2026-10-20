@@ -473,6 +473,62 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await q.message.reply_text(f"📘 #{draft_id} në Facebook:\n{fb_url}")
 
 
+# --- Njoftime (Kleinanzeigen von der Website) --------------------------------------
+NJ_TYPES = {"kerkoj": "🔵 KËRKOJ", "ofroj": "🟢 OFROJ"}
+NJ_CATS = {"pune": "Punë & zanate", "banese": "Banesë", "vetura": "Vetura", "sherbime": "Shërbime",
+           "shitje": "Shitje & blerje", "tjera": "Të tjera"}
+
+
+async def check_njoftime(context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Jede Minute: neue Kleinanzeigen von der Website zur Freigabe schicken."""
+    if not config.TELEGRAM_CHAT_ID:
+        return
+    try:
+        items = await asyncio.to_thread(lambda: pipeline.WordPress().pending_njoftime())
+    except Exception as exc:
+        log.warning("Njoftime nicht abrufbar: %s", exc)
+        return
+    by_id = {it["id"]: it for it in items}
+    for nj_id in db.nj_new_ids(list(by_id)):
+        it = by_id[nj_id]
+        m = it.get("meta") or {}
+        e = html.escape
+        title = it["title"].get("raw") or html.unescape(it["title"].get("rendered", ""))
+        text = (f"📌 <b>Njoftim i ri #{nj_id}</b>\n"
+                f"{NJ_TYPES.get(m.get('_nj_lloji'), '')} · {e(NJ_CATS.get(m.get('_nj_kategoria'), ''))}"
+                f"{' · 📍 ' + e(m.get('_nj_vendi')) if m.get('_nj_vendi') else ''}\n\n"
+                f"<b>{e(title)}</b>\n{e(it['content'].get('raw', ''))}\n\n"
+                f"👤 {e(m.get('_nj_emri') or '–')} · 📞 {e(m.get('_nj_telefoni') or '–')}")
+        kb = InlineKeyboardMarkup([[InlineKeyboardButton("✅ Publiko", callback_data=f"nj_ok:{nj_id}"),
+                                    InlineKeyboardButton("❌ Fshi", callback_data=f"nj_no:{nj_id}")]])
+        await context.bot.send_message(config.TELEGRAM_CHAT_ID, text, parse_mode=ParseMode.HTML,
+                                       reply_markup=kb, link_preview_options=NO_PREVIEW)
+
+
+async def on_njoftim(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    q = update.callback_query
+    if not is_admin(update):
+        await q.answer("Nuk ke leje.", show_alert=True)
+        return
+    action, raw_id = q.data.split(":")
+    nj_id = int(raw_id)
+    try:
+        if action == "nj_ok":
+            res = await asyncio.to_thread(lambda: pipeline.WordPress().set_njoftim_status(nj_id, "publish"))
+            await q.answer("U publikua")
+            await q.edit_message_reply_markup(reply_markup=None)
+            await q.message.reply_text(f"✅ Njoftimi #{nj_id} është online:\n{res.get('link', '')}")
+        else:
+            await asyncio.to_thread(lambda: pipeline.WordPress().trash_njoftim(nj_id))
+            await q.answer("U fshi")
+            await q.edit_message_reply_markup(reply_markup=None)
+            await q.message.reply_text(f"❌ Njoftimi #{nj_id} u fshi.")
+    except Exception as exc:
+        log.exception("Njoftim-Aktion fehlgeschlagen")
+        await q.answer("Gabim", show_alert=True)
+        await q.message.reply_text(f"⚠️ Njoftimi #{nj_id}: {exc}")
+
+
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE) -> None:
     await run_scan(context.bot)
 
@@ -487,12 +543,14 @@ def main() -> None:
     app.add_handler(CommandHandler("anulo", cmd_cancel))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
+    app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no):\d+$"))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho|shenje):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))
     app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),
                             name="daily-scan")
+    app.job_queue.run_repeating(check_njoftime, interval=60, first=15, name="njoftime")
     log.info("Bot läuft – täglicher Scan um %s (%s)", config.SCAN_TIME, config.TIMEZONE)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

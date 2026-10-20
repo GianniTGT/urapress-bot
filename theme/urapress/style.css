@@ -508,3 +508,62 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-header__left { order: 2; }
 	.up-header__right a[href*="reklamo"] { padding: 7px 12px; font-size: 14px; }
 }
+
+/* =====================================================================
+   1.8.0 – Njoftime (Kleinanzeigen)
+   ===================================================================== */
+.up-nav a[href*="/njoftime"] { --c: #16181D; font-weight: 800; }
+.up-njs { padding-top: 28px; padding-bottom: 48px; }
+.up-njs__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; border-bottom: 3px solid var(--up-ink); padding-bottom: 16px; }
+.up-njs__title { margin: 0; font-size: 40px; font-weight: 900; letter-spacing: -.02em; }
+.up-njs__sub { margin: 6px 0 0; color: var(--up-muted); max-width: 640px; }
+.up-njs__add { display: inline-flex; align-items: center; text-decoration: none; }
+.up-njs__add:hover { color: #fff; }
+.up-njs__filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 18px 0 22px; }
+.up-njs__sep { width: 1px; height: 22px; background: var(--up-line); margin: 0 6px; }
+.up-chip { padding: 6px 12px; border: 1px solid var(--up-line); border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--up-ink); background: #fff; }
+.up-chip:hover { border-color: var(--up-ink); color: var(--up-ink); }
+.up-chip.is-active { background: var(--up-ink); border-color: var(--up-ink); color: #fff; }
+.up-njs__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.up-njs__empty { padding: 28px; background: var(--up-soft); border-radius: var(--up-radius); }
+.up-nj { display: flex; flex-direction: column; gap: 8px; padding: 18px; background: #fff; border: 1px solid var(--up-line); border-left: 5px solid #2E9E4F; border-radius: var(--up-radius); }
+.up-nj--kerkoj { border-left-color: #2346A0; }
+.up-nj__top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--up-muted); }
+.up-nj__lloji { padding: 2px 8px; border-radius: 4px; background: #2E9E4F; color: #fff; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.up-nj--kerkoj .up-nj__lloji { background: #2346A0; }
+.up-nj__kat { font-weight: 700; color: var(--up-ink); }
+.up-nj__titulli { margin: 0; font-size: 19px; line-height: 1.25; }
+.up-nj__teksti { margin: 0; color: #3A3F48; font-size: 15px; }
+.up-nj__fund { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: auto; padding-top: 6px; }
+.up-nj__meta { font-size: 13px; color: var(--up-muted); margin-right: auto; }
+.up-nj__btn { padding: 6px 12px; border-radius: 999px; background: var(--up-soft); font-weight: 800; font-size: 14px; color: var(--up-ink); }
+.up-nj__btn--wa { background: #25D366; color: #fff; }
+.up-nj__btn--wa:hover { color: #fff; filter: brightness(.95); }
+.up-njs--single .up-nj { max-width: 720px; }
+.up-njs--single .up-nj__titulli { font-size: 28px; }
+.up-njs__form { margin-top: 40px; padding: 26px; background: var(--up-soft); border-radius: var(--up-radius); max-width: 760px; }
+.up-njs__form h2 { margin: 0 0 6px; font-size: 26px; }
+.up-njs__note { margin: 0 0 16px; color: var(--up-muted); font-size: 15px; }
+.up-njs__form form { display: flex; flex-direction: column; gap: 14px; }
+.up-njs__form label { display: flex; flex-direction: column; gap: 5px; font-weight: 700; font-size: 14px; }
+.up-njs__form input[type=text], .up-njs__form input[type=tel], .up-njs__form select, .up-njs__form textarea {
+	font: inherit; font-size: 16px; font-weight: 400; padding: 11px 12px; border: 1px solid #C9CCD3; border-radius: var(--up-radius); background: #fff;
+}
+.up-njs__form :is(input, select, textarea):focus { outline: 2px solid var(--up-red); outline-offset: 1px; border-color: transparent; }
+.up-njs__row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.up-njs__lloji { display: flex; gap: 10px; border: 0; padding: 0; margin: 0; }
+.up-njs__lloji label { flex-direction: row; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border: 1px solid #C9CCD3; border-radius: 999px; cursor: pointer; }
+.up-njs__lloji label:has(input:checked) { border-color: var(--up-ink); box-shadow: inset 0 0 0 1px var(--up-ink); }
+.up-njs__check { flex-direction: row !important; align-items: flex-start; font-weight: 400 !important; color: var(--up-muted); }
+.up-njs__check input { margin-top: 3px; }
+.up-njs__form .up-btn { align-self: flex-start; }
+.up-njs__hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.up-njs__msg { padding: 12px 14px; border-radius: var(--up-radius); font-weight: 700; }
+.up-njs__msg--ok { background: #E3F4E8; color: #1D6B36; }
+.up-njs__msg--err { background: #FBE4E4; color: #9B1C1C; }
+@media (max-width: 1024px) { .up-njs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+	.up-njs__grid, .up-njs__row { grid-template-columns: minmax(0, 1fr); }
+	.up-njs__title { font-size: 32px; }
+	.up-njs__form { padding: 18px; }
+}
