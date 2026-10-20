@@ -33,6 +33,9 @@
 		<div class="up-header__center"><?php urapress_logo( is_front_page() ? 'h1' : 'div' ); ?></div>
 		<nav class="up-header__right" aria-label="<?php esc_attr_e( 'Faqet', 'urapress' ); ?>">
 			<a href="<?php echo esc_url( get_post_type_archive_link( 'njoftim' ) ); ?>">Njoftime</a>
+			<?php if ( urapress_zazu_cat_id() ) : ?>
+				<a href="<?php echo esc_url( get_category_link( urapress_zazu_cat_id() ) ); ?>">ZaZu</a>
+			<?php endif; ?>
 			<?php
 			foreach ( array( 'rreth-nesh' => 'Rreth nesh', 'kontakt' => 'Kontakt', 'reklamo' => 'Reklamo' ) as $urapress_slug => $urapress_label ) {
 				$urapress_page = get_page_by_path( $urapress_slug );

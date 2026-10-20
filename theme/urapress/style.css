@@ -603,3 +603,17 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-nav li.current-menu-parent > a::after { width: 26px; height: 13px; bottom: 2px; }
 }
 @media (prefers-reduced-motion: reduce) { .up-nav li a::after { transition: none; } }
+
+/* =====================================================================
+   1.9.0 – ZaZu-Comic
+   ===================================================================== */
+.up-zazu { padding-top: 28px; padding-bottom: 48px; max-width: 1040px; }
+.up-zazu__head { border-bottom: 3px solid var(--up-ink); padding-bottom: 14px; margin-bottom: 24px; }
+.up-zazu__title { margin: 0; font-size: 44px; font-weight: 900; letter-spacing: -.02em; }
+.up-zazu__sub { margin: 4px 0 0; color: var(--up-muted); }
+.up-zazu__item { margin-bottom: 36px; }
+.up-zazu__date { display: inline-block; margin-bottom: 8px; font-size: 14px; font-weight: 700; color: var(--up-muted); }
+.up-zazu__item img, .category-zazu .up-content img, .single .up-content .up-zazu-img img { width: 100%; height: auto; border-radius: 4px; }
+.up-zazu-nav { display: flex; justify-content: space-between; gap: 12px; margin: 22px 0; font-weight: 800; }
+.up-zazu-nav a { padding: 8px 14px; border: 2px solid var(--up-ink); border-radius: 999px; }
+.up-zazu-nav a:hover { background: var(--up-ink); color: #fff; }

@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.8.1' );
+define( 'URAPRESS_VERSION', '1.9.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 
 /**
@@ -319,6 +319,7 @@ function urapress_diverse_ids( $count, $pool = 24 ) {
 			'post_status'         => 'publish',
 			'ignore_sticky_posts' => false,
 			'fields'              => 'ids',
+			'category__not_in'    => array_filter( array( urapress_zazu_cat_id() ) ),
 		)
 	);
 	$picked = array();
@@ -749,4 +750,24 @@ add_action(
 		echo '<meta name="google-site-verification" content="chLdYlkZPzRevozYE4nQDEU2GMAfU5aVGS8QFcNMiZA" />' . "\n";
 	},
 	1
+);
+
+/**
+ * ZaZu-Comic: ID der Kategorie «ZaZu» (0, solange es noch keinen Comic gibt).
+ */
+function urapress_zazu_cat_id() {
+	$cat = get_category_by_slug( 'zazu' );
+	return $cat ? (int) $cat->term_id : 0;
+}
+
+/**
+ * ZaZu-Seite: 5 Comics pro Seite, neueste zuerst.
+ */
+add_action(
+	'pre_get_posts',
+	function ( $q ) {
+		if ( ! is_admin() && $q->is_main_query() && $q->is_category( 'zazu' ) ) {
+			$q->set( 'posts_per_page', 5 );
+		}
+	}
 );

@@ -5,6 +5,7 @@ Befehle im Telegram-Chat:
   /start    zeigt deine Chat-ID (für .env)
   /skano    Scan sofort starten (optional: religjion | sport | politik)
   /shkruaj  eigenen Artikel schreiben (ohne Quelle)
+  /zazu     ZaZu-Comic aus Text-Zeilen zeichnen
   /statusi  Statistik
 """
 import asyncio
@@ -13,6 +14,7 @@ import json
 import logging
 import re
 from datetime import time as dtime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Update
@@ -21,6 +23,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Con
                           MessageHandler, filters)
 
 import ai_writer
+import comic
 import config
 import db
 import facebook
@@ -197,6 +200,7 @@ async def cmd_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
     context.chat_data.pop("shkruaj", None)
     context.chat_data.pop("ndrysho", None)
+    context.chat_data.pop("zazu", None)
     await update.message.reply_text("↩️ U anulua.")
 
 
@@ -204,6 +208,9 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         return
     msg = update.message
+    if context.chat_data.get("zazu"):
+        await make_comic(msg, context, msg.text or "")
+        return
     # Ziel: Reply auf eine Nachricht mit #N, sonst der Entwurf, der gerade bearbeitet wird
     draft_id = None
     if msg.reply_to_message:
@@ -473,6 +480,84 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await q.message.reply_text(f"📘 #{draft_id} në Facebook:\n{fb_url}")
 
 
+# --- ZaZu-Comic --------------------------------------------------------------------
+ZAZU_HELP = (
+    "😺 Shkruaj skicën – një rresht = një foto (1 deri 4):\n\n"
+    "Sara: ZaZu, hajde të luajmë bowling!\n"
+    "ZaZu (putra): Një… dy… tre… katër.\n"
+    "ZaZu (mërzitur): S'ka shans. Gishta të vegjël.\n\n"
+    "Gjendja në kllapa (pa kllapa = normal):\n"
+    "ZaZu: gëzuar · mërzitur · habitur · putra\n"
+    "Sara: mërzitur · habitur · topi\n\n"
+    "/anulo për ta ndërprerë.")
+
+
+def zazu_keyboard(key: int) -> InlineKeyboardMarkup:
+    rows = []
+    if facebook.enabled():
+        rows.append([InlineKeyboardButton("📘 Posto + FB", callback_data=f"zz_pfb:{key}")])
+    rows.append([InlineKeyboardButton("✅ Posto", callback_data=f"zz_ok:{key}"),
+                 InlineKeyboardButton("❌ Mos posto", callback_data=f"zz_no:{key}")])
+    return InlineKeyboardMarkup(rows)
+
+
+async def make_comic(msg, context: ContextTypes.DEFAULT_TYPE, text: str) -> None:
+    try:
+        panels = comic.parse(text)
+    except comic.ComicError as exc:
+        await msg.reply_text(f"⚠️ {exc}")
+        return
+    context.chat_data.pop("zazu", None)
+    key = context.chat_data.get("zazu_nr", 0) + 1
+    context.chat_data["zazu_nr"] = key
+    path = config.IMAGE_DIR / "zazu" / f"zazu-{msg.message_id}.png"
+    await asyncio.to_thread(comic.render, panels, path)
+    context.chat_data.setdefault("zazu_skica", {})[key] = {"panels": panels, "path": str(path)}
+    with open(path, "rb") as fh:
+        await msg.reply_photo(fh, caption=f"😺 ZaZu · skica {key}\nPër ta ndryshuar: /zazu dhe dërgo tekstin përsëri.",
+                              reply_markup=zazu_keyboard(key))
+
+
+async def cmd_zazu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    context.chat_data.pop("shkruaj", None)
+    context.chat_data.pop("ndrysho", None)
+    text = (update.message.text or "").split(None, 1)
+    if len(text) > 1 and text[1].strip():
+        await make_comic(update.message, context, text[1])
+        return
+    context.chat_data["zazu"] = True
+    await update.message.reply_text(ZAZU_HELP)
+
+
+async def on_zazu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    q = update.callback_query
+    if not is_admin(update):
+        await q.answer("Nuk ke leje.", show_alert=True)
+        return
+    action, raw = q.data.split(":")
+    sk = context.chat_data.get("zazu_skica", {}).pop(int(raw), None)
+    if not sk:
+        await q.answer("Kjo skicë është trajtuar tashmë.", show_alert=True)
+        return
+    await q.answer()
+    await q.edit_message_reply_markup(reply_markup=None)
+    if action == "zz_no":
+        await q.message.reply_text("❌ ZaZu nuk u postua.")
+        return
+    await q.message.reply_text("⏳ ZaZu duke u publikuar …")
+    try:
+        link, fb_url = await asyncio.to_thread(
+            pipeline.publish_comic, Path(sk["path"]), sk["panels"], action == "zz_pfb")
+    except Exception as exc:
+        log.exception("ZaZu fehlgeschlagen")
+        context.chat_data.setdefault("zazu_skica", {})[int(raw)] = sk
+        await q.message.reply_text(f"⚠️ ZaZu nuk u publikua: {exc}", reply_markup=zazu_keyboard(int(raw)))
+        return
+    await q.message.reply_text(f"✅ ZaZu u publikua:\n{link}" + (f"\n📘 Facebook: {fb_url}" if fb_url else ""))
+
+
 # --- Njoftime (Kleinanzeigen von der Website) --------------------------------------
 NJ_TYPES = {"kerkoj": "🔵 KËRKOJ", "ofroj": "🟢 OFROJ"}
 NJ_CATS = {"pune": "Punë & zanate", "banese": "Banesë", "vetura": "Vetura", "sherbime": "Shërbime",
@@ -541,9 +626,11 @@ def main() -> None:
     app.add_handler(CommandHandler("statusi", cmd_status))
     app.add_handler(CommandHandler("shkruaj", cmd_write))
     app.add_handler(CommandHandler("anulo", cmd_cancel))
+    app.add_handler(CommandHandler("zazu", cmd_zazu))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
     app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no):\d+$"))
+    app.add_handler(CallbackQueryHandler(on_zazu, pattern=r"^zz_(ok|pfb|no):\d+$"))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho|shenje):\d+$"))
 

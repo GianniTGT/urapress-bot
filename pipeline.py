@@ -138,3 +138,24 @@ def attach_photo(draft_id: int, path: Path) -> str:
     db.update_draft(draft_id, image_kind="manual", image_ref=str(path), wp_media_id=media["id"])
     return d["wp_post_url"]
 
+
+
+def publish_comic(path: Path, panels: list[dict], to_fb: bool) -> tuple[str, str | None]:
+    """Stellt einen ZaZu-Comic in die Kategorie «ZaZu». Gibt (Link, Facebook-URL oder None) zurück."""
+    import comic
+    import facebook
+
+    title = f"ZaZu – {datetime.now():%d.%m.%Y}"
+    alt = comic.alt_text(panels)
+    wp = WordPress()
+    media = wp.upload_image(path, title=title, alt=alt)
+    content = (f'<figure class="wp-block-image up-zazu-img"><img src="{html.escape(media["source_url"])}" '
+               f'alt="{html.escape(alt)}" width="{media.get("media_details", {}).get("width", "")}" '
+               f'height="{media.get("media_details", {}).get("height", "")}"/></figure>')
+    post = wp.create_post(title=title, content=content, excerpt=panels[0]["text"],
+                          categories=[wp.term_id("categories", "ZaZu")], tags=[],
+                          featured_media=media["id"], status=POST_STATUS)
+    fb_url = None
+    if to_fb:
+        fb_url = facebook.post(f"😺 {title}\n\n{post['link']}", post["link"], media["source_url"])
+    return post["link"], fb_url

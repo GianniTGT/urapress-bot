@@ -1,0 +1,50 @@
+{
+ "scale": 2,
+ "poses": {
+  "zazu-normal": {
+   "ox": 176.0,
+   "oy": 146.0,
+   "top": -72.0
+  },
+  "zazu-gezuar": {
+   "ox": 176.0,
+   "oy": 146.0,
+   "top": -72.0
+  },
+  "zazu-merzitur": {
+   "ox": 176.0,
+   "oy": 146.0,
+   "top": -72.0
+  },
+  "zazu-habitur": {
+   "ox": 176.0,
+   "oy": 146.0,
+   "top": -72.0
+  },
+  "zazu-putra": {
+   "ox": 176.0,
+   "oy": 146.0,
+   "top": -72.0
+  },
+  "sara-normal": {
+   "ox": 130.0,
+   "oy": 142.0,
+   "top": -70.0
+  },
+  "sara-merzitur": {
+   "ox": 130.0,
+   "oy": 142.0,
+   "top": -70.0
+  },
+  "sara-habitur": {
+   "ox": 130.0,
+   "oy": 142.0,
+   "top": -70.0
+  },
+  "sara-topi": {
+   "ox": 130.0,
+   "oy": 142.0,
+   "top": -70.0
+  }
+ }
+}

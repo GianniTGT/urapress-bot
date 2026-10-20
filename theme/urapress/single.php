@@ -16,6 +16,10 @@ get_header();
 		$urapress_thumb = get_post_thumbnail_id();
 		$urapress_url   = rawurlencode( get_permalink() );
 		$urapress_title = rawurlencode( get_the_title() );
+		$urapress_zazu  = in_category( 'zazu' );
+		if ( $urapress_zazu ) {
+			$urapress_thumb = 0; // Comic steht ganz im Text, nicht als zugeschnittenes Titelbild
+		}
 		?>
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'up-article' ); ?>>
 			<header>
@@ -47,6 +51,18 @@ get_header();
 			<div class="up-content">
 				<?php the_content(); ?>
 			</div>
+
+			<?php if ( $urapress_zazu ) : ?>
+				<nav class="up-zazu-nav" aria-label="ZaZu">
+					<?php
+					$urapress_older = get_previous_post( true );
+					$urapress_newer = get_next_post( true );
+					echo $urapress_older ? '<a href="' . esc_url( get_permalink( $urapress_older ) ) . '">← ZaZu i mëparshëm</a>' : '<span></span>';
+					echo '<a href="' . esc_url( get_category_link( urapress_zazu_cat_id() ) ) . '">Të gjitha</a>';
+					echo $urapress_newer ? '<a href="' . esc_url( get_permalink( $urapress_newer ) ) . '">ZaZu i radhës →</a>' : '<span></span>';
+					?>
+				</nav>
+			<?php endif; ?>
 
 			<?php
 			$urapress_tags = get_the_tags();
