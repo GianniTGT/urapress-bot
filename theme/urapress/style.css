@@ -431,11 +431,11 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
    1.7.0 – Logo „Hängebrücke", Reklamo-Knopf, Rubrik-Farben, Werbeplatz oben
    ===================================================================== */
 .up-logo { display: inline-flex; color: var(--up-ink); }
-.up-logo__svg { display: block; height: 96px; width: auto; }
+.up-logo__svg { display: block; height: 122px; width: auto; }
 .up-footer .up-logo { color: #fff; }
-.up-footer .up-logo__svg { height: 76px; }
-@media (max-width: 1024px) { .up-logo__svg { height: 80px; } }
-@media (max-width: 760px) { .up-logo__svg { height: 54px; } }
+.up-footer .up-logo__svg { height: 90px; }
+@media (max-width: 1024px) { .up-logo__svg { height: 92px; } }
+@media (max-width: 760px) { .up-logo__svg { height: 62px; } }
 
 /* Reklamo als roter Knopf */
 .up-header__right { align-items: center; }
