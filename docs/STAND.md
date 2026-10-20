@@ -91,3 +91,23 @@ Unklar ist noch, ob der neueste Stand (`e09fdc7`, mit Facebook) schon gezogen un
 - Ungenutzte CSS-Regel `.up-topbar` in `style.css` (stört nicht)
 - Die Sidebar auf Artikelseiten zeigt Standard-WP-Widgets (Recent Posts, Archives …), weil
   `sidebar-1` belegt ist. Wenn die Widgets dort entfernt werden, erscheint die Theme-Sidebar.
+
+---
+
+# Nachtrag 20.10.2026 (Nachmittag)
+
+**Live (Theme 1.7.2):**
+- Neues Logo „Hängebrücke". Quelle: `tools/brand/build.py` + `render.py` (Schrift: Source Sans 3, OFL).
+  Dateien in `theme/urapress/assets/brand/`: logo/logo-white/logo-mono (SVG+PNG), favicon.ico, icon-*.png,
+  apple-touch-icon, site.webmanifest. Facebook-Bild `assets/og-default.jpg`.
+- Reklamo als roter Knopf (auch auf Tablet/Handy). Rubriken mit farbiger Marke.
+- Werbeplatz oben: WordPress → Design → Widgets → „Reklamë – lart (970×90)". Leer = unsichtbar.
+- Markierungen auf dem Foto per Tag: E FUNDIT, TOP LAJM, SKANDAL, EKSKLUZIVE.
+- Meta-Description, NewsArticle-Schema (Google), Facebook-Link im Footer.
+
+**Bot (git pull nötig):** Knöpfe 📘 Posto + Foto + FB / ✅ Posto + Foto / 🏷 Shenjë / ✏️ Ndrysho / ❌ Mos posto,
+`/shkruaj` für eigene Artikel ohne Quelle, `/anulo`.
+
+**Offen (Entscheid Gianni):** Platzhalter in Impressum/Datenschutz/Kontakt/Reklamo (Indexierung ist AN!),
+Kommentar-Moderation + Spamschutz, Standard-Widgets in sidebar-1 entfernen, Statistik-Plugin,
+Google Search Console / Google News, Foto-Quelle („Foto: …").
