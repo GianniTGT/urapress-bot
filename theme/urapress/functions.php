@@ -739,3 +739,14 @@ add_filter(
 		return $fields;
 	}
 );
+
+/**
+ * Google Search Console: Bestätigung der Seite.
+ */
+add_action(
+	'wp_head',
+	function () {
+		echo '<meta name="google-site-verification" content="chLdYlkZPzRevozYE4nQDEU2GMAfU5aVGS8QFcNMiZA" />' . "\n";
+	},
+	1
+);
