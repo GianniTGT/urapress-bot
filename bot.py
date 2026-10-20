@@ -3,11 +3,13 @@
 Start:  python bot.py
 Befehle im Telegram-Chat:
   /start    zeigt deine Chat-ID (für .env)
-  /skano    Scan sofort starten
+  /skano    Scan sofort starten (optional: religjion | sport | politik)
+  /shkruaj  eigenen Artikel schreiben (ohne Quelle)
   /statusi  Statistik
 """
 import asyncio
 import html
+import json
 import logging
 import re
 from datetime import time as dtime
@@ -41,7 +43,8 @@ def keyboard(draft_id: int) -> InlineKeyboardMarkup:
     if facebook.enabled():
         rows.append([InlineKeyboardButton("📘 Posto + Foto + FB", callback_data=f"pfb:{draft_id}")])
     rows.append([InlineKeyboardButton("✅ Posto + Foto", callback_data=f"posto:{draft_id}")])
-    rows.append([InlineKeyboardButton("❌ Mos posto", callback_data=f"refuzo:{draft_id}")])
+    rows.append([InlineKeyboardButton("✏️ Ndrysho tekstin", callback_data=f"ndrysho:{draft_id}"),
+                 InlineKeyboardButton("❌ Mos posto", callback_data=f"refuzo:{draft_id}")])
     return InlineKeyboardMarkup(rows)
 
 
@@ -71,7 +74,9 @@ def preview_text(d: dict) -> str:
     return (
         f"🆕 <b>#{d['id']} · {e(d['title'])}</b>\n<i>{e(d['excerpt'])}</i>\n\n{e(body)}\n\n"
         f"📂 {e(d['category'])} · 🏷 {e(', '.join(d['tags']))}\n"
-        f"🔗 Burimi: <a href=\"{e(d['source_link'])}\">{e(d['source_name'])}</a>\n{photo}"
+        + (f"🔗 Burimi: <a href=\"{e(d['source_link'])}\">{e(d['source_name'])}</a>\n" if d["source_link"]
+           else "✍️ Tekst i redaksisë – pa burim\n")
+        + photo
     )
 
 
@@ -113,6 +118,134 @@ async def run_scan(bot, theme: str | None = None) -> None:
             await send_draft(bot, db.get_draft(draft_id))
         for err in errors:
             await bot.send_message(config.TELEGRAM_CHAT_ID, f"⚠️ {err}")
+
+
+# --- Eigener / korrigierter Text -------------------------------------------------
+def parse_text(text: str) -> tuple[str, str, list[str]] | None:
+    """Rreshti i parë = titulli, pastaj paragrafët (të ndarë me rresht bosh).
+    Gibt (Titel, Kurztext, Absätze) zurück oder None, wenn kein Text da ist."""
+    blocks, cur = [], []
+    for line in text.strip().splitlines():
+        line = line.strip()
+        if line.startswith(("📂", "🔗", "🖼", "✍️")):
+            continue
+        if line:
+            cur.append(line)
+        elif cur:
+            blocks.append(cur)
+            cur = []
+    if cur:
+        blocks.append(cur)
+    if not blocks:
+        return None
+    from_preview = blocks[0][0].startswith("🆕")  # ganze Vorschau kopiert: 2. Zeile ist der alte Kurztext
+    title = re.sub(r"^🆕\s*#\d+\s*·\s*", "", blocks[0][0]).strip()
+    paras = []
+    if len(blocks[0]) > 1 and not from_preview:  # Text direkt unter dem Titel ohne Leerzeile
+        paras.append(" ".join(blocks[0][1:]))
+    paras += [" ".join(b) for b in blocks[1:]]
+    if not title or not paras:
+        return None
+    return title, make_excerpt(paras[0]), paras
+
+
+def make_excerpt(first: str, limit: int = 240) -> str:
+    """Kurztext: erster Satz (bei sehr kurzem Satz die ersten zwei)."""
+    sentences = re.split(r"(?<=[.!?])\s+", first)
+    out = sentences[0]
+    if len(out) < 60 and len(sentences) > 1:
+        out += " " + sentences[1]
+    return out if len(out) <= limit else out[:limit].rsplit(" ", 1)[0] + " …"
+
+
+def plain_text(d: dict) -> str:
+    return d["title"] + "\n\n" + "\n\n".join(d["paragraphs"])
+
+
+def category_keyboard(draft_id: int) -> InlineKeyboardMarkup:
+    cats = config.CATEGORIES
+    rows = [[InlineKeyboardButton(c, callback_data=f"kat:{draft_id}:{i}") for i, c in enumerate(cats)][j:j + 2]
+            for j in range(0, len(cats), 2)]
+    return InlineKeyboardMarkup(rows)
+
+
+async def cmd_write(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    context.chat_data.pop("ndrysho", None)
+    context.chat_data["shkruaj"] = True
+    await update.message.reply_text(
+        "✍️ Shkruaj lajmin dhe dërgoje këtu:\n\n"
+        "• rreshti i parë = titulli\n"
+        "• pastaj një rresht bosh\n"
+        "• pastaj paragrafët (të ndarë me rresht bosh)\n\n"
+        "Lajmi del pa burim. /anulo për ta ndërprerë.")
+
+
+async def cmd_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    context.chat_data.pop("shkruaj", None)
+    context.chat_data.pop("ndrysho", None)
+    await update.message.reply_text("↩️ U anulua.")
+
+
+async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    msg = update.message
+    # Ziel: Reply auf eine Nachricht mit #N, sonst der Entwurf, der gerade bearbeitet wird
+    draft_id = None
+    if msg.reply_to_message:
+        m = re.search(r"#(\d+)", msg.reply_to_message.text or msg.reply_to_message.caption or "")
+        draft_id = int(m.group(1)) if m else None
+    draft_id = draft_id or context.chat_data.get("ndrysho")
+    new_article = not draft_id and context.chat_data.get("shkruaj")
+    if not draft_id and not new_article:
+        await msg.reply_text("ℹ️ Për lajm të ri: /shkruaj. Për të ndryshuar një lajm: butoni ✏️ Ndrysho tekstin.")
+        return
+    parsed = parse_text(msg.text or "")
+    if not parsed:
+        await msg.reply_text("⚠️ Mungon titulli ose teksti. Rreshti i parë = titulli, pastaj paragrafët.")
+        return
+    title, excerpt, paras = parsed
+
+    if new_article:
+        context.chat_data.pop("shkruaj", None)
+        new_id = db.add_draft({
+            "source_name": "", "source_link": "", "title": title, "excerpt": excerpt,
+            "paragraphs": paras, "category": config.CATEGORIES[0], "tags": [], "person": None,
+            "image_kind": "none", "image_ref": None, "wp_media_id": None,
+        })
+        await msg.reply_text(f"📂 #{new_id} · Në cilën rubrikë?", reply_markup=category_keyboard(new_id))
+        return
+
+    d = db.get_draft(draft_id)
+    if not d or d["status"] != "pending":
+        context.chat_data.pop("ndrysho", None)
+        await msg.reply_text(f"ℹ️ #{draft_id} nuk mund të ndryshohet më.")
+        return
+    db.update_draft(draft_id, title=title, excerpt=excerpt,
+                    paragraphs=json.dumps(paras, ensure_ascii=False), source_name="", source_link="")
+    context.chat_data.pop("ndrysho", None)
+    await msg.reply_text(f"✏️ #{draft_id} u ndryshua (pa burim). Ja versioni i ri:")
+    await send_draft(context.bot, db.get_draft(draft_id))
+
+
+async def on_category(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    q = update.callback_query
+    if not is_admin(update):
+        await q.answer("Nuk ke leje.", show_alert=True)
+        return
+    _, raw_id, raw_i = q.data.split(":")
+    draft_id, i = int(raw_id), int(raw_i)
+    if not 0 <= i < len(config.CATEGORIES):
+        await q.answer()
+        return
+    db.update_draft(draft_id, category=config.CATEGORIES[i])
+    await q.answer(config.CATEGORIES[i])
+    await q.edit_message_text(f"📂 #{draft_id} · {config.CATEGORIES[i]}")
+    await send_draft(context.bot, db.get_draft(draft_id))
 
 
 # --- Handler ------------------------------------------------------------------
@@ -257,6 +390,22 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
         return
 
+    if action == "ndrysho":
+        d = db.get_draft(draft_id)
+        if not d or d["status"] != "pending":
+            await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
+            return
+        context.chat_data.pop("shkruaj", None)
+        context.chat_data["ndrysho"] = draft_id
+        await q.answer()
+        await q.message.reply_text(
+            f"✏️ #{draft_id}: kopjo tekstin më poshtë, ndryshoje dhe dërgoje këtu. "
+            "Rreshti i parë = titulli. Burimi hiqet. /anulo për ta ndërprerë.")
+        text = plain_text(d)
+        for k in range(0, len(text), 4000):
+            await q.message.reply_text(text[k:k + 4000])
+        return
+
     if action == "anulo":
         pritje.pop(draft_id, None)
         if context.chat_data.get("e_fundit") == draft_id:
@@ -311,8 +460,12 @@ def main() -> None:
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("skano", cmd_scan))
     app.add_handler(CommandHandler("statusi", cmd_status))
+    app.add_handler(CommandHandler("shkruaj", cmd_write))
+    app.add_handler(CommandHandler("anulo", cmd_cancel))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
+    app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
-    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb):\d+$"))
+    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))
     app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),

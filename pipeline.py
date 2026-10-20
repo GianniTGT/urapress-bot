@@ -75,8 +75,10 @@ def build_drafts(theme: str | None = None) -> tuple[list[int], list[str]]:
 
 def build_content(d: dict) -> str:
     body = "\n".join(f"<p>{html.escape(p, quote=False)}</p>" for p in d["paragraphs"])
-    source = (f'<p class="dj-burimi"><em>Burimi: <a href="{html.escape(d["source_link"])}" '
-              f'target="_blank" rel="noopener nofollow">{html.escape(d["source_name"])}</a></em></p>')
+    source = ""
+    if d["source_link"]:  # eigener Text der Redaktion: ohne Quelle
+        source = (f'<p class="dj-burimi"><em>Burimi: <a href="{html.escape(d["source_link"])}" '
+                  f'target="_blank" rel="noopener nofollow">{html.escape(d["source_name"])}</a></em></p>')
     if d["image_kind"] == "ai":
         source += f'\n<p class="dj-foto-ai"><em>{AI_IMAGE_CAPTION}</em></p>'
     return f"{body}\n{source}"
