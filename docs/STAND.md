@@ -41,6 +41,9 @@ Unklar ist noch, ob der neueste Stand (`e09fdc7`, mit Facebook) schon gezogen un
 
 ### 2. Facebook einrichten
 
+> **Vollständige Anleitung mit Bildern: [FACEBOOK-EINRICHTEN.md](FACEBOOK-EINRICHTEN.md)**
+> Stand 20.10.: App-Rechte freigeschaltet, Seiten-ID `1390417390820237`, Token in der `.env` eingetragen.
+
 **Stand:**
 - FB-Seite **Urapress.ch** (Nachrichten- und Medienseite) existiert
 - Meta-App **urapress** erstellt, Anwendungsfall „Alles auf deiner Seite verwalten" (Pages API),
