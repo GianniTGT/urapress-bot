@@ -38,7 +38,7 @@ function urapress_nj_register() {
 			'rest_base'    => 'njoftime',
 		)
 	);
-	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri' ) as $k ) {
+	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar' ) as $k ) {
 		register_post_meta(
 			'njoftim',
 			'_nj_' . $k,
@@ -69,6 +69,11 @@ function urapress_nj_query( $q ) {
 	}
 	$q->set( 'posts_per_page', 24 );
 	$q->set( 'date_query', array( array( 'after' => URAPRESS_NJ_DAYS . ' days ago' ) ) );
+	$kerko = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['q'] ) ) : '';
+	if ( '' !== $kerko ) {
+		$q->set( 's', $kerko );
+	}
+	$q->set( 'post__not_in', urapress_nj_highlighted_ids() ); // die hervorgehobenen stehen oben extra
 	$meta  = array();
 	$lloji = isset( $_GET['lloji'] ) ? sanitize_key( wp_unslash( $_GET['lloji'] ) ) : '';
 	$kat   = isset( $_GET['kategoria'] ) ? sanitize_key( wp_unslash( $_GET['kategoria'] ) ) : '';
@@ -83,6 +88,62 @@ function urapress_nj_query( $q ) {
 	}
 }
 add_action( 'pre_get_posts', 'urapress_nj_query' );
+
+/* Hervorgehobene Anzeigen (bezahlt): _nj_theksuar = Zeitpunkt, bis wann */
+function urapress_nj_is_highlighted( $id ) {
+	return (int) get_post_meta( $id, '_nj_theksuar', true ) > time();
+}
+
+function urapress_nj_highlighted_ids() {
+	static $ids = null;
+	if ( null === $ids ) {
+		$ids = get_posts(
+			array(
+				'post_type'      => 'njoftim',
+				'post_status'    => 'publish',
+				'posts_per_page' => 50,
+				'fields'         => 'ids',
+				'meta_query'     => array( array( 'key' => '_nj_theksuar', 'value' => time(), 'compare' => '>', 'type' => 'NUMERIC' ) ),
+			)
+		);
+	}
+	return $ids;
+}
+
+/* Anzahl aktiver Anzeigen pro Kategorie (optional nur Kërkoj oder Ofroj) */
+function urapress_nj_counts( $lloji = '' ) {
+	$args = array(
+		'post_type'      => 'njoftim',
+		'post_status'    => 'publish',
+		'posts_per_page' => 1000,
+		'fields'         => 'ids',
+		'date_query'     => array( array( 'after' => URAPRESS_NJ_DAYS . ' days ago' ) ),
+	);
+	if ( isset( urapress_nj_types()[ $lloji ] ) ) {
+		$args['meta_query'] = array( array( 'key' => '_nj_lloji', 'value' => $lloji ) );
+	}
+	$counts = array_fill_keys( array_keys( urapress_nj_cats() ), 0 );
+	foreach ( get_posts( $args ) as $id ) {
+		$k = get_post_meta( $id, '_nj_kategoria', true );
+		if ( isset( $counts[ $k ] ) ) {
+			++$counts[ $k ];
+		}
+	}
+	return $counts;
+}
+
+/* Eigene Bildchen für die Kategorie-Kacheln: [Hintergrund, SVG] */
+function urapress_nj_icon( $k ) {
+	$i = array(
+		'pune'     => array( '#FDE7D3', '<g transform="rotate(-35 60 64)"><rect x="54" y="38" width="12" height="70" rx="5" fill="#B5762E"/><rect x="30" y="22" width="60" height="24" rx="7" fill="#5C6B7A"/><rect x="30" y="22" width="14" height="24" rx="5" fill="#46525E"/></g>' ),
+		'banese'   => array( '#E3E9F8', '<path d="M20 58 L60 24 L100 58 V100 H20Z" fill="#2346A0"/><path d="M12 60 L60 18 L108 60" fill="none" stroke="#D7141A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><rect x="50" y="70" width="20" height="30" rx="3" fill="#F3C76B"/><rect x="30" y="64" width="14" height="14" rx="2" fill="#BFD3FF"/><rect x="76" y="64" width="14" height="14" rx="2" fill="#BFD3FF"/>' ),
+		'vetura'   => array( '#FBE0E1', '<path d="M14 74 Q16 58 30 56 L40 40 Q44 34 52 34 H76 Q84 34 88 40 L98 56 Q110 58 108 74 V84 H14Z" fill="#D7141A"/><path d="M44 42 H60 V56 H36Z M66 42 H80 L88 56 H66Z" fill="#CFE4F5"/><circle cx="36" cy="86" r="12" fill="#16181D"/><circle cx="36" cy="86" r="5" fill="#C9CCD3"/><circle cx="86" cy="86" r="12" fill="#16181D"/><circle cx="86" cy="86" r="5" fill="#C9CCD3"/><rect x="98" y="64" width="8" height="6" rx="2" fill="#FFE27A"/>' ),
+		'sherbime' => array( '#DDF1E8', '<path d="M18 64 L42 46 L60 56 L78 46 L102 64 L76 88 Q70 94 62 88 L18 64Z" fill="#F3CBAE" stroke="#B9876A" stroke-width="3" stroke-linejoin="round"/><path d="M10 60 L30 44 L42 52 L22 70Z" fill="#0E8A7E"/><path d="M110 60 L90 44 L78 52 L98 70Z" fill="#2E9E4F"/><path d="M50 72 L58 80 M58 66 L68 76 M66 62 L76 72" stroke="#B9876A" stroke-width="3" stroke-linecap="round"/>' ),
+		'shitje'   => array( '#EFE5FA', '<path d="M28 36 H92 L84 102 H36Z" fill="#6A4FB3"/><path d="M44 46 V34 a16 16 0 0 1 32 0 V46" fill="none" stroke="#3E2C78" stroke-width="7" stroke-linecap="round"/><path d="M62 58 L90 58 L98 70 L90 82 L62 82Z" fill="#FFD400" transform="rotate(-14 80 70)"/><circle cx="70" cy="72" r="4" fill="#6A4FB3"/>' ),
+		'tjera'    => array( '#F1F2F4', '<rect x="24" y="24" width="72" height="72" rx="20" fill="#16181D"/><circle cx="42" cy="60" r="7" fill="#fff"/><circle cx="60" cy="60" r="7" fill="#fff"/><circle cx="78" cy="60" r="7" fill="#fff"/>' ),
+	);
+	return $i[ $k ] ?? $i['tjera'];
+}
 
 /* Formular verarbeiten */
 function urapress_nj_submit() {
@@ -163,9 +224,11 @@ function urapress_nj_card( $post, $full = false ) {
 	$lloji = $m( 'lloji' );
 	$tel   = $m( 'telefoni' );
 	$text  = $full ? $post->post_content : wp_trim_words( $post->post_content, 40, '…' );
+	$star  = urapress_nj_is_highlighted( $post->ID );
 	?>
-	<article class="up-nj up-nj--<?php echo esc_attr( $lloji ); ?>">
+	<article class="up-nj up-nj--<?php echo esc_attr( $lloji ); ?><?php echo $star ? ' up-nj--theksuar' : ''; ?>">
 		<div class="up-nj__top">
+			<?php if ( $star ) : ?><span class="up-nj__star">⭐ I theksuar</span><?php endif; ?>
 			<span class="up-nj__lloji"><?php echo esc_html( urapress_nj_types()[ $lloji ] ?? '' ); ?></span>
 			<span class="up-nj__kat"><?php echo esc_html( urapress_nj_cats()[ $m( 'kategoria' ) ] ?? '' ); ?></span>
 			<?php if ( $m( 'vendi' ) ) : ?><span class="up-nj__vendi">📍 <?php echo esc_html( $m( 'vendi' ) ); ?></span><?php endif; ?>

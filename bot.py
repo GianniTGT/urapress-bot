@@ -13,6 +13,7 @@ import html
 import json
 import logging
 import re
+import time
 from datetime import time as dtime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -585,7 +586,8 @@ async def check_njoftime(context: ContextTypes.DEFAULT_TYPE) -> None:
                 f"<b>{e(title)}</b>\n{e(it['content'].get('raw', ''))}\n\n"
                 f"👤 {e(m.get('_nj_emri') or '–')} · 📞 {e(m.get('_nj_telefoni') or '–')}")
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("✅ Publiko", callback_data=f"nj_ok:{nj_id}"),
-                                    InlineKeyboardButton("❌ Fshi", callback_data=f"nj_no:{nj_id}")]])
+                                    InlineKeyboardButton("❌ Fshi", callback_data=f"nj_no:{nj_id}")],
+                                   [InlineKeyboardButton("⭐ Publiko i theksuar (30 ditë)", callback_data=f"nj_star:{nj_id}")]])
         await context.bot.send_message(config.TELEGRAM_CHAT_ID, text, parse_mode=ParseMode.HTML,
                                        reply_markup=kb, link_preview_options=NO_PREVIEW)
 
@@ -602,7 +604,14 @@ async def on_njoftim(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             res = await asyncio.to_thread(lambda: pipeline.WordPress().set_njoftim_status(nj_id, "publish"))
             await q.answer("U publikua")
             await q.edit_message_reply_markup(reply_markup=None)
-            await q.message.reply_text(f"✅ Njoftimi #{nj_id} është online:\n{res.get('link', '')}")
+            star = InlineKeyboardMarkup([[InlineKeyboardButton("⭐ Theksoje (30 ditë)", callback_data=f"nj_star:{nj_id}")]])
+            await q.message.reply_text(f"✅ Njoftimi #{nj_id} është online:\n{res.get('link', '')}", reply_markup=star)
+        elif action == "nj_star":
+            until = int(time.time()) + 30 * 86400
+            res = await asyncio.to_thread(lambda: pipeline.WordPress().highlight_njoftim(nj_id, until))
+            await q.answer("⭐ I theksuar")
+            await q.edit_message_reply_markup(reply_markup=None)
+            await q.message.reply_text(f"⭐ Njoftimi #{nj_id} është online dhe i theksuar në krye për 30 ditë:\n{res.get('link', '')}")
         else:
             await asyncio.to_thread(lambda: pipeline.WordPress().trash_njoftim(nj_id))
             await q.answer("U fshi")
@@ -629,7 +638,7 @@ def main() -> None:
     app.add_handler(CommandHandler("zazu", cmd_zazu))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
-    app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no):\d+$"))
+    app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no|star):\d+$"))
     app.add_handler(CallbackQueryHandler(on_zazu, pattern=r"^zz_(ok|pfb|no):\d+$"))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho|shenje):\d+$"))

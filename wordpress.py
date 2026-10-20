@@ -78,5 +78,10 @@ class WordPress:
     def set_njoftim_status(self, nj_id: int, status: str) -> dict:
         return self._req("POST", f"/njoftime/{nj_id}", json={"status": status})
 
+    def highlight_njoftim(self, nj_id: int, until: int) -> dict:
+        """Veröffentlicht und hebt hervor bis zum Zeitpunkt until (Unix-Zeit)."""
+        return self._req("POST", f"/njoftime/{nj_id}",
+                         json={"status": "publish", "meta": {"_nj_theksuar": str(until)}})
+
     def trash_njoftim(self, nj_id: int) -> dict:
         return self._req("DELETE", f"/njoftime/{nj_id}")
