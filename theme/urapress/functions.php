@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.7.1' );
+define( 'URAPRESS_VERSION', '1.7.2' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -359,7 +359,7 @@ function urapress_open_graph() {
 		return; // një plugin SEO e bën këtë vetë
 	}
 	$title = wp_get_document_title();
-	$desc  = get_bloginfo( 'description' );
+	$desc  = get_bloginfo( 'description' ) ? get_bloginfo( 'description' ) : 'Lajmet nga Atdheu dhe jeta në Zvicër – në një vend, në gjuhën tonë.';
 	$url   = home_url( add_query_arg( array() ) );
 	$image = '';
 	$type  = 'website';
@@ -389,6 +389,29 @@ function urapress_open_graph() {
 		'og:image'       => $image,
 		'twitter:card'   => $image ? 'summary_large_image' : 'summary',
 	);
+	printf( '<meta name="description" content="%s">' . "\n", esc_attr( wp_strip_all_tags( $desc ) ) );
+	if ( is_singular( 'post' ) ) {
+		$post   = get_queried_object();
+		$schema = array(
+			'@context'         => 'https://schema.org',
+			'@type'            => 'NewsArticle',
+			'headline'         => get_the_title( $post ),
+			'description'      => wp_strip_all_tags( $desc ),
+			'datePublished'    => get_the_date( 'c', $post ),
+			'dateModified'     => get_the_modified_date( 'c', $post ),
+			'image'            => array( $image ),
+			'mainEntityOfPage' => get_permalink( $post ),
+			'inLanguage'       => 'sq',
+			'author'           => array( '@type' => 'Organization', 'name' => 'Redaksia UraPress' ),
+			'publisher'        => array(
+				'@type' => 'NewsMediaOrganization',
+				'name'  => 'UraPress',
+				'url'   => home_url( '/' ),
+				'logo'  => array( '@type' => 'ImageObject', 'url' => get_template_directory_uri() . '/assets/brand/logo.png' ),
+			),
+		);
+		echo '<script type="application/ld+json">' . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . '</script>' . "\n";
+	}
 	foreach ( $tags as $prop => $content ) {
 		if ( '' === $content ) {
 			continue;

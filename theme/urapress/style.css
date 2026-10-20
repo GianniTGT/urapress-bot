@@ -493,3 +493,18 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 @media (prefers-reduced-motion: reduce) { .up-card__badge--e-fundit::before { animation: none; } }
 .up-card--overlay-lead .up-card__badge { top: 18px; left: 18px; font-size: 14px; padding: 6px 12px; }
 .up-card--row .up-card__badge { top: 6px; left: 6px; font-size: 9px; padding: 2px 6px; }
+
+/* Facebook-Link im Footer */
+.up-footer__social { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; padding: 8px 14px; border: 1px solid #3A3F49; border-radius: 999px; font-weight: 700; font-size: 14px; }
+.up-footer__social:hover { background: #1877F2; border-color: #1877F2; color: #fff; }
+
+/* Reklamo auch auf Tablet und Handy sichtbar */
+@media (max-width: 1024px) {
+	.up-header__right { display: flex; gap: 0; }
+	.up-header__right a:not([href*="reklamo"]) { display: none; }
+}
+@media (max-width: 760px) {
+	.up-header__inner { grid-template-columns: 1fr auto auto; gap: 10px; }
+	.up-header__left { order: 2; }
+	.up-header__right a[href*="reklamo"] { padding: 7px 12px; font-size: 14px; }
+}
