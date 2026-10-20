@@ -603,19 +603,19 @@ async def on_njoftim(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         if action == "nj_ok":
             res = await asyncio.to_thread(lambda: pipeline.WordPress().set_njoftim_status(nj_id, "publish"))
             await q.answer("U publikua")
-            await q.edit_message_reply_markup(reply_markup=None)
+            await _remove_buttons(q.message)
             star = InlineKeyboardMarkup([[InlineKeyboardButton("⭐ Theksoje (30 ditë)", callback_data=f"nj_star:{nj_id}")]])
             await q.message.reply_text(f"✅ Njoftimi #{nj_id} është online:\n{res.get('link', '')}", reply_markup=star)
         elif action == "nj_star":
             until = int(time.time()) + 30 * 86400
             res = await asyncio.to_thread(lambda: pipeline.WordPress().highlight_njoftim(nj_id, until))
             await q.answer("⭐ I theksuar")
-            await q.edit_message_reply_markup(reply_markup=None)
+            await _remove_buttons(q.message)
             await q.message.reply_text(f"⭐ Njoftimi #{nj_id} është online dhe i theksuar në krye për 30 ditë:\n{res.get('link', '')}")
         else:
             await asyncio.to_thread(lambda: pipeline.WordPress().trash_njoftim(nj_id))
             await q.answer("U fshi")
-            await q.edit_message_reply_markup(reply_markup=None)
+            await _remove_buttons(q.message)
             await q.message.reply_text(f"❌ Njoftimi #{nj_id} u fshi.")
     except Exception as exc:
         log.exception("Njoftim-Aktion fehlgeschlagen")
