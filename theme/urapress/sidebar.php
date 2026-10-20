@@ -44,7 +44,7 @@
 		?>
 		<div class="up-ad up-ad--small">
 			<strong><?php esc_html_e( 'Reklamoni biznesin tuaj këtu', 'urapress' ); ?></strong><br>
-			<a class="up-section__more" href="<?php echo esc_url( $urapress_ad_page ? get_permalink( $urapress_ad_page ) : 'mailto:reklama@urapress.ch' ); ?>"><?php esc_html_e( 'Më shumë', 'urapress' ); ?> →</a>
+			<a class="up-section__more" href="<?php echo esc_url( $urapress_ad_page ? get_permalink( $urapress_ad_page ) : 'mailto:redaksia@urapress.ch' ); ?>"><?php esc_html_e( 'Më shumë', 'urapress' ); ?> →</a>
 		</div>
 	<?php endif; ?>
 </aside>
