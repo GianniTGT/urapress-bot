@@ -191,7 +191,7 @@ def select_stories(candidates: list[dict], n: int, already_posted: list[str], th
         f"Bereits publiziert / vorgeschlagen:\n- " + "\n- ".join(already_posted or ["(keine)"])
         + "\n\nKandidaten:\n" + "\n".join(lines)
     )
-    result = _ask(SELECT_SYSTEM, user, max_tokens=800)
+    result = _ask(SELECT_SYSTEM, user, max_tokens=1600)
     log.info("Auswahl: %s – %s", result.get("zgjedhja"), result.get("arsye"))
     picks = [candidates[i] for i in result.get("zgjedhja", []) if 0 <= i < len(candidates)]
     return picks[:n]
