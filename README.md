@@ -98,6 +98,7 @@ für die ausgewählten Meldungen automatisch von der Webseite (trafilatura).
 |---|---|---|
 | shtegu.com | `https://shtegu.com/feed/` | im Feed |
 | lajmpress.org | `https://lajmpress.org/feed/` | im Feed |
+| zhurnal.mk | `https://zhurnal.mk/feed/` | im Feed (enclosure) |
 | alsat.mk | `https://alsat.mk/feed/` | von der Webseite |
 | portalix.mk | `https://portalix.mk/api/rss.xml` | von der Webseite |
 
