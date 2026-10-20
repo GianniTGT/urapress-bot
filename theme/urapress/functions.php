@@ -324,6 +324,10 @@ function urapress_open_graph() {
 			$image = get_the_post_thumbnail_url( $post, 'urapress-lead' );
 		}
 	}
+	// Ohne Beitragsbild: festes UraPress-Bild, sonst holt Facebook ein fremdes Bild von der Seite.
+	if ( '' === $image ) {
+		$image = get_template_directory_uri() . '/assets/og-default.jpg';
+	}
 
 	$tags = array(
 		'og:site_name'   => get_bloginfo( 'name' ),

@@ -37,13 +37,24 @@ def is_admin(update: Update) -> bool:
 
 
 def keyboard(draft_id: int) -> InlineKeyboardMarkup:
-    rows = [[
-        InlineKeyboardButton("✅ Posto", callback_data=f"posto:{draft_id}"),
-        InlineKeyboardButton("❌ Refuzo", callback_data=f"refuzo:{draft_id}"),
-    ]]
+    rows = []
     if facebook.enabled():
-        rows.insert(0, [InlineKeyboardButton("📘 Posto + FB", callback_data=f"pfb:{draft_id}")])
+        rows.append([InlineKeyboardButton("📘 Posto + Foto + FB", callback_data=f"pfb:{draft_id}")])
+    rows.append([InlineKeyboardButton("✅ Posto + Foto", callback_data=f"posto:{draft_id}")])
+    rows.append([InlineKeyboardButton("❌ Mos posto", callback_data=f"refuzo:{draft_id}")])
     return InlineKeyboardMarkup(rows)
+
+
+def has_photo(d: dict) -> bool:
+    """Eigenes Foto (Reply) oder Personenfoto aus der eigenen WP-Mediathek."""
+    return d["image_kind"] in ("manual", "wp")
+
+
+def fb_keyboard(draft_id: int) -> InlineKeyboardMarkup | None:
+    """Nur Facebook – für Artikel, die schon auf der Website sind (z. B. nach Foto-Reply)."""
+    if not facebook.enabled():
+        return None
+    return InlineKeyboardMarkup([[InlineKeyboardButton("📘 Posto në FB", callback_data=f"fb:{draft_id}")]])
 
 
 def preview_text(d: dict) -> str:
@@ -52,7 +63,7 @@ def preview_text(d: dict) -> str:
         "wp": f"🖼 Foto nga Mediateka: {e(d['person'] or '')}",
         "ai": f"🖼 {config.AI_IMAGE_CAPTION}",
         "manual": "🖼 Foto nga redaksia",
-        "none": "🖼 Pa foto – dërgo një foto si përgjigje (Reply) këtij mesazhi",
+        "none": "🖼 Pa foto – shtyp një buton, pastaj dërgo foton",
     }[d["image_kind"]]
     body = "\n\n".join(d["paragraphs"])
     if len(body) > 2900:
@@ -118,12 +129,46 @@ def _draft_id_from(msg) -> int | None:
     return None
 
 
+async def publish(message, draft_id: int, to_fb: bool) -> None:
+    """Veröffentlicht auf der Website, bei to_fb zusätzlich auf Facebook. Antwortet auf message."""
+    if not db.claim(draft_id, "publishing"):
+        await message.reply_text(f"ℹ️ #{draft_id} është trajtuar tashmë.")
+        return
+    await message.reply_text(f"⏳ #{draft_id} duke u publikuar …")
+    try:
+        post = await asyncio.to_thread(pipeline.publish_draft, draft_id)
+    except Exception as exc:
+        log.exception("Publizieren fehlgeschlagen")
+        db.update_draft(draft_id, status="pending", error=str(exc))
+        await message.reply_text(f"⚠️ #{draft_id} nuk u publikua: {exc}", reply_markup=keyboard(draft_id))
+        return
+    msg = f"✅ #{draft_id} u publikua:\n{post['link']}"
+    if to_fb:
+        try:
+            fb_url = await asyncio.to_thread(pipeline.post_to_facebook, draft_id)
+            msg += f"\n📘 Facebook: {fb_url}"
+        except Exception as exc:
+            log.exception("Facebook fehlgeschlagen")
+            msg += f"\n⚠️ Facebook dështoi: {exc}"
+    await message.reply_text(msg)
+
+
+async def _remove_buttons(msg) -> None:
+    if msg:
+        try:
+            await msg.edit_reply_markup(reply_markup=None)
+        except Exception:
+            pass
+
+
 async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         return
-    draft_id = _draft_id_from(update.message)
+    pritje = context.chat_data.setdefault("pritje", {})  # draft_id -> to_fb
+    # Reply auf eine Nachricht mit #N, sonst der Entwurf, für den zuletzt ein Foto verlangt wurde
+    draft_id = _draft_id_from(update.message) or context.chat_data.get("e_fundit")
     if not draft_id:
-        await update.message.reply_text("📷 Dërgoje foton si përgjigje (Reply) te mesazhi i lajmit.")
+        await update.message.reply_text("📷 Shtyp së pari një buton te lajmi (Posto + Foto …), pastaj dërgo foton.")
         return
     d = db.get_draft(draft_id)
     if not d or d["status"] not in ("pending", "posted"):
@@ -133,6 +178,7 @@ async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     path = config.IMAGE_DIR / f"manual-{draft_id}.jpg"
     await tg_file.download_to_drive(path)
 
+    # Schon online: Foto nachträglich einsetzen, dann FB anbieten
     if d["status"] == "posted" and d["wp_post_id"]:
         try:
             link = await asyncio.to_thread(pipeline.attach_photo, draft_id, path)
@@ -140,29 +186,21 @@ async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             log.exception("Foto anhängen fehlgeschlagen")
             await update.message.reply_text(f"⚠️ Foto nuk u vendos te #{draft_id}: {exc}")
             return
-        await update.message.reply_text(f"📷 Foto u vendos te #{draft_id}:\n{link}")
+        await update.message.reply_text(f"📷 Foto u vendos te #{draft_id}:\n{link}",
+                                        reply_markup=fb_keyboard(draft_id))
         return
 
     db.update_draft(draft_id, image_kind="manual", image_ref=str(path), wp_media_id=None)
-    # Foto-Reply veröffentlicht direkt – kein zweites "Posto".
-    if not db.claim(draft_id, "publishing"):
-        await update.message.reply_text(f"ℹ️ #{draft_id} është trajtuar tashmë.")
-        return
-    if update.message.reply_to_message:
-        try:
-            await update.message.reply_to_message.edit_reply_markup(reply_markup=None)
-        except Exception:
-            pass
-    await update.message.reply_text(f"📷 Foto u shtua te #{draft_id}. Duke publikuar …")
-    try:
-        post = await asyncio.to_thread(pipeline.publish_draft, draft_id)
-    except Exception as exc:
-        log.exception("Publizieren fehlgeschlagen")
-        db.update_draft(draft_id, status="pending", error=str(exc))
-        await update.message.reply_text(f"⚠️ #{draft_id} nuk u publikua: {exc}\nProvo me ✅ Posto.",
+    await _remove_buttons(update.message.reply_to_message)
+    if draft_id in pritje:
+        to_fb = pritje.pop(draft_id)
+        if context.chat_data.get("e_fundit") == draft_id:
+            context.chat_data.pop("e_fundit", None)
+        await publish(update.message, draft_id, to_fb)
+    else:
+        # Foto zuerst geschickt: jetzt wählen, wohin
+        await update.message.reply_text(f"📷 Foto u shtua te #{draft_id}. Ku ta postojmë?",
                                         reply_markup=keyboard(draft_id))
-        return
-    await update.message.reply_text(f"✅ #{draft_id} u publikua me foto:\n{post['link']}")
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -207,38 +245,60 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     action, raw_id = q.data.split(":")
     draft_id = int(raw_id)
+    pritje = context.chat_data.setdefault("pritje", {})
 
     if action == "refuzo":
         if db.claim(draft_id, "rejected"):
+            pritje.pop(draft_id, None)
             await q.answer("U refuzua")
             await q.edit_message_reply_markup(reply_markup=None)
-            await q.message.reply_text(f"❌ #{draft_id} u refuzua.")
+            await q.message.reply_text(f"❌ #{draft_id} nuk u postua.")
         else:
             await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
         return
 
+    if action == "anulo":
+        pritje.pop(draft_id, None)
+        if context.chat_data.get("e_fundit") == draft_id:
+            context.chat_data.pop("e_fundit", None)
+        await q.answer("U anulua")
+        await q.edit_message_text(f"↩️ #{draft_id}: zgjidh përsëri.", reply_markup=keyboard(draft_id))
+        return
+
     if action in ("posto", "pfb"):
-        if not db.claim(draft_id, "publishing"):
+        d = db.get_draft(draft_id)
+        if not d or d["status"] != "pending":
             await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
             return
-        await q.answer("Duke publikuar …")
+        to_fb = action == "pfb"
+        await q.answer()
+        await q.edit_message_reply_markup(reply_markup=None)
+        if has_photo(d):
+            await publish(q.message, draft_id, to_fb)
+            return
+        # Erst Foto verlangen, dann veröffentlichen
+        pritje[draft_id] = to_fb
+        context.chat_data["e_fundit"] = draft_id
+        ku = "uebfaqe + Facebook" if to_fb else "uebfaqe"
+        await q.message.reply_text(
+            f"📷 Dërgo foton për #{draft_id} ({ku}).",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✖ Anulo", callback_data=f"anulo:{draft_id}")]]))
+        return
+
+    if action == "fb":
+        d = db.get_draft(draft_id)
+        if not d or d["status"] != "posted":
+            await q.answer("Artikulli nuk është ende në uebfaqe.", show_alert=True)
+            return
+        await q.answer("Duke postuar në Facebook …")
         try:
-            post = await asyncio.to_thread(pipeline.publish_draft, draft_id)
+            fb_url = await asyncio.to_thread(pipeline.post_to_facebook, draft_id)
         except Exception as exc:
-            log.exception("Publizieren fehlgeschlagen")
-            db.update_draft(draft_id, status="pending", error=str(exc))
-            await q.message.reply_text(f"⚠️ #{draft_id} nuk u publikua: {exc}\nProvo përsëri me ✅ Posto.")
+            log.exception("Facebook fehlgeschlagen")
+            await q.message.reply_text(f"⚠️ Facebook dështoi: {exc}")
             return
         await q.edit_message_reply_markup(reply_markup=None)
-        msg = f"✅ #{draft_id} u publikua:\n{post['link']}"
-        if action == "pfb":
-            try:
-                fb_url = await asyncio.to_thread(pipeline.post_to_facebook, draft_id)
-                msg += f"\n📘 Facebook: {fb_url}"
-            except Exception as exc:
-                log.exception("Facebook fehlgeschlagen")
-                msg += f"\n⚠️ Facebook dështoi: {exc}"
-        await q.message.reply_text(msg)
+        await q.message.reply_text(f"📘 #{draft_id} në Facebook:\n{fb_url}")
 
 
 async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -252,7 +312,7 @@ def main() -> None:
     app.add_handler(CommandHandler("skano", cmd_scan))
     app.add_handler(CommandHandler("statusi", cmd_status))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
-    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo):\d+$"))
+    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))
     app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),

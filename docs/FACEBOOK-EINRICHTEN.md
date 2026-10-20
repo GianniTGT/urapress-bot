@@ -198,13 +198,22 @@ sudo systemctl status urapress-bot --no-pager | head -3
 
 ### Test in Telegram
 
-`/skano` schicken. Bei jedem Vorschlag erscheinen jetzt drei Knöpfe:
+`/skano` schicken. Bei jedem Vorschlag kommen drei Knöpfe:
 
-- **📘 Posto + FB** → Website **und** Facebook (Foto + Titel + Kurztext + Link)
-- **✅ Posto** → nur Website
-- **❌ Refuzo**
+| Knopf | Was passiert |
+|---|---|
+| **📘 Posto + Foto + FB** | Bot fragt „📷 Dërgo foton" → Foto schicken → **Website + Facebook** mit diesem Foto |
+| **✅ Posto + Foto** | Bot fragt „📷 Dërgo foton" → Foto schicken → **nur Website** |
+| **❌ Mos posto** | wird verworfen |
 
-Der Knopf 📘 erscheint **nur**, wenn `FB_PAGE_ID` und `FB_PAGE_TOKEN` gesetzt sind.
+- Das Foto kann man einfach schicken oder als Reply auf „📷 Dërgo foton für #N" senden.
+- Wer zuerst ein Foto als Reply auf den Vorschlag schickt, wird danach gefragt „Ku ta postojmë?" und wählt dann den Knopf.
+- **✖ Anulo** unter „📷 Dërgo foton" bringt die drei Knöpfe zurück.
+- Gibt es schon ein Personenfoto aus der eigenen WP-Mediathek, wird **ohne** Nachfrage direkt gepostet.
+- Der FB-Knopf erscheint **nur**, wenn `FB_PAGE_ID` und `FB_PAGE_TOKEN` gesetzt sind.
+
+**Ohne Beitragsbild** zeigt Facebook das feste UraPress-Bild (`theme/urapress/assets/og-default.jpg`)
+und nicht irgendein fremdes Bild von der Seite. Am 20.10. ist genau das passiert: Facebook hat sich ein Foto aus einem anderen Artikel geholt.
 
 ---
 
@@ -264,6 +273,8 @@ einfügen, dort muss „Gültig: Wahr" stehen.
 - `facebook.py`: Graph API v21.0. Mit Bild: `POST /{page}/photos` (url + caption).
   Ohne Bild: `POST /{page}/feed` (message + link).
 - `pipeline.post_to_facebook(draft_id)`: Text = Titel + Kurztext + Link. Bild = Beitragsbild aus WordPress (`media_url`).
-- `bot.py`: Callback `pfb:<id>` veröffentlicht zuerst in WordPress und dann auf FB.
+- `bot.py`: Knöpfe `pfb:<id>` (Website + FB) und `posto:<id>` (nur Website) verlangen zuerst ein Foto
+  (gemerkt in `chat_data["pritje"]`). `fb:<id>` postet einen schon veröffentlichten Artikel nur auf FB.
+  `pfb` veröffentlicht zuerst in WordPress und dann auf FB.
   Wenn FB fehlschlägt, bleibt der Artikel auf der Website und Telegram zeigt den Fehler.
 - `config.py`: `FB_PAGE_ID`, `FB_PAGE_TOKEN` (optional, leer = kein FB-Knopf).
