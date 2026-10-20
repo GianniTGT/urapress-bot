@@ -16,6 +16,12 @@
 <?php wp_body_open(); ?>
 <a class="skip-link screen-reader-text" href="#content"><?php esc_html_e( 'Kalo te përmbajtja', 'urapress' ); ?></a>
 
+<?php if ( is_active_sidebar( 'ads-top' ) ) : ?>
+<div class="up-adtop" aria-label="<?php esc_attr_e( 'Reklamë', 'urapress' ); ?>">
+	<div class="up-wrap up-adtop__inner"><?php dynamic_sidebar( 'ads-top' ); ?></div>
+</div>
+<?php endif; ?>
+
 <header class="up-header">
 	<div class="up-wrap up-header__inner">
 		<div class="up-header__left">

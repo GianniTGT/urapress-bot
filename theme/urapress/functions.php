@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.6.0' );
+define( 'URAPRESS_VERSION', '1.7.0' );
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.
@@ -110,12 +110,16 @@ function urapress_preconnect( $urls, $relation_type ) {
 }
 add_filter( 'wp_resource_hints', 'urapress_preconnect', 10, 2 );
 
-/* Favicon me harkun, nëse nuk është vendosur "Site Icon" në WordPress. */
+/* Favicon, ikona për celular dhe manifest (ura e varur), nëse nuk është vendosur "Site Icon" në WordPress. */
 function urapress_favicon() {
 	if ( has_site_icon() ) {
 		return;
 	}
-	printf( '<link rel="icon" type="image/svg+xml" href="%s">' . "\n", esc_url( get_template_directory_uri() . '/assets/favicon.svg' ) );
+	$b = get_template_directory_uri() . '/assets/brand/';
+	printf( '<link rel="icon" href="%s" sizes="48x48">' . "\n", esc_url( $b . 'favicon.ico' ) );
+	printf( '<link rel="icon" type="image/svg+xml" href="%s">' . "\n", esc_url( $b . 'icon-small.svg' ) );
+	printf( '<link rel="apple-touch-icon" href="%s">' . "\n", esc_url( $b . 'apple-touch-icon.png' ) );
+	printf( '<link rel="manifest" href="%s">' . "\n", esc_url( $b . 'site.webmanifest' ) );
 }
 add_action( 'wp_head', 'urapress_favicon' );
 
@@ -149,6 +153,22 @@ function urapress_widgets() {
 }
 add_action( 'widgets_init', 'urapress_widgets' );
 
+/* Hapësirë reklame lart (mbi logo), 970×90 ose 728×90. Shfaqet vetëm kur ka një widget. */
+function urapress_widgets_top() {
+	register_sidebar(
+		array(
+			'name'          => __( 'Reklamë – lart (970×90)', 'urapress' ),
+			'id'            => 'ads-top',
+			'description'   => __( 'Banner mbi logo, në të gjitha faqet. Shto p.sh. një widget "Foto" me lidhje. Bosh = nuk shfaqet.', 'urapress' ),
+			'before_widget' => '<div id="%1$s" class="up-adtop__item %2$s">',
+			'after_widget'  => '</div>',
+			'before_title'  => '<span class="screen-reader-text">',
+			'after_title'   => '</span>',
+		)
+	);
+}
+add_action( 'widgets_init', 'urapress_widgets_top' );
+
 /* ------------------------------------------------------------------ */
 /* Excerpt                                                            */
 /* ------------------------------------------------------------------ */
@@ -162,16 +182,46 @@ add_filter( 'excerpt_more', fn() => '…' );
 
 /** Logoja: "ura" në të kuqe, "press" në të zezë, me harkun e urës poshtë. */
 function urapress_logo( $tag = 'div' ) {
+	static $svg = null;
 	$tag = in_array( $tag, array( 'h1', 'div' ), true ) ? $tag : 'div';
+	if ( null === $svg ) {
+		$svg = (string) file_get_contents( get_template_directory() . '/assets/brand/logo-inline.svg' );
+		// feste Grösse entfernen, Grösse kommt aus dem CSS
+		$svg = preg_replace( '/<svg ([^>]*?)width="[^"]*" height="[^"]*"/', '<svg class="up-logo__svg" $1', $svg, 1 );
+		$svg = str_replace( 'role="img" aria-label="UraPress"', 'aria-hidden="true" focusable="false"', $svg );
+	}
 	printf(
-		'<%1$s class="up-logo-wrap" style="margin:0"><a class="up-logo" href="%2$s" rel="home" aria-label="%3$s">' .
-		'<span class="up-logo__word" aria-hidden="true"><span>ura</span>press</span>' .
-		'<svg class="up-logo__arch" viewBox="0 0 560 56" aria-hidden="true"><path d="M14 14 Q280 64 546 14" fill="none" stroke="#D7141A" stroke-width="8" stroke-linecap="round"/><circle cx="14" cy="14" r="10" fill="currentColor"/><circle cx="546" cy="14" r="10" fill="currentColor"/></svg>' .
-		'</a></%1$s>',
+		'<%1$s class="up-logo-wrap" style="margin:0"><a class="up-logo" href="%2$s" rel="home" aria-label="%3$s">%4$s</a></%1$s>',
 		$tag,
 		esc_url( home_url( '/' ) ),
-		esc_attr( get_bloginfo( 'name' ) )
+		esc_attr( get_bloginfo( 'name' ) ),
+		$svg // phpcs:ignore -- eigene Datei aus dem Theme
 	);
+}
+
+/** Shenja mbi foto (TOP LAJM, SKANDAL …). Vendoset si etiketë (tag) e artikullit. */
+function urapress_badges() {
+	return array(
+		'e-fundit'   => 'E FUNDIT',
+		'top-lajm'   => 'TOP LAJM',
+		'skandal'    => 'SKANDAL',
+		'ekskluzive' => 'EKSKLUZIVE',
+	);
+}
+
+/** Gibt [slug, Text] der Markierung eines Artikels zurück oder null. */
+function urapress_post_badge( $post_id = null ) {
+	$tags = get_the_tags( $post_id );
+	if ( ! $tags ) {
+		return null;
+	}
+	$slugs = wp_list_pluck( $tags, 'slug' );
+	foreach ( urapress_badges() as $slug => $label ) {
+		if ( in_array( $slug, $slugs, true ) ) {
+			return array( $slug, $label );
+		}
+	}
+	return null;
 }
 
 /** Kategoria kryesore e artikullit (e para që është në listën e rubrikave). */

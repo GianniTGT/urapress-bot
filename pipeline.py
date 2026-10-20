@@ -120,7 +120,9 @@ def post_to_facebook(draft_id: int) -> str:
             image_url = WordPress().media_url(d["wp_media_id"]) or None
         except Exception as exc:
             log.warning("FB-Bild-URL nicht ermittelbar: %s", exc)
-    message = d["title"]
+    icons = {"E FUNDIT": "🔴", "TOP LAJM": "🔥", "SKANDAL": "⚠️", "EKSKLUZIVE": "⭐"}
+    badge = next((x for x in d["tags"] if x in icons), None)
+    message = f"{icons[badge]} {badge} | {d['title']}" if badge else d["title"]
     if d["excerpt"]:
         message += "\n\n" + d["excerpt"]
     message += "\n\n" + link

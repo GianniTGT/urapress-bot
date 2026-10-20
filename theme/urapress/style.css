@@ -426,3 +426,70 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 
 .up-nav li a { color: var(--up-ink); background: transparent; }
 .up-nav li a:hover { background: transparent; }
+
+/* =====================================================================
+   1.7.0 – Logo „Hängebrücke", Reklamo-Knopf, Rubrik-Farben, Werbeplatz oben
+   ===================================================================== */
+.up-logo { display: inline-flex; color: var(--up-ink); }
+.up-logo__svg { display: block; height: 96px; width: auto; }
+.up-footer .up-logo { color: #fff; }
+.up-footer .up-logo__svg { height: 76px; }
+@media (max-width: 1024px) { .up-logo__svg { height: 80px; } }
+@media (max-width: 760px) { .up-logo__svg { height: 54px; } }
+
+/* Reklamo als roter Knopf */
+.up-header__right { align-items: center; }
+.up-header__right a[href*="reklamo"] {
+	display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: 999px;
+	background: var(--up-red); color: #fff; box-shadow: 0 2px 6px rgba(215, 20, 26, .25);
+}
+.up-header__right a[href*="reklamo"]::before {
+	content: ""; width: 16px; height: 16px; background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 10v4a1 1 0 0 0 1 1h2l5 4V5L6 9H4a1 1 0 0 0-1 1zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 10v4a1 1 0 0 0 1 1h2l5 4V5L6 9H4a1 1 0 0 0-1 1zm13.5 2a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.up-header__right a[href*="reklamo"]:hover { background: var(--up-red-dark); color: #fff; }
+
+/* Rubriken: dezente Farbmarke vor jedem Namen */
+.up-nav a[href*="/category/zvicer"] { --c: #D7141A; }
+.up-nav a[href*="/category/diaspora"] { --c: #F08A24; }
+.up-nav a[href*="/category/kosove"] { --c: #2346A0; }
+.up-nav a[href*="/category/shqiperi"] { --c: #8B1E3F; }
+.up-nav a[href*="/category/maqedoni-e-veriut"] { --c: #E3A80F; }
+.up-nav a[href*="/category/mal-i-zi"] { --c: #0E8A7E; }
+.up-nav a[href*="/category/lugina-e-presheves"] { --c: #6A4FB3; }
+.up-nav a[href*="/category/bota"] { --c: #1A9BD7; }
+.up-nav a[href*="/category/ekonomi"] { --c: #5C6B7A; }
+.up-nav a[href*="/category/sport"] { --c: #2E9E4F; }
+.up-nav a[href*="/category/kulture-showbiz"] { --c: #D63A8A; }
+.up-nav li a::before {
+	content: ""; display: inline-block; width: 10px; height: 4px; border-radius: 2px; margin-right: 7px;
+	background: var(--c, var(--up-red)); vertical-align: middle; position: relative; top: -1px;
+}
+.up-nav li a:hover,
+.up-nav li.current-menu-item > a,
+.up-nav li.current-cat > a,
+.up-nav li.current-menu-parent > a { color: var(--up-ink); border-bottom-color: var(--c, var(--up-ink)); }
+
+/* Werbeplatz oben (nur sichtbar, wenn ein Widget drin ist) */
+.up-adtop { background: #F6F5F2; border-bottom: 1px solid var(--up-line); }
+.up-adtop__inner { display: flex; flex-direction: column; align-items: center; gap: 4px; padding-top: 10px; padding-bottom: 12px; }
+.up-adtop__inner::before { content: "Reklamë"; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--up-muted); }
+.up-adtop__item { max-width: 970px; width: 100%; display: flex; justify-content: center; }
+.up-adtop img { display: block; max-width: 100%; height: auto; }
+
+/* Markierung auf dem Foto: TOP LAJM, SKANDAL, EKSKLUZIVE, E FUNDIT */
+.up-card__badge {
+	position: absolute; top: 10px; left: 10px; z-index: 2; display: inline-flex; align-items: center; gap: 6px;
+	padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 900; letter-spacing: .06em; line-height: 1.4;
+	color: #fff; background: var(--up-red); box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.up-card__badge--skandal { background: #FFD400; color: #16181D; }
+.up-card__badge--ekskluzive { background: #16181D; color: #fff; border-left: 4px solid var(--up-red); }
+.up-card__badge--e-fundit::before {
+	content: ""; width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: up-pulse 1.4s ease-in-out infinite;
+}
+@keyframes up-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+@media (prefers-reduced-motion: reduce) { .up-card__badge--e-fundit::before { animation: none; } }
+.up-card--overlay-lead .up-card__badge { top: 18px; left: 18px; font-size: 14px; padding: 6px 12px; }
+.up-card--row .up-card__badge { top: 6px; left: 6px; font-size: 9px; padding: 2px 6px; }

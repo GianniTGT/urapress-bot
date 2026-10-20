@@ -27,7 +27,11 @@ urapress_shown( get_the_ID() );
 		<?php if ( has_post_thumbnail() ) : ?>
 			<?php the_post_thumbnail( $urapress_args['size'], array( 'alt' => '', 'loading' => 'lead' === $urapress_variant ? 'eager' : 'lazy' ) ); ?>
 		<?php else : ?>
-			<span class="up-card__noimg"><svg viewBox="0 0 520 60" aria-hidden="true"><path d="M10 10 Q260 70 510 10" fill="none" stroke="#16181D" stroke-width="10" stroke-linecap="round"/></svg></span>
+			<span class="up-card__noimg"><svg viewBox="0 0 120 60" aria-hidden="true" fill="none" stroke="#16181D" stroke-linecap="round"><path d="M38 48V31M60 48V20M82 48V31" stroke-width="2.5"/><path d="M12 48Q60 -2 108 48" stroke="#D7141A" stroke-width="6"/><path d="M8 48h104" stroke-width="5"/></svg></span>
+		<?php endif; ?>
+		<?php $urapress_badge = urapress_post_badge(); ?>
+		<?php if ( $urapress_badge ) : ?>
+			<span class="up-card__badge up-card__badge--<?php echo esc_attr( $urapress_badge[0] ); ?>"><?php echo esc_html( $urapress_badge[1] ); ?></span>
 		<?php endif; ?>
 		<?php $urapress_nc = (int) get_comments_number(); ?>
 		<?php if ( $urapress_nc > 0 ) : ?>

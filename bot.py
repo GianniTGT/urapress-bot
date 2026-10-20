@@ -38,11 +38,21 @@ def is_admin(update: Update) -> bool:
     return update.effective_user and update.effective_user.id in config.TELEGRAM_ADMIN_IDS
 
 
+BADGES = ["E FUNDIT", "TOP LAJM", "SKANDAL", "EKSKLUZIVE"]  # Reihenfolge beim Durchschalten
+
+
+def current_badge(tags: list[str]) -> str | None:
+    return next((t for t in tags if t in BADGES), None)
+
+
 def keyboard(draft_id: int) -> InlineKeyboardMarkup:
+    d = db.get_draft(draft_id)
+    badge = current_badge(d["tags"]) if d else None
     rows = []
     if facebook.enabled():
         rows.append([InlineKeyboardButton("📘 Posto + Foto + FB", callback_data=f"pfb:{draft_id}")])
     rows.append([InlineKeyboardButton("✅ Posto + Foto", callback_data=f"posto:{draft_id}")])
+    rows.append([InlineKeyboardButton(f"🏷 Shenjë mbi foto: {badge or 'asnjë'}", callback_data=f"shenje:{draft_id}")])
     rows.append([InlineKeyboardButton("✏️ Ndrysho tekstin", callback_data=f"ndrysho:{draft_id}"),
                  InlineKeyboardButton("❌ Mos posto", callback_data=f"refuzo:{draft_id}")])
     return InlineKeyboardMarkup(rows)
@@ -390,6 +400,19 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
         return
 
+    if action == "shenje":
+        d = db.get_draft(draft_id)
+        if not d or d["status"] != "pending":
+            await q.answer("Ky lajm është trajtuar tashmë.", show_alert=True)
+            return
+        cur = current_badge(d["tags"])
+        nxt = BADGES[BADGES.index(cur) + 1] if cur and cur != BADGES[-1] else (None if cur else BADGES[0])
+        tags = [t for t in d["tags"] if t not in BADGES] + ([nxt] if nxt else [])
+        db.update_draft(draft_id, tags=json.dumps(tags, ensure_ascii=False))
+        await q.answer(nxt or "pa shenjë")
+        await q.edit_message_reply_markup(reply_markup=keyboard(draft_id))
+        return
+
     if action == "ndrysho":
         d = db.get_draft(draft_id)
         if not d or d["status"] != "pending":
@@ -465,7 +488,7 @@ def main() -> None:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
     app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
-    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho):\d+$"))
+    app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho|shenje):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))
     app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),
