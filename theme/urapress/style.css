@@ -671,3 +671,38 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-njs .up-njs__add { width: 100%; justify-content: center; padding: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .up-njs__pic::before, .up-njs__pic svg { transition: none; } }
+
+/* =====================================================================
+   1.11.0 – Njoftime auf der Startseite und unter Artikeln
+   ===================================================================== */
+.up-njhome { background: linear-gradient(135deg, #FFF6EC, #F3F0FF); border-radius: 18px; padding: 24px; }
+.up-njhome__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.up-njhome__title { margin: 0; font-size: 30px; font-weight: 900; }
+.up-njhome__sub { margin: 4px 0 0; color: var(--up-muted); }
+.up-njhome__sub b { color: var(--up-red); }
+.up-njhome__btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.up-njhome__btns a { padding: 10px 18px; border-radius: 10px; font-weight: 800; }
+.up-njhome__all { border: 2px solid var(--up-ink); color: var(--up-ink); }
+.up-njhome__add { background: var(--up-red); color: #fff; }
+.up-njhome__add:hover { background: var(--up-red-dark); color: #fff; }
+.up-njhome__all:hover { background: var(--up-ink); color: #fff; }
+.up-njhome__tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.up-njhome__tiles a { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px; border-radius: 14px; background: #fff; font-weight: 800; font-size: 15px; text-align: center; color: var(--up-ink); box-shadow: 0 1px 3px rgba(0,0,0,.06); transition: transform .2s; }
+.up-njhome__tiles a:hover { transform: translateY(-3px); color: var(--up-ink); }
+.up-njhome__tiles span { width: 70px; height: 70px; border-radius: 18px; background: var(--b); display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); }
+.up-njhome__tiles svg { width: 56px; height: 56px; transform: rotate(8deg); }
+.up-njhome__list { margin-top: 18px; }
+.up-njpromo { display: flex; align-items: center; gap: 12px; margin: 26px 0 8px; padding: 14px 16px; border-radius: 12px; background: #FFF6EC; border: 1px solid #F6D9B8; color: var(--up-ink); font-size: 16px; }
+.up-njpromo:hover { color: var(--up-ink); background: #FFEEDB; }
+.up-njpromo__ico { font-size: 22px; }
+.up-njpromo__go { margin-left: auto; white-space: nowrap; font-weight: 800; color: var(--up-red); }
+@media (max-width: 1024px) { .up-njhome__tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+	.up-njhome { padding: 16px; border-radius: 14px; }
+	.up-njhome__btns { width: 100%; }
+	.up-njhome__btns a { flex: 1; text-align: center; }
+	.up-njhome__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+	.up-njpromo { flex-wrap: wrap; font-size: 15px; }
+	.up-njpromo__go { margin-left: 34px; }
+}
+@media (prefers-reduced-motion: reduce) { .up-njhome__tiles a { transition: none; } }

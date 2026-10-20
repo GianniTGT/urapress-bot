@@ -75,6 +75,12 @@ get_header();
 				</div>
 			<?php endif; ?>
 
+			<?php
+			if ( ! $urapress_zazu ) {
+				urapress_nj_promo();
+			}
+			?>
+
 			<div class="up-share" aria-label="<?php esc_attr_e( 'Shpërndaje', 'urapress' ); ?>">
 				<a class="up-share__wa" href="https://wa.me/?text=<?php echo $urapress_title . '%20' . $urapress_url; // phpcs:ignore ?>" target="_blank" rel="noopener">WhatsApp</a>
 				<a class="up-share__fb" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $urapress_url; // phpcs:ignore ?>" target="_blank" rel="noopener">Facebook</a>

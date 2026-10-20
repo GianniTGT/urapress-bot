@@ -246,6 +246,64 @@ function urapress_nj_card( $post, $full = false ) {
 	<?php
 }
 
+/* Kasten auf der Startseite: Kategorien + neueste Anzeigen */
+function urapress_nj_home_block() {
+	$base   = get_post_type_archive_link( 'njoftim' );
+	$latest = get_posts(
+		array(
+			'post_type'      => 'njoftim',
+			'post_status'    => 'publish',
+			'posts_per_page' => 3,
+			'date_query'     => array( array( 'after' => URAPRESS_NJ_DAYS . ' days ago' ) ),
+		)
+	);
+	?>
+	<section class="up-section up-njhome" aria-label="Njoftime">
+		<div class="up-njhome__head">
+			<div>
+				<h2 class="up-njhome__title">Njoftime</h2>
+				<p class="up-njhome__sub">Kërkoni zanatçi, banesë, veturë – ose ofroni diçka. <b>Falas</b> për komunitetin.</p>
+			</div>
+			<div class="up-njhome__btns">
+				<a class="up-njhome__all" href="<?php echo esc_url( $base ); ?>">Shiko njoftimet</a>
+				<a class="up-njhome__add" href="<?php echo esc_url( $base ); ?>#shto">+ Shto njoftim falas</a>
+			</div>
+		</div>
+		<nav class="up-njhome__tiles" aria-label="Kategoritë e njoftimeve">
+			<?php
+			foreach ( urapress_nj_cats() as $k => $v ) :
+				list( $bg, $svg ) = urapress_nj_icon( $k );
+				?>
+				<a href="<?php echo esc_url( add_query_arg( 'kategoria', $k, $base ) ); ?>" style="--b:<?php echo esc_attr( $bg ); ?>">
+					<span><svg viewBox="0 0 120 120" aria-hidden="true"><?php echo $svg; // phpcs:ignore -- feste Zeichnung ?></svg></span>
+					<?php echo esc_html( $v ); ?>
+				</a>
+			<?php endforeach; ?>
+		</nav>
+		<?php if ( $latest ) : ?>
+			<div class="up-njs__grid up-njhome__list">
+				<?php
+				foreach ( $latest as $p ) {
+					urapress_nj_card( $p );
+				}
+				?>
+			</div>
+		<?php endif; ?>
+	</section>
+	<?php
+}
+
+/* Kleine Zeile unter jedem Artikel */
+function urapress_nj_promo() {
+	?>
+	<a class="up-njpromo" href="<?php echo esc_url( get_post_type_archive_link( 'njoftim' ) ); ?>">
+		<span class="up-njpromo__ico" aria-hidden="true">📌</span>
+		<span><b>Kërkoni zanatçi, banesë apo veturë?</b> Njoftimet e komunitetit – falas.</span>
+		<span class="up-njpromo__go">Njoftime →</span>
+	</a>
+	<?php
+}
+
 /* "Njoftime" in der Rubriken-Leiste und im Footer-Menü */
 function urapress_nj_footer_item( $items, $args ) {
 	if ( isset( $args->theme_location ) && 'footer' === $args->theme_location ) {

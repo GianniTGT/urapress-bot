@@ -93,6 +93,8 @@ $urapress_top      = $urapress_lead_ids
 		</section>
 	<?php endif; ?>
 
+	<?php urapress_nj_home_block(); ?>
+
 	<?php if ( is_active_sidebar( 'ads-home' ) ) : ?>
 		<section class="up-section"><?php dynamic_sidebar( 'ads-home' ); ?></section>
 	<?php else : ?>
