@@ -531,7 +531,9 @@ function urapress_nj_promo() {
 /* "Njoftime" in der Rubriken-Leiste und im Footer-Menü */
 function urapress_nj_footer_item( $items, $args ) {
 	if ( isset( $args->theme_location ) && 'footer' === $args->theme_location ) {
-		$items = sprintf( '<li><a href="%s">Njoftime</a></li>', esc_url( get_post_type_archive_link( 'njoftim' ) ) ) . $items;
+		$items = sprintf( '<li><a href="%s">Njoftime</a></li>', esc_url( get_post_type_archive_link( 'njoftim' ) ) )
+			. ( urapress_zazu_cat_id() ? sprintf( '<li><a href="%s">ZaZu</a></li>', esc_url( get_category_link( urapress_zazu_cat_id() ) ) ) : '' )
+			. $items;
 	}
 	return $items;
 }

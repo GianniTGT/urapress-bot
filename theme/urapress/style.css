@@ -848,3 +848,8 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-llog__btn.is-del { color: #9B1C1C; border-color: #F0B4B4; }
 .up-llog__edit { max-width: none; margin-top: 0; }
 .up-llog__formbtns { display: flex; gap: 16px; align-items: center; }
+/* 1.17.1 – Kopf rechts nur noch Llogaria/Hyr und Reklamo (auch am Handy) */
+.up-header__right .up-header__acc { font-weight: 800; white-space: nowrap; }
+@media (max-width: 1024px) { .up-header__right a.up-header__acc { display: inline-flex; margin-right: 10px; } }
+@media (max-width: 760px) { .up-header__right a.up-header__acc { font-size: 14px; margin-right: 6px; } }
+@media (max-width: 760px) { .up-header__right .up-header__acc span { display: none; } .up-header__right a.up-header__acc { font-size: 22px; } }
