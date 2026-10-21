@@ -212,7 +212,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Befehl ohne Telegram-Markierung (z. B. kopiert/eingefügt mit unsichtbarem Zeichen): trotzdem ausführen
     raw = (msg.text or "").lstrip(" \u200b\u200c\u200d\u2060\ufeff\u00a0").replace("\uff0f", "/")
     if raw.startswith("/"):
-        name, _, rest = raw[1:].partition(" ")
+        name, _, rest = raw[1:].lstrip().partition(" ")
         handler = {"skano": cmd_scan, "zazu": cmd_zazu, "shkruaj": cmd_write, "anulo": cmd_cancel,
                    "statusi": cmd_status}.get(name.split("@")[0].strip().lower())
         if handler:
