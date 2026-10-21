@@ -542,6 +542,10 @@ add_filter(
 			$vendi = get_post_meta( $id, '_nj_vendi', true );
 			$parts['title'] = get_the_title( $id ) . ( $vendi ? ' – ' . $vendi : '' ) . ' | Njoftim · Kleinanzeige ' . ( urapress_nj_cats_de()[ $kat ] ?? '' );
 		}
+		if ( is_post_type_archive( 'njoftim' ) || is_singular( 'njoftim' ) ) {
+			unset( $parts['tagline'] );
+			$parts['site'] = 'UraPress';
+		}
 		return $parts;
 	}
 );
