@@ -706,3 +706,14 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-njpromo__go { margin-left: 34px; }
 }
 @media (prefers-reduced-motion: reduce) { .up-njhome__tiles a { transition: none; } }
+
+/* =====================================================================
+   1.12.0 – Knopf «Ballina» (zurück zur Startseite) in der Rubriken-Leiste
+   ===================================================================== */
+.up-nav li.up-nav__home a { display: inline-flex; align-items: center; gap: 6px; --c: var(--up-red); }
+.up-nav li.up-nav__home svg { display: block; }
+@media (min-width: 761px) {
+	.up-nav li.up-nav__home span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+	.up-nav li.up-nav__home a { padding-left: 2px; padding-right: 4px; }
+}
+@media (max-width: 760px) { .up-nav li.up-nav__home a { font-weight: 800; } }

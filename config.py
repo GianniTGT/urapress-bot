@@ -47,7 +47,7 @@ FB_PAGE_TOKEN = _get("FB_PAGE_TOKEN", "")
 # --- Quellen & Ablauf -------------------------------------------------------
 FEEDS = [f.strip() for f in _get(
     "FEEDS",
-    "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/,https://partner-feeds.20min.ch/rss/20minuten,https://www.b92.net/rss/b92/info,https://telegrafi.com/feeds/feed.rss?geo=CH,https://zhurnal.mk/feed/",
+    "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/,https://partner-feeds.20min.ch/rss/20minuten,https://www.b92.net/rss/b92/info,https://telegrafi.com/feeds/feed.rss?geo=CH,https://zhurnal.mk/feed/,https://telegrafi.com/feeds/feed.rss?geo=DE,https://rss.dw.com/rdf/rss-alb-all,https://www.gazetaexpress.com/feed/",
 
 ).split(",") if f.strip()]
 SCAN_TIME = _get("SCAN_TIME", "07:30")          # HH:MM

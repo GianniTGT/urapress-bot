@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.11.0' );
+define( 'URAPRESS_VERSION', '1.12.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 
 /**
@@ -299,6 +299,11 @@ function urapress_is_ai_image( $attachment_id ) {
 /** Menyja rezervë: rubrikat kryesore, nëse nuk është caktuar meny në WordPress. */
 function urapress_fallback_menu() {
 	echo '<ul id="primary-menu">';
+	printf(
+		'<li class="up-nav__home%s"><a href="%s" aria-label="Ballina" title="Ballina"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8"/><path d="M5.5 9.5V21h13V9.5"/><path d="M10 21v-6h4v6"/></svg><span>Ballina</span></a></li>',
+		is_front_page() ? ' current-cat' : '',
+		esc_url( home_url( '/' ) )
+	);
 	foreach ( urapress_main_categories() as $name ) {
 		$term = urapress_category_by_name( $name );
 		if ( ! $term ) {

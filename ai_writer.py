@@ -16,12 +16,18 @@ Shqipëri, Kosovë, Maqedoni e Veriut, Mal i Zi, Lugina e Preshevës, Diaspora;
 dazu Sport, Ekonomi, Kulturë & Showbiz, Bota).
 
 Wähle aus der Kandidatenliste die besten Meldungen für heute aus. Kriterien:
-1. Nachrichtenwert und Relevanz für Albaner in der Schweiz / im deutschsprachigen Raum.
-   Meldungen mit direktem Diaspora-Bezug klar bevorzugen.
-2. Vielfalt: nicht mehrmals dasselbe Thema oder dasselbe Land.
-3. Ausschliessen: Gedichte, Werbung/Firmen-Promotion, reine Meinungsbeiträge ohne
-   Nachrichtenkern, Gerüchte, Meldungen, die schon publiziert wurden (siehe Liste).
-4. Bei zwei Meldungen zum selben Ereignis: nur die ausführlichere wählen.
+1. Nachrichtenwert und Relevanz für Albaner in der Schweiz und in DEUTSCHLAND (dort lebt die
+   grösste albanische Diaspora) sowie im übrigen deutschsprachigen Raum.
+   Meldungen mit direktem Diaspora-Bezug klar bevorzugen – Meldungen über Albaner in
+   Deutschland genauso wie über Albaner in der Schweiz.
+2. Mischung: Wenn eine passende Meldung dabei ist, soll mindestens EINE aus Kulturë & Showbiz
+   stammen – bekannte albanische Sänger, Schauspieler, TV-Gesichter, Influencer, Skandale,
+   Streit, Liebe/Trennung, Auftritte. Das lesen die Leute am liebsten.
+3. Vielfalt: nicht mehrmals dasselbe Thema oder dasselbe Land.
+4. Ausschliessen: Gedichte, Werbung/Firmen-Promotion, reine Meinungsbeiträge ohne
+   Nachrichtenkern, reine Gerüchte ohne Quelle (Showbiz-Meldungen über Aussagen, Posts oder
+   Auftritte von Stars sind KEINE Gerüchte), Meldungen, die schon publiziert wurden (siehe Liste).
+5. Bei zwei Meldungen zum selben Ereignis: nur die ausführlichere wählen.
 
 Antworte NUR mit JSON: {"zgjedhja": [Index, ...], "arsye": "kurze Begründung auf Deutsch"}"""
 
@@ -150,6 +156,18 @@ THEMES = {
         "aliases": ["sport", "sporti", "sports"],
         "guide": "lajme sportive: futboll dhe basketboll, kombëtaret e Kosovës dhe Shqipërisë, sportistë shqiptarë "
                  "brenda dhe jashtë vendit, ndeshje, transferime, rezultate dhe arritje",
+    },
+    "showbiz": {
+        "label": "Showbiz & Skandale",
+        "aliases": ["showbiz", "show", "skandal", "skandale", "vip", "kulture", "kulturë", "muzike", "muzikë"],
+        "guide": "showbiz shqiptar: këngëtarë, aktorë, prezantues, influencerë, Big Brother VIP, skandale, "
+                 "grindje, dashuri e ndarje, dasma, koncerte dhe paraqitje publike të të famshmëve",
+    },
+    "gjermani": {
+        "label": "Gjermani",
+        "aliases": ["gjermani", "gjermania", "germany", "deutschland", "de"],
+        "guide": "shqiptarët në Gjermani dhe lajme nga Gjermania që prekin diasporën: punë, leje qëndrimi, "
+                 "shtetësi, politikë gjermane, histori të shqiptarëve në qytete gjermane, sport dhe biznes",
     },
     "politik": {
         "label": "Politikë",

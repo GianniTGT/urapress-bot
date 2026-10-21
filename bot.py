@@ -3,7 +3,7 @@
 Start:  python bot.py
 Befehle im Telegram-Chat:
   /start    zeigt deine Chat-ID (für .env)
-  /skano    Scan sofort starten (optional: religjion | sport | politik)
+  /skano    Scan sofort starten (optional: religjion | sport | politik | showbiz | gjermani)
   /shkruaj  eigenen Artikel schreiben (ohne Quelle)
   /zazu     ZaZu-Comic aus Text-Zeilen zeichnen
   /statusi  Statistik
@@ -370,7 +370,7 @@ async def cmd_scan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         theme = ai_writer.resolve_theme(context.args[0])
         if not theme:
             await update.message.reply_text(
-                "Temat: /skano religjion · /skano sport · /skano politik\n"
+                "Temat: /skano religjion · /skano sport · /skano politik · /skano showbiz · /skano gjermani\n"
                 "(ose thjesht /skano për të gjitha)")
             return
     label = ai_writer.THEMES[theme]["label"] if theme else None
