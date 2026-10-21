@@ -717,3 +717,24 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-nav li.up-nav__home a { padding-left: 2px; padding-right: 4px; }
 }
 @media (max-width: 760px) { .up-nav li.up-nav__home a { font-weight: 800; } }
+
+/* =====================================================================
+   1.13.0 – Njoftime: Fotos und Auto-Angaben; Knopf «Shpërndaje»
+   ===================================================================== */
+.up-share__native { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; font: inherit; font-weight: 700; font-size: 15px; border: 2px solid var(--up-ink); background: #fff; color: var(--up-ink); cursor: pointer; }
+.up-share__native:hover { background: var(--up-ink); color: #fff; }
+.up-zazu__item .up-share { margin: 12px 0 0; }
+.up-nj__foto { position: relative; display: block; margin: -18px -18px 4px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--up-radius) var(--up-radius) 0 0; background: var(--up-soft); }
+.up-nj__foto img { width: 100%; height: 100%; object-fit: cover; }
+.up-nj__nfoto { position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px; font-weight: 700; }
+.up-nj__car { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0; padding: 8px 10px; border-radius: 8px; background: #FBE0E1; font-weight: 700; }
+.up-nj__car b { font-size: 18px; font-weight: 900; color: var(--up-red); white-space: nowrap; }
+.up-nj__galeria { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.up-nj__galeria img { width: 100%; height: 220px; object-fit: cover; border-radius: 8px; }
+.up-njs__car { border: 2px solid #F3B8BB; border-radius: 10px; padding: 12px 14px 14px; margin: 0; background: #FFF5F5; }
+.up-njs__car legend { font-weight: 800; padding: 0 6px; }
+.up-njs__row3 { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 12px; }
+.up-njs__form input[type=file] { padding: 10px; border: 2px dashed #C9CCD3; border-radius: 10px; background: #fff; font: inherit; font-size: 15px; }
+.up-njs__hint { margin: -8px 0 0; font-size: 13px; color: var(--up-muted); }
+.up-njs__hint.is-err { color: #9B1C1C; font-weight: 700; }
+@media (max-width: 760px) { .up-njs__row3 { grid-template-columns: minmax(0, 1fr); } }

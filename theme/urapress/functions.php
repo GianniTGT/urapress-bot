@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.12.0' );
+define( 'URAPRESS_VERSION', '1.13.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 
 /**
@@ -775,4 +775,47 @@ add_action(
 			$q->set( 'posts_per_page', 5 );
 		}
 	}
+);
+
+/**
+ * Teilen-Knöpfe: WhatsApp, Facebook und «Shpërndaje» (Handy: öffnet die Teilen-Liste des Telefons).
+ */
+function urapress_share( $url, $title ) {
+	$u = rawurlencode( $url );
+	$t = rawurlencode( $title );
+	?>
+	<div class="up-share" aria-label="<?php esc_attr_e( 'Shpërndaje', 'urapress' ); ?>">
+		<a class="up-share__wa" href="https://wa.me/?text=<?php echo $t . '%20' . $u; // phpcs:ignore ?>" target="_blank" rel="noopener">WhatsApp</a>
+		<a class="up-share__fb" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $u; // phpcs:ignore ?>" target="_blank" rel="noopener">Facebook</a>
+		<?php urapress_share_native( $url, $title ); ?>
+	</div>
+	<?php
+}
+
+function urapress_share_native( $url, $title ) {
+	printf(
+		'<button type="button" class="up-share__native" data-share-url="%s" data-share-title="%s">📤 Shpërndaje</button>',
+		esc_url( $url ),
+		esc_attr( $title )
+	);
+}
+
+add_action(
+	'wp_footer',
+	function () {
+		?>
+		<script>
+		document.addEventListener('click', function (e) {
+			var b = e.target.closest('[data-share-url]');
+			if (!b) { return; }
+			var d = { title: b.dataset.shareTitle, text: b.dataset.shareTitle, url: b.dataset.shareUrl };
+			if (navigator.share) { navigator.share(d).catch(function () {}); return; }
+			(navigator.clipboard ? navigator.clipboard.writeText(d.url) : Promise.reject()).then(function () {
+				b.textContent = '✔ Lidhja u kopjua';
+			}, function () { window.prompt('Kopjo lidhjen:', d.url); });
+		});
+		</script>
+		<?php
+	},
+	50
 );

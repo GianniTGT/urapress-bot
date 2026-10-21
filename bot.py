@@ -18,7 +18,7 @@ from datetime import time as dtime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions, Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LinkPreviewOptions, Update
 from telegram.constants import ParseMode
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
@@ -583,11 +583,24 @@ async def check_njoftime(context: ContextTypes.DEFAULT_TYPE) -> None:
         text = (f"📌 <b>Njoftim i ri #{nj_id}</b>\n"
                 f"{NJ_TYPES.get(m.get('_nj_lloji'), '')} · {e(NJ_CATS.get(m.get('_nj_kategoria'), ''))}"
                 f"{' · 📍 ' + e(m.get('_nj_vendi')) if m.get('_nj_vendi') else ''}\n\n"
-                f"<b>{e(title)}</b>\n{e(it['content'].get('raw', ''))}\n\n"
-                f"👤 {e(m.get('_nj_emri') or '–')} · 📞 {e(m.get('_nj_telefoni') or '–')}")
+                + (f"🚗 <b>{e(m.get('_nj_marka', ''))} {e(m.get('_nj_modeli', ''))}</b> · "
+                   f"{int(m.get('_nj_cmimi') or 0):,} CHF\n".replace(",", "'") if m.get('_nj_marka') else "")
+                + f"<b>{e(title)}</b>\n{e(it['content'].get('raw', ''))}\n\n"
+                f"👤 {e(m.get('_nj_emri') or '–')} · 📞 {e(m.get('_nj_telefoni') or '–')}"
+                + (f"\n📷 {len(it.get('nj_foto') or [])} foto" if it.get('nj_foto') else ""))
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("✅ Publiko", callback_data=f"nj_ok:{nj_id}"),
                                     InlineKeyboardButton("❌ Fshi", callback_data=f"nj_no:{nj_id}")],
                                    [InlineKeyboardButton("⭐ Publiko i theksuar (30 ditë)", callback_data=f"nj_star:{nj_id}")]])
+        fotos = it.get("nj_foto") or []
+        if fotos:
+            try:
+                if len(fotos) > 1:
+                    await context.bot.send_media_group(config.TELEGRAM_CHAT_ID,
+                                                       [InputMediaPhoto(u) for u in fotos[:3]])
+                else:
+                    await context.bot.send_photo(config.TELEGRAM_CHAT_ID, fotos[0])
+            except Exception as exc:
+                log.warning("Njoftim-Fotos nicht gesendet: %s", exc)
         await context.bot.send_message(config.TELEGRAM_CHAT_ID, text, parse_mode=ParseMode.HTML,
                                        reply_markup=kb, link_preview_options=NO_PREVIEW)
 

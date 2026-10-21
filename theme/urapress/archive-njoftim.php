@@ -13,7 +13,7 @@ $urapress_q     = isset( $_GET['q'] ) ? sanitize_text_field( wp_unslash( $_GET['
 $urapress_msg   = isset( $_GET['nj'] ) ? sanitize_key( wp_unslash( $_GET['nj'] ) ) : '';
 $urapress_msgs  = array(
 	'ok'     => array( 'ok', 'Faleminderit! Njoftimi juaj u dërgua. Del në faqe pasi ta kontrollojë redaksia – zakonisht brenda një dite.' ),
-	'mungon' => array( 'err', 'Diçka mungon: plotësoni titullin, tekstin, telefonin dhe pranoni kushtet.' ),
+	'mungon' => array( 'err', 'Diçka mungon: plotësoni titullin, tekstin, telefonin dhe pranoni kushtet. Te veturat: marka, modeli dhe çmimi.' ),
 	'shume'  => array( 'err', 'Keni dërguar shumë njoftime brenda një ore. Provoni përsëri më vonë.' ),
 	'gabim'  => array( 'err', 'Ndodhi një gabim. Ju lutemi provoni përsëri.' ),
 );
@@ -150,7 +150,7 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 		<?php if ( isset( $urapress_msgs[ $urapress_msg ] ) ) : ?>
 			<p class="up-njs__msg up-njs__msg--<?php echo esc_attr( $urapress_msgs[ $urapress_msg ][0] ); ?>"><?php echo esc_html( $urapress_msgs[ $urapress_msg ][1] ); ?></p>
 		<?php endif; ?>
-		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
 			<input type="hidden" name="action" value="urapress_nj">
 			<?php wp_nonce_field( 'urapress_nj', 'nj_nonce' ); ?>
 			<div class="up-njs__hp" aria-hidden="true"><label>Website <input type="text" name="nj_web" tabindex="-1" autocomplete="off"></label></div>
@@ -169,16 +169,53 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 				</label>
 				<label>Vendi <input type="text" name="nj_vendi" maxlength="40" placeholder="p.sh. Bern"></label>
 			</div>
+			<fieldset class="up-njs__car" data-nj-car hidden>
+				<legend>🚗 Të dhënat e veturës</legend>
+				<div class="up-njs__row3">
+					<label>Marka * <input type="text" name="nj_marka" maxlength="30" placeholder="p.sh. VW"></label>
+					<label>Modeli * <input type="text" name="nj_modeli" maxlength="40" placeholder="p.sh. Golf 1.4 TSI"></label>
+					<label><span data-nj-price>Çmimi (CHF) *</span> <input type="text" name="nj_cmimi" inputmode="numeric" maxlength="9" placeholder="p.sh. 12500"></label>
+				</div>
+			</fieldset>
 			<label>Titulli <input type="text" name="nj_titulli" minlength="5" maxlength="80" required placeholder="p.sh. Kërkoj pllakashtrues për 2 ditë punë (banjo)"></label>
 			<label>Teksti <textarea name="nj_teksti" rows="5" minlength="10" maxlength="600" required placeholder="Përshkruani shkurt: çfarë, kur, ku…"></textarea></label>
 			<div class="up-njs__row">
 				<label>Emri <input type="text" name="nj_emri" maxlength="40" placeholder="p.sh. Arben"></label>
 				<label>Telefoni / WhatsApp <input type="tel" name="nj_telefoni" required placeholder="079 123 45 67"></label>
 			</div>
+			<label>Foto (deri në <?php echo (int) URAPRESS_NJ_MAX_FOTO; ?>, falas) <input type="file" name="nj_foto[]" accept="image/jpeg,image/png,image/webp" multiple data-nj-foto></label>
+			<p class="up-njs__hint" data-nj-foto-msg>JPG, PNG ose WEBP, maksimum 8 MB secila.</p>
 			<label class="up-njs__check"><input type="checkbox" name="nj_pranoj" value="1" required> Pranoj që numri im të publikohet në njoftim dhe që redaksia mund ta refuzojë njoftimin.</label>
 			<button class="up-btn" type="submit">Dërgo njoftimin</button>
 		</form>
 	</section>
 </main>
+<script>
+(function () {
+	var f = document.querySelector('#shto form');
+	if (!f) { return; }
+	var box = f.querySelector('[data-nj-car]'), kat = f.querySelector('[name=nj_kategoria]');
+	var price = f.querySelector('[data-nj-price]'), foto = f.querySelector('[data-nj-foto]'), msg = f.querySelector('[data-nj-foto-msg]');
+	function upd() {
+		var car = kat.value === 'vetura';
+		box.hidden = !car;
+		box.querySelectorAll('input').forEach(function (i) { i.required = car; });
+		var kerkoj = (f.querySelector('[name=nj_lloji]:checked') || {}).value === 'kerkoj';
+		price.textContent = kerkoj ? 'Buxheti (CHF) *' : 'Çmimi (CHF) *';
+	}
+	kat.addEventListener('change', upd);
+	f.querySelectorAll('[name=nj_lloji]').forEach(function (r) { r.addEventListener('change', upd); });
+	upd();
+	foto.addEventListener('change', function () {
+		if (foto.files.length > <?php echo (int) URAPRESS_NJ_MAX_FOTO; ?>) {
+			msg.textContent = 'Maksimum <?php echo (int) URAPRESS_NJ_MAX_FOTO; ?> foto – vetëm të parat merren.';
+			msg.classList.add('is-err');
+		} else {
+			msg.textContent = foto.files.length ? foto.files.length + ' foto të zgjedhura.' : 'JPG, PNG ose WEBP, maksimum 8 MB secila.';
+			msg.classList.remove('is-err');
+		}
+	});
+})();
+</script>
 <?php
 get_footer();

@@ -38,7 +38,7 @@ function urapress_nj_register() {
 			'rest_base'    => 'njoftime',
 		)
 	);
-	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar' ) as $k ) {
+	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar', 'marka', 'modeli', 'cmimi', 'foto' ) as $k ) {
 		register_post_meta(
 			'njoftim',
 			'_nj_' . $k,
@@ -52,6 +52,43 @@ function urapress_nj_register() {
 	}
 }
 add_action( 'init', 'urapress_nj_register' );
+
+/* Foto-Adressen für den Telegram-Bot */
+add_action(
+	'rest_api_init',
+	function () {
+		register_rest_field(
+			'njoftim',
+			'nj_foto',
+			array(
+				'get_callback' => fn( $o ) => array_values( array_filter( array_map( 'wp_get_attachment_url', urapress_nj_photo_ids( $o['id'] ) ) ) ),
+			)
+		);
+	}
+);
+
+const URAPRESS_NJ_MAX_FOTO = 3;
+
+function urapress_nj_photo_ids( $id ) {
+	return array_values( array_filter( array_map( 'absint', explode( ',', (string) get_post_meta( $id, '_nj_foto', true ) ) ) ) );
+}
+
+/* Vetura: Marka, Modeli, Çmimi sind Pflicht */
+function urapress_nj_is_car( $kat ) {
+	return 'vetura' === $kat;
+}
+
+/* Fotos löschen, wenn die Anzeige gelöscht wird */
+function urapress_nj_delete_photos( $post_id ) {
+	if ( 'njoftim' !== get_post_type( $post_id ) ) {
+		return;
+	}
+	foreach ( urapress_nj_photo_ids( $post_id ) as $aid ) {
+		wp_delete_attachment( $aid, true );
+	}
+}
+add_action( 'wp_trash_post', 'urapress_nj_delete_photos' );
+add_action( 'before_delete_post', 'urapress_nj_delete_photos' );
 
 /* Einmalig die Adressen /njoftime/ und /njoftim/... aktivieren. */
 function urapress_nj_flush() {
@@ -145,6 +182,41 @@ function urapress_nj_icon( $k ) {
 	return $i[ $k ] ?? $i['tjera'];
 }
 
+/* Bis zu 3 Fotos aus dem Formular speichern (nur JPG/PNG/WEBP, je max. 8 MB). Gibt die IDs zurück. */
+function urapress_nj_save_photos( $post_id ) {
+	if ( empty( $_FILES['nj_foto']['name'] ) || ! is_array( $_FILES['nj_foto']['name'] ) ) {
+		return array();
+	}
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	require_once ABSPATH . 'wp-admin/includes/media.php';
+	require_once ABSPATH . 'wp-admin/includes/image.php';
+	$files = $_FILES['nj_foto']; // phpcs:ignore -- wird unten geprüft
+	$ids   = array();
+	$count = min( count( $files['name'] ), URAPRESS_NJ_MAX_FOTO );
+	for ( $i = 0; $i < $count; $i++ ) {
+		if ( UPLOAD_ERR_OK !== (int) $files['error'][ $i ] || (int) $files['size'][ $i ] > 8 * MB_IN_BYTES ) {
+			continue;
+		}
+		$check = wp_check_filetype_and_ext( $files['tmp_name'][ $i ], $files['name'][ $i ] );
+		if ( ! in_array( $check['type'], array( 'image/jpeg', 'image/png', 'image/webp' ), true ) || ! @getimagesize( $files['tmp_name'][ $i ] ) ) {
+			continue;
+		}
+		$_FILES['nj_foto_single'] = array(
+			'name'     => sanitize_file_name( 'njoftim-' . $post_id . '-' . ( $i + 1 ) . '.' . $check['ext'] ),
+			'type'     => $check['type'],
+			'tmp_name' => $files['tmp_name'][ $i ],
+			'error'    => 0,
+			'size'     => $files['size'][ $i ],
+		);
+		$aid = media_handle_upload( 'nj_foto_single', $post_id, array(), array( 'test_form' => false ) );
+		if ( ! is_wp_error( $aid ) ) {
+			$ids[] = (int) $aid;
+		}
+	}
+	unset( $_FILES['nj_foto_single'] );
+	return $ids;
+}
+
 /* Formular verarbeiten */
 function urapress_nj_submit() {
 	$back = get_post_type_archive_link( 'njoftim' );
@@ -173,12 +245,16 @@ function urapress_nj_submit() {
 	$vendi   = sanitize_text_field( $f( 'nj_vendi' ) );
 	$emri    = sanitize_text_field( $f( 'nj_emri' ) );
 	$tel     = trim( preg_replace( '/[^0-9+ ]/', '', $f( 'nj_telefoni' ) ) );
+	$marka   = sanitize_text_field( $f( 'nj_marka' ) );
+	$modeli  = sanitize_text_field( $f( 'nj_modeli' ) );
+	$cmimi   = (int) preg_replace( '/\D/', '', $f( 'nj_cmimi' ) );
 	$ok      = isset( urapress_nj_types()[ $lloji ] ) && isset( urapress_nj_cats()[ $kat ] )
 		&& mb_strlen( $titulli ) >= 5 && mb_strlen( $titulli ) <= 80
 		&& mb_strlen( $teksti ) >= 10 && mb_strlen( $teksti ) <= 600
 		&& mb_strlen( $vendi ) <= 40 && mb_strlen( $emri ) <= 40
 		&& strlen( preg_replace( '/\D/', '', $tel ) ) >= 9
-		&& ! empty( $_POST['nj_pranoj'] );
+		&& ! empty( $_POST['nj_pranoj'] )
+		&& ( ! urapress_nj_is_car( $kat ) || ( mb_strlen( $marka ) >= 2 && mb_strlen( $marka ) <= 30 && mb_strlen( $modeli ) >= 1 && mb_strlen( $modeli ) <= 40 && $cmimi > 0 && $cmimi < 10000000 ) );
 	if ( ! $ok ) {
 		$go( 'mungon' );
 	}
@@ -196,6 +272,15 @@ function urapress_nj_submit() {
 	}
 	foreach ( array( 'lloji' => $lloji, 'kategoria' => $kat, 'vendi' => $vendi, 'telefoni' => $tel, 'emri' => $emri ) as $k => $v ) {
 		update_post_meta( $id, '_nj_' . $k, $v );
+	}
+	if ( urapress_nj_is_car( $kat ) ) {
+		update_post_meta( $id, '_nj_marka', $marka );
+		update_post_meta( $id, '_nj_modeli', $modeli );
+		update_post_meta( $id, '_nj_cmimi', (string) $cmimi );
+	}
+	$foto = urapress_nj_save_photos( $id );
+	if ( $foto ) {
+		update_post_meta( $id, '_nj_foto', implode( ',', $foto ) );
 	}
 	set_transient( $ip_key, $count + 1, HOUR_IN_SECONDS );
 	$go( 'ok' );
@@ -225,8 +310,16 @@ function urapress_nj_card( $post, $full = false ) {
 	$tel   = $m( 'telefoni' );
 	$text  = $full ? $post->post_content : wp_trim_words( $post->post_content, 40, '…' );
 	$star  = urapress_nj_is_highlighted( $post->ID );
+	$foto  = urapress_nj_photo_ids( $post->ID );
+	$car   = urapress_nj_is_car( $m( 'kategoria' ) ) && $m( 'marka' );
 	?>
-	<article class="up-nj up-nj--<?php echo esc_attr( $lloji ); ?><?php echo $star ? ' up-nj--theksuar' : ''; ?>">
+	<article class="up-nj up-nj--<?php echo esc_attr( $lloji ); ?><?php echo $star ? ' up-nj--theksuar' : ''; ?><?php echo $foto ? ' has-foto' : ''; ?>">
+		<?php if ( $foto && ! $full ) : ?>
+			<a class="up-nj__foto" href="<?php echo esc_url( get_permalink( $post ) ); ?>">
+				<?php echo wp_get_attachment_image( $foto[0], 'medium_large', false, array( 'loading' => 'lazy', 'alt' => esc_attr( get_the_title( $post ) ) ) ); ?>
+				<?php if ( count( $foto ) > 1 ) : ?><span class="up-nj__nfoto">📷 <?php echo count( $foto ); ?></span><?php endif; ?>
+			</a>
+		<?php endif; ?>
 		<div class="up-nj__top">
 			<?php if ( $star ) : ?><span class="up-nj__star">⭐ I theksuar</span><?php endif; ?>
 			<span class="up-nj__lloji"><?php echo esc_html( urapress_nj_types()[ $lloji ] ?? '' ); ?></span>
@@ -234,6 +327,16 @@ function urapress_nj_card( $post, $full = false ) {
 			<?php if ( $m( 'vendi' ) ) : ?><span class="up-nj__vendi">📍 <?php echo esc_html( $m( 'vendi' ) ); ?></span><?php endif; ?>
 		</div>
 		<h3 class="up-nj__titulli"><a href="<?php echo esc_url( get_permalink( $post ) ); ?>"><?php echo esc_html( get_the_title( $post ) ); ?></a></h3>
+		<?php if ( $car ) : ?>
+			<p class="up-nj__car"><span>🚗 <?php echo esc_html( $m( 'marka' ) . ' ' . $m( 'modeli' ) ); ?></span><b><?php echo esc_html( number_format( (int) $m( 'cmimi' ), 0, '.', "'" ) ); ?> CHF</b></p>
+		<?php endif; ?>
+		<?php if ( $foto && $full ) : ?>
+			<div class="up-nj__galeria">
+				<?php foreach ( $foto as $aid ) : ?>
+					<a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>" target="_blank" rel="noopener"><?php echo wp_get_attachment_image( $aid, 'large', false, array( 'alt' => esc_attr( get_the_title( $post ) ) ) ); ?></a>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
 		<p class="up-nj__teksti"><?php echo nl2br( esc_html( $text ) ); ?></p>
 		<div class="up-nj__fund">
 			<span class="up-nj__meta"><?php echo esc_html( trim( $m( 'emri' ) . ' · ' . human_time_diff( get_post_time( 'U', true, $post ) ) . ' më parë', ' ·' ) ); ?></span>

@@ -85,6 +85,7 @@ get_header();
 				<a class="up-share__wa" href="https://wa.me/?text=<?php echo $urapress_title . '%20' . $urapress_url; // phpcs:ignore ?>" target="_blank" rel="noopener">WhatsApp</a>
 				<a class="up-share__fb" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $urapress_url; // phpcs:ignore ?>" target="_blank" rel="noopener">Facebook</a>
 				<a class="up-share__x" href="https://twitter.com/intent/tweet?url=<?php echo $urapress_url; // phpcs:ignore ?>&amp;text=<?php echo $urapress_title; // phpcs:ignore ?>" target="_blank" rel="noopener">X</a>
+				<?php urapress_share_native( get_permalink(), get_the_title() ); ?>
 			</div>
 		</article>
 

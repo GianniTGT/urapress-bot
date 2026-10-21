@@ -19,6 +19,7 @@ get_header();
 			<?php
 		else :
 			urapress_nj_card( get_post(), true );
+			urapress_share( get_permalink(), get_the_title() . ' – Njoftim në UraPress' );
 		endif;
 	endwhile;
 	?>

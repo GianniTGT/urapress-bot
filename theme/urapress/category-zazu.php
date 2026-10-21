@@ -20,6 +20,7 @@ get_header();
 			<article class="up-zazu__item">
 				<a class="up-zazu__date" href="<?php the_permalink(); ?>"><?php echo esc_html( urapress_sq_date( (int) get_post_time( 'U' ), false, true ) ); ?></a>
 				<div class="up-content"><?php the_content(); ?></div>
+				<?php urapress_share( get_permalink(), get_the_title() . ' 😺' ); ?>
 			</article>
 			<?php
 		endwhile;
