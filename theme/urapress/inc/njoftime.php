@@ -339,6 +339,11 @@ function urapress_nj_card( $post, $full = false ) {
 				<?php echo wp_get_attachment_image( $foto[0], 'medium_large', false, array( 'loading' => 'lazy', 'alt' => esc_attr( get_the_title( $post ) ) ) ); ?>
 				<?php if ( count( $foto ) > 1 ) : ?><span class="up-nj__nfoto">📷 <?php echo count( $foto ); ?></span><?php endif; ?>
 			</a>
+		<?php elseif ( ! $full ) : ?>
+			<?php list( $nj_bg, $nj_svg ) = urapress_nj_icon( $m( 'kategoria' ) ); ?>
+			<a class="up-nj__foto up-nj__foto--icon" href="<?php echo esc_url( get_permalink( $post ) ); ?>" style="--b:<?php echo esc_attr( $nj_bg ); ?>" aria-hidden="true" tabindex="-1">
+				<svg viewBox="0 0 120 120"><?php echo $nj_svg; // phpcs:ignore -- feste Zeichnung ?></svg>
+			</a>
 		<?php endif; ?>
 		<div class="up-nj__top">
 			<?php if ( $star ) : ?><span class="up-nj__star">⭐ I theksuar</span><?php endif; ?>
@@ -359,7 +364,7 @@ function urapress_nj_card( $post, $full = false ) {
 		<?php endif; ?>
 		<p class="up-nj__teksti"><?php echo nl2br( esc_html( $text ) ); ?></p>
 		<div class="up-nj__fund">
-			<span class="up-nj__meta"><?php echo esc_html( trim( $m( 'emri' ) . ' · ' . human_time_diff( get_post_time( 'U', true, $post ) ) . ' më parë', ' ·' ) ); ?></span>
+			<span class="up-nj__meta"><?php echo esc_html( trim( $m( 'emri' ) . ' · ' . wp_strip_all_tags( urapress_time( $post->ID ) ), ' ·' ) ); ?></span>
 			<?php if ( $tel && urapress_nj_phone_visible( $post->ID ) ) : ?>
 				<a class="up-nj__btn" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $tel ) ); ?>">📞 <?php echo esc_html( $tel ); ?></a>
 				<a class="up-nj__btn up-nj__btn--wa" href="https://wa.me/<?php echo esc_attr( urapress_nj_wa( $tel ) ); ?>" target="_blank" rel="noopener nofollow">WhatsApp</a>
@@ -421,7 +426,7 @@ function urapress_nj_detail( $post ) {
 			<p class="up-njd__lab">Kontakti</p>
 			<div class="up-njd__who">
 				<span class="up-njd__av"><?php echo esc_html( mb_strtoupper( mb_substr( $emri, 0, 1 ) ) ); ?></span>
-				<div><b><?php echo esc_html( $emri ); ?></b><small>njoftim prej <?php echo esc_html( human_time_diff( get_post_time( 'U', true, $post ) ) ); ?></small></div>
+				<div><b><?php echo esc_html( $emri ); ?></b><small>publikuar <?php echo esc_html( wp_strip_all_tags( urapress_time( $post->ID ) ) ); ?></small></div>
 			</div>
 			<?php if ( $tel && urapress_nj_phone_visible( $post->ID ) ) : ?>
 				<a class="up-njd__btn up-njd__btn--wa" href="https://wa.me/<?php echo esc_attr( urapress_nj_wa( $tel ) ); ?>?text=<?php echo rawurlencode( 'Përshëndetje, për njoftimin «' . get_the_title( $post ) . '» në UraPress: ' ); ?>" target="_blank" rel="noopener nofollow">💬 Shkruaj në WhatsApp</a>

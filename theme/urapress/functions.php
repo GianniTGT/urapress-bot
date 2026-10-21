@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.15.0' );
+define( 'URAPRESS_VERSION', '1.15.2' );
 require_once __DIR__ . '/inc/njoftime.php';
 require_once __DIR__ . '/inc/llogaria.php';
 

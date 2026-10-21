@@ -804,3 +804,7 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-njd__body { padding: 18px; }
 }
 .up-hyr__box a.up-btn { display: flex; align-items: center; }
+/* 1.15.1 – Anzeigen ohne Foto: Kategorie-Bildchen statt leerer Fläche */
+.up-nj__foto--icon { display: flex; align-items: center; justify-content: center; background: var(--b); }
+.up-nj__foto--icon svg { width: 42%; height: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,.15)); }
+.up-nj__fund .up-nj__meta { flex-basis: 100%; }
