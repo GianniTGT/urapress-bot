@@ -38,7 +38,7 @@ function urapress_nj_register() {
 			'rest_base'    => 'njoftime',
 		)
 	);
-	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar', 'marka', 'modeli', 'cmimi', 'foto' ) as $k ) {
+	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar', 'marka', 'modeli', 'cmimi', 'foto', 'numri' ) as $k ) {
 		register_post_meta(
 			'njoftim',
 			'_nj_' . $k,
@@ -72,6 +72,25 @@ const URAPRESS_NJ_MAX_FOTO = 3;
 function urapress_nj_photo_ids( $id ) {
 	return array_values( array_filter( array_map( 'absint', explode( ',', (string) get_post_meta( $id, '_nj_foto', true ) ) ) ) );
 }
+
+/* Nummer sichtbar? Der Verkäufer wählt: für alle oder nur für angemeldete Leser */
+function urapress_nj_members_only( $id ) {
+	return 'anetaret' === get_post_meta( $id, '_nj_numri', true );
+}
+function urapress_nj_phone_visible( $id ) {
+	return ! urapress_nj_members_only( $id ) || is_user_logged_in();
+}
+
+/* Über die Schnittstelle (REST) bekommt nur die Redaktion die Nummer */
+add_filter(
+	'rest_prepare_njoftim',
+	function ( $res ) {
+		if ( ! current_user_can( 'edit_posts' ) && isset( $res->data['meta'] ) ) {
+			unset( $res->data['meta']['_nj_telefoni'], $res->data['meta']['_nj_numri'] );
+		}
+		return $res;
+	}
+);
 
 /* Vetura: Marka, Modeli, Çmimi sind Pflicht */
 function urapress_nj_is_car( $kat ) {
@@ -270,7 +289,8 @@ function urapress_nj_submit() {
 	if ( ! $id || is_wp_error( $id ) ) {
 		$go( 'gabim' );
 	}
-	foreach ( array( 'lloji' => $lloji, 'kategoria' => $kat, 'vendi' => $vendi, 'telefoni' => $tel, 'emri' => $emri ) as $k => $v ) {
+	$numri = 'anetaret' === $f( 'nj_numri' ) ? 'anetaret' : 'te_gjithe';
+	foreach ( array( 'lloji' => $lloji, 'kategoria' => $kat, 'vendi' => $vendi, 'telefoni' => $tel, 'emri' => $emri, 'numri' => $numri ) as $k => $v ) {
 		update_post_meta( $id, '_nj_' . $k, $v );
 	}
 	if ( urapress_nj_is_car( $kat ) ) {
@@ -340,12 +360,81 @@ function urapress_nj_card( $post, $full = false ) {
 		<p class="up-nj__teksti"><?php echo nl2br( esc_html( $text ) ); ?></p>
 		<div class="up-nj__fund">
 			<span class="up-nj__meta"><?php echo esc_html( trim( $m( 'emri' ) . ' · ' . human_time_diff( get_post_time( 'U', true, $post ) ) . ' më parë', ' ·' ) ); ?></span>
-			<?php if ( $tel ) : ?>
+			<?php if ( $tel && urapress_nj_phone_visible( $post->ID ) ) : ?>
 				<a class="up-nj__btn" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $tel ) ); ?>">📞 <?php echo esc_html( $tel ); ?></a>
 				<a class="up-nj__btn up-nj__btn--wa" href="https://wa.me/<?php echo esc_attr( urapress_nj_wa( $tel ) ); ?>" target="_blank" rel="noopener nofollow">WhatsApp</a>
+			<?php elseif ( $tel ) : ?>
+				<a class="up-nj__btn up-nj__btn--lock" href="<?php echo esc_url( urapress_hyr_url( get_permalink( $post ) ) ); ?>" rel="nofollow">🔒 Hyr për numrin</a>
 			<?php endif; ?>
 		</div>
 	</article>
+	<?php
+}
+
+/* Detailseite einer Anzeige: Fotos, Preis, Tabelle, rechts Kontakt */
+function urapress_nj_detail( $post ) {
+	$m     = fn( $k ) => (string) get_post_meta( $post->ID, '_nj_' . $k, true );
+	$lloji = $m( 'lloji' );
+	$tel   = $m( 'telefoni' );
+	$foto  = urapress_nj_photo_ids( $post->ID );
+	$car   = urapress_nj_is_car( $m( 'kategoria' ) ) && $m( 'marka' );
+	$price = $car && (int) $m( 'cmimi' ) ? number_format( (int) $m( 'cmimi' ), 0, '.', "'" ) . ' CHF' : '';
+	$emri  = $m( 'emri' ) ?: 'Anonim';
+	$rows  = array_filter(
+		array(
+			( 'kerkoj' === $lloji ? 'Buxheti' : 'Çmimi' ) => $price,
+			'Vendi'          => $m( 'vendi' ),
+			'Marka / Modeli' => $car ? $m( 'marka' ) . ' ' . $m( 'modeli' ) : '',
+			'Kategoria'      => urapress_nj_cats()[ $m( 'kategoria' ) ] ?? '',
+			'Publikuar'      => urapress_sq_date( (int) get_post_time( 'U', false, $post ), false, false ),
+			'Nr.'            => '#' . $post->ID,
+		)
+	);
+	?>
+	<div class="up-njd">
+		<article class="up-njd__main up-nj--<?php echo esc_attr( $lloji ); ?>">
+			<?php if ( $foto ) : ?>
+				<div class="up-njd__gal up-njd__gal--<?php echo count( $foto ); ?>">
+					<?php foreach ( $foto as $i => $aid ) : ?>
+						<a href="<?php echo esc_url( wp_get_attachment_url( $aid ) ); ?>" target="_blank" rel="noopener"><?php echo wp_get_attachment_image( $aid, $i ? 'medium_large' : 'large', false, array( 'alt' => esc_attr( get_the_title( $post ) ), 'loading' => $i ? 'lazy' : 'eager' ) ); ?></a>
+					<?php endforeach; ?>
+				</div>
+			<?php endif; ?>
+			<div class="up-njd__body">
+				<div class="up-nj__top">
+					<?php if ( urapress_nj_is_highlighted( $post->ID ) ) : ?><span class="up-nj__star">⭐ I theksuar</span><?php endif; ?>
+					<span class="up-nj__lloji"><?php echo esc_html( urapress_nj_types()[ $lloji ] ?? '' ); ?></span>
+					<span class="up-nj__kat"><?php echo esc_html( urapress_nj_cats()[ $m( 'kategoria' ) ] ?? '' ); ?></span>
+					<?php if ( $m( 'vendi' ) ) : ?><span class="up-nj__vendi">📍 <?php echo esc_html( $m( 'vendi' ) ); ?></span><?php endif; ?>
+				</div>
+				<h1 class="up-njd__title"><?php echo esc_html( get_the_title( $post ) ); ?></h1>
+				<?php if ( $price ) : ?><p class="up-njd__price"><?php echo esc_html( $price ); ?></p><?php endif; ?>
+				<div class="up-njd__text"><?php echo wpautop( esc_html( $post->post_content ) ); // phpcs:ignore ?></div>
+			</div>
+			<dl class="up-njd__facts">
+				<?php foreach ( $rows as $k => $v ) : ?>
+					<div><dt><?php echo esc_html( $k ); ?></dt><dd><?php echo esc_html( $v ); ?></dd></div>
+				<?php endforeach; ?>
+			</dl>
+		</article>
+		<aside class="up-njd__side">
+			<p class="up-njd__lab">Kontakti</p>
+			<div class="up-njd__who">
+				<span class="up-njd__av"><?php echo esc_html( mb_strtoupper( mb_substr( $emri, 0, 1 ) ) ); ?></span>
+				<div><b><?php echo esc_html( $emri ); ?></b><small>njoftim prej <?php echo esc_html( human_time_diff( get_post_time( 'U', true, $post ) ) ); ?></small></div>
+			</div>
+			<?php if ( $tel && urapress_nj_phone_visible( $post->ID ) ) : ?>
+				<a class="up-njd__btn up-njd__btn--wa" href="https://wa.me/<?php echo esc_attr( urapress_nj_wa( $tel ) ); ?>?text=<?php echo rawurlencode( 'Përshëndetje, për njoftimin «' . get_the_title( $post ) . '» në UraPress: ' ); ?>" target="_blank" rel="noopener nofollow">💬 Shkruaj në WhatsApp</a>
+				<a class="up-njd__btn up-njd__btn--tel" href="tel:<?php echo esc_attr( preg_replace( '/[^0-9+]/', '', $tel ) ); ?>">📞 <?php echo esc_html( $tel ); ?></a>
+			<?php elseif ( $tel ) : ?>
+				<a class="up-njd__btn up-njd__btn--tel" href="<?php echo esc_url( urapress_hyr_url( get_permalink( $post ) ) ); ?>" rel="nofollow">🔒 Hyr për ta parë numrin</a>
+				<p class="up-njd__note">Shitësi e shfaq numrin vetëm për anëtarët. Kyçja është falas – vetëm me email, pa fjalëkalim.</p>
+			<?php endif; ?>
+			<p class="up-njd__note">🔒 Mos paguani kurrë paraprakisht. Takohuni në vend publik.</p>
+			<p class="up-njd__lab">Shpërndaje</p>
+			<?php urapress_share( get_permalink( $post ), get_the_title( $post ) . ' – Njoftim në UraPress' ); ?>
+		</aside>
+	</div>
 	<?php
 }
 

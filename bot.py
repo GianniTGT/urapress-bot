@@ -602,6 +602,7 @@ async def check_njoftime(context: ContextTypes.DEFAULT_TYPE) -> None:
                    f"{int(m.get('_nj_cmimi') or 0):,} CHF\n".replace(",", "'") if m.get('_nj_marka') else "")
                 + f"<b>{e(title)}</b>\n{e(it['content'].get('raw', ''))}\n\n"
                 f"👤 {e(m.get('_nj_emri') or '–')} · 📞 {e(m.get('_nj_telefoni') or '–')}"
+                + (" 🔒 (vetëm anëtarët)" if m.get('_nj_numri') == 'anetaret' else "")
                 + (f"\n📷 {len(it.get('nj_foto') or [])} foto" if it.get('nj_foto') else ""))
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("✅ Publiko", callback_data=f"nj_ok:{nj_id}"),
                                     InlineKeyboardButton("❌ Fshi", callback_data=f"nj_no:{nj_id}")],

@@ -18,8 +18,7 @@ get_header();
 			<p class="up-njs__msg up-njs__msg--err">Ky njoftim ka skaduar.</p>
 			<?php
 		else :
-			urapress_nj_card( get_post(), true );
-			urapress_share( get_permalink(), get_the_title() . ' – Njoftim në UraPress' );
+			urapress_nj_detail( get_post() );
 		endif;
 	endwhile;
 	?>

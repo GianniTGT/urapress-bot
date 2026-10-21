@@ -7,8 +7,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.14.0' );
+define( 'URAPRESS_VERSION', '1.15.0' );
 require_once __DIR__ . '/inc/njoftime.php';
+require_once __DIR__ . '/inc/llogaria.php';
 
 /**
  * Rubrikat kryesore, në radhën e menysë dhe të faqes kryesore.

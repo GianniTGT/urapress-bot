@@ -183,9 +183,14 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 				<label>Emri <input type="text" name="nj_emri" maxlength="40" placeholder="p.sh. Arben"></label>
 				<label>Telefoni / WhatsApp <input type="tel" name="nj_telefoni" required placeholder="079 123 45 67"></label>
 			</div>
+			<fieldset class="up-njs__lloji up-njs__numri">
+				<legend>Kush e sheh numrin tënd?</legend>
+				<label><input type="radio" name="nj_numri" value="te_gjithe" checked> Të gjithë</label>
+				<label><input type="radio" name="nj_numri" value="anetaret"> Vetëm anëtarët e kyçur 🔒</label>
+			</fieldset>
 			<label>Foto (deri në <?php echo (int) URAPRESS_NJ_MAX_FOTO; ?>, falas) <input type="file" name="nj_foto[]" accept="image/jpeg,image/png,image/webp" multiple data-nj-foto></label>
 			<p class="up-njs__hint" data-nj-foto-msg>JPG, PNG ose WEBP, maksimum 8 MB secila.</p>
-			<label class="up-njs__check"><input type="checkbox" name="nj_pranoj" value="1" required> Pranoj që numri im të publikohet në njoftim dhe që redaksia mund ta refuzojë njoftimin.</label>
+			<label class="up-njs__check"><input type="checkbox" name="nj_pranoj" value="1" required> Pranoj që numri im të shfaqet sipas zgjedhjes sime më lart dhe që redaksia mund ta refuzojë njoftimin.</label>
 			<button class="up-btn" type="submit">Dërgo njoftimin</button>
 		</form>
 	</section>
