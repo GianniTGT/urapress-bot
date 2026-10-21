@@ -741,3 +741,6 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 /* 1.13.1 – Teilen-Knopf nur als Symbol */
 .up-share .up-share__native { width: 44px; min-height: 44px; padding: 0; justify-content: center; border-radius: 50%; }
 .up-share__native.is-done { background: #128C4B; border-color: #128C4B; color: #fff; }
+/* 1.14.0 – WhatsApp, Facebook und X auch nur als Symbol */
+.up-share { gap: 12px; }
+.up-share a { width: 44px; min-height: 44px; padding: 0; justify-content: center; border-radius: 50%; }

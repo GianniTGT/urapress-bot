@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.13.1' );
+define( 'URAPRESS_VERSION', '1.14.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 
 /**
@@ -785,8 +785,8 @@ function urapress_share( $url, $title ) {
 	$t = rawurlencode( $title );
 	?>
 	<div class="up-share" aria-label="<?php esc_attr_e( 'Shpërndaje', 'urapress' ); ?>">
-		<a class="up-share__wa" href="https://wa.me/?text=<?php echo $t . '%20' . $u; // phpcs:ignore ?>" target="_blank" rel="noopener">WhatsApp</a>
-		<a class="up-share__fb" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $u; // phpcs:ignore ?>" target="_blank" rel="noopener">Facebook</a>
+		<a class="up-share__wa" aria-label="WhatsApp" title="WhatsApp" href="https://wa.me/?text=<?php echo $t . '%20' . $u; // phpcs:ignore ?>" target="_blank" rel="noopener"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4z"/><path fill="currentColor" d="M9 7.6c-.5 0-1 .6-1 1.4 0 3.6 3.4 7 7 7 .8 0 1.4-.5 1.4-1v-1.2l-2.3-1-1.1 1.1c-1.3-.6-2.3-1.6-2.9-2.9l1.1-1.1-1-2.3z"/></svg></a>
+		<a class="up-share__fb" aria-label="Facebook" title="Facebook" href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $u; // phpcs:ignore ?>" target="_blank" rel="noopener"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 22v-8h2.8l.5-3.4h-3.3V8.5c0-1 .4-1.6 1.7-1.6H17V3.9c-.4-.1-1.6-.2-2.9-.2-2.8 0-4.4 1.6-4.4 4.6v2.3H6.8V14h2.9v8z"/></svg></a>
 		<?php urapress_share_native( $url, $title ); ?>
 	</div>
 	<?php
