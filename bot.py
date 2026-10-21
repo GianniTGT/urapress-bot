@@ -6,6 +6,7 @@ Befehle im Telegram-Chat:
   /skano    Scan sofort starten (optional: religjion | sport | politik | showbiz | gjermani)
   /shkruaj  eigenen Artikel schreiben (ohne Quelle)
   /zazu     ZaZu-Comic aus Text-Zeilen zeichnen
+  /ndihme   alle Befehle (auch /help oder einfach ?)
   /statusi  Statistik
 """
 import asyncio
@@ -18,7 +19,7 @@ from datetime import time as dtime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LinkPreviewOptions, Update
+from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto, LinkPreviewOptions, Update
 from telegram.constants import ParseMode
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, ContextTypes,
                           MessageHandler, filters)
@@ -214,11 +215,15 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if raw.startswith("/"):
         name, _, rest = raw[1:].lstrip().partition(" ")
         handler = {"skano": cmd_scan, "zazu": cmd_zazu, "shkruaj": cmd_write, "anulo": cmd_cancel,
-                   "statusi": cmd_status}.get(name.split("@")[0].strip().lower())
+                   "statusi": cmd_status, "ndihme": cmd_help, "ndihmë": cmd_help, "help": cmd_help,
+                   "komandat": cmd_help}.get(name.split("@")[0].strip().lower())
         if handler:
             context.args = rest.split()
             await handler(update, context)
             return
+    if raw.strip().lower() in ("?", "ndihme", "ndihmë", "help", "komandat"):
+        await cmd_help(update, context)
+        return
     if context.chat_data.get("zazu"):
         await make_comic(msg, context, msg.text or "")
         return
@@ -230,7 +235,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     draft_id = draft_id or context.chat_data.get("ndrysho")
     new_article = not draft_id and context.chat_data.get("shkruaj")
     if not draft_id and not new_article:
-        await msg.reply_text("ℹ️ Për lajm të ri: /shkruaj. Për të ndryshuar një lajm: butoni ✏️ Ndrysho tekstin.")
+        await msg.reply_text("ℹ️ Për lajm të ri: /shkruaj. Për të ndryshuar një lajm: butoni ✏️ Ndrysho tekstin.\n📖 Të gjitha komandat: /ndihme ose ?")
         return
     parsed = parse_text(msg.text or "")
     if not parsed:
@@ -650,11 +655,56 @@ async def scheduled_scan(context: ContextTypes.DEFAULT_TYPE) -> None:
     await run_scan(context.bot)
 
 
+HELP_TEXT = (
+    "📖 <b>Komandat e bot-it</b>\n\n"
+    "🔎 <b>/skano</b> – kërko lajme tani\n"
+    "     <code>/skano showbiz</code> · <code>/skano gjermani</code> · <code>/skano sport</code>\n"
+    "     <code>/skano politik</code> · <code>/skano religjion</code>\n\n"
+    "✍️ <b>/shkruaj</b> – shkruaj lajmin tënd (pa burim)\n"
+    "     rreshti i parë = titulli, pastaj paragrafët\n\n"
+    "😺 <b>/zazu</b> – vizato ZaZu-n (një rresht = një foto)\n"
+    "     <code>Sara: …</code> · <code>ZaZu (mërzitur): …</code>\n\n"
+    "📊 <b>/statusi</b> – sa lajme janë postuar / në pritje\n"
+    "↩️ <b>/anulo</b> – ndërprit (shkruaj, ndrysho, zazu)\n"
+    "📖 <b>/ndihme</b> ose <b>?</b> – kjo listë\n\n"
+    "<b>Butonat te lajmet</b>\n"
+    "📘 Posto + Foto + FB · ✅ Posto + Foto · 🏷 Shenjë (TOP LAJM, SKANDAL…)\n"
+    "✏️ Ndrysho tekstin · ❌ Mos posto\n"
+    "📷 Foto: dërgo foton si përgjigje te lajmi\n\n"
+    "<b>Butonat te njoftimet</b>\n"
+    "✅ Publiko · ⭐ Publiko i theksuar (30 ditë) · ❌ Fshi"
+)
+
+COMMANDS = [
+    BotCommand("skano", "Kërko lajme (showbiz, gjermani, sport, politik, religjion)"),
+    BotCommand("shkruaj", "Shkruaj lajmin tënd"),
+    BotCommand("zazu", "Vizato ZaZu"),
+    BotCommand("statusi", "Statistika"),
+    BotCommand("anulo", "Ndërprit"),
+    BotCommand("ndihme", "Të gjitha komandat"),
+]
+
+
+async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    await update.message.reply_text(HELP_TEXT, parse_mode=ParseMode.HTML)
+
+
+async def _post_init(app: Application) -> None:
+    """Menü «/» in Telegram mit allen Befehlen füllen."""
+    try:
+        await app.bot.set_my_commands(COMMANDS)
+    except Exception as exc:
+        log.warning("Befehls-Menü nicht gesetzt: %s", exc)
+
+
 def main() -> None:
     db.init()
-    app = Application.builder().token(config.TELEGRAM_BOT_TOKEN).build()
+    app = Application.builder().token(config.TELEGRAM_BOT_TOKEN).post_init(_post_init).build()
     app.add_handler(CommandHandler("start", cmd_start))
     app.add_handler(CommandHandler("skano", cmd_scan))
+    app.add_handler(CommandHandler(["ndihme", "help", "komandat"], cmd_help))
     app.add_handler(CommandHandler("statusi", cmd_status))
     app.add_handler(CommandHandler("shkruaj", cmd_write))
     app.add_handler(CommandHandler("anulo", cmd_cancel))
