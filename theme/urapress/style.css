@@ -853,3 +853,5 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 @media (max-width: 1024px) { .up-header__right a.up-header__acc { display: inline-flex; margin-right: 10px; } }
 @media (max-width: 760px) { .up-header__right a.up-header__acc { font-size: 14px; margin-right: 6px; } }
 @media (max-width: 760px) { .up-header__right .up-header__acc span { display: none; } .up-header__right a.up-header__acc { font-size: 22px; } }
+/* 1.17.2 – Markierung (TOP LAJM …) auch auf der Artikelseite */
+.up-card__badge.up-article__badge { position: static; display: inline-flex; margin: 0 10px 8px 0; vertical-align: middle; box-shadow: none; }

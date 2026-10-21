@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UraPress Redaktion
  * Description: Einfache Redaktionsmaske fuer Beitraege mit Text, Fett, Kursiv, Medien und Beitragsbild.
- * Version: 1.0.0
+ * Version: 1.1.0
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -36,6 +36,15 @@ function urapress_redaktion_page() {
             $post_id = (int) $saved;
             $cat     = isset( $_POST['category'] ) ? (int) $_POST['category'] : 0;
             if ( $cat ) { wp_set_post_categories( $post_id, array( $cat ) ); }
+            // Markierung auf dem Foto (TOP LAJM, SKANDAL …) – ist ein Schlagwort
+            $badges = array( 'e-fundit' => 'E FUNDIT', 'top-lajm' => 'TOP LAJM', 'skandal' => 'SKANDAL', 'ekskluzive' => 'EKSKLUZIVE' );
+            $badge  = isset( $_POST['badge'] ) ? sanitize_key( wp_unslash( $_POST['badge'] ) ) : '';
+            $keep   = array();
+            foreach ( (array) wp_get_post_tags( $post_id ) as $t ) {
+                if ( ! isset( $badges[ $t->slug ] ) ) { $keep[] = $t->name; }
+            }
+            if ( isset( $badges[ $badge ] ) ) { $keep[] = $badges[ $badge ]; }
+            wp_set_post_tags( $post_id, $keep, false );
             $thumb = isset( $_POST['thumb_id'] ) ? (int) $_POST['thumb_id'] : 0;
             if ( $thumb ) { set_post_thumbnail( $post_id, $thumb ); } else { delete_post_thumbnail( $post_id ); }
             $notice = '<div class="notice notice-success"><p>Gespeichert und veröffentlicht. <a href="' . esc_url( get_permalink( $post_id ) ) . '" target="_blank">Beitrag ansehen</a></p></div>';
@@ -52,6 +61,12 @@ function urapress_redaktion_page() {
         $cats     = get_the_category( $post->ID );
         $cat_id   = $cats ? (int) $cats[0]->term_id : 0;
         $thumb_id = (int) get_post_thumbnail_id( $post->ID );
+    }
+    $badge_now = '';
+    if ( $post ) {
+        foreach ( (array) wp_get_post_tags( $post->ID ) as $t ) {
+            if ( in_array( $t->slug, array( 'e-fundit', 'top-lajm', 'skandal', 'ekskluzive' ), true ) ) { $badge_now = $t->slug; }
+        }
     }
     $thumb_src = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'medium' ) : '';
     $recent    = get_posts( array( 'numberposts' => 40, 'post_status' => array( 'publish', 'draft' ) ) );
@@ -89,6 +104,11 @@ function urapress_redaktion_page() {
                         <option value="<?php echo (int) $c->term_id; ?>" <?php selected( $cat_id, $c->term_id ); ?>><?php echo esc_html( $c->name ); ?></option>
                     <?php endforeach; ?>
                 </select></label></p>
+
+            <p><strong>Shenjë mbi foto</strong><br>
+                <?php foreach ( array( '' => 'Asnjë', 'e-fundit' => '🔴 E FUNDIT', 'top-lajm' => '🔥 TOP LAJM', 'skandal' => '⚠️ SKANDAL', 'ekskluzive' => '⭐ EKSKLUZIVE' ) as $k => $v ) : ?>
+                    <label style="display:inline-block;margin:6px 14px 0 0;font-size:15px"><input type="radio" name="badge" value="<?php echo esc_attr( $k ); ?>" <?php checked( $badge_now, $k ); ?>> <?php echo esc_html( $v ); ?></label>
+                <?php endforeach; ?></p>
 
             <p><strong>Beitragsbild</strong><br>
                 <img id="thumb-preview" src="<?php echo esc_url( $thumb_src ); ?>" style="max-width:300px;<?php echo $thumb_src ? '' : 'display:none;'; ?>"><br>

@@ -23,6 +23,12 @@ get_header();
 		?>
 		<article id="post-<?php the_ID(); ?>" <?php post_class( 'up-article' ); ?>>
 			<header>
+				<?php
+				$urapress_badge = urapress_post_badge();
+				if ( $urapress_badge ) :
+					?>
+					<span class="up-card__badge up-card__badge--<?php echo esc_attr( $urapress_badge[0] ); ?> up-article__badge"><?php echo esc_html( $urapress_badge[1] ); ?></span>
+				<?php endif; ?>
 				<?php if ( $urapress_cat ) : ?>
 					<a class="up-article__cat" href="<?php echo esc_url( get_category_link( $urapress_cat ) ); ?>"><?php echo esc_html( $urapress_cat->name ); ?></a>
 				<?php endif; ?>
