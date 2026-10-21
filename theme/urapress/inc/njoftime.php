@@ -24,6 +24,18 @@ function urapress_nj_cats() {
 	);
 }
 
+/* Deutsche Namen der Kategorien (für deutschsprachige Leser und Google) */
+function urapress_nj_cats_de() {
+	return array(
+		'pune'     => 'Arbeit & Handwerk',
+		'banese'   => 'Wohnung',
+		'vetura'   => 'Auto',
+		'sherbime' => 'Dienstleistungen',
+		'shitje'   => 'Kaufen & Verkaufen',
+		'tjera'    => 'Andere',
+	);
+}
+
 function urapress_nj_register() {
 	register_post_type(
 		'njoftim',
@@ -38,7 +50,7 @@ function urapress_nj_register() {
 			'rest_base'    => 'njoftime',
 		)
 	);
-	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar', 'marka', 'modeli', 'cmimi', 'foto', 'numri' ) as $k ) {
+	foreach ( array( 'lloji', 'kategoria', 'vendi', 'telefoni', 'emri', 'theksuar', 'marka', 'modeli', 'cmimi', 'foto', 'numri', 'gjuha' ) as $k ) {
 		register_post_meta(
 			'njoftim',
 			'_nj_' . $k,
@@ -290,7 +302,8 @@ function urapress_nj_submit() {
 		$go( 'gabim' );
 	}
 	$numri = 'anetaret' === $f( 'nj_numri' ) ? 'anetaret' : 'te_gjithe';
-	foreach ( array( 'lloji' => $lloji, 'kategoria' => $kat, 'vendi' => $vendi, 'telefoni' => $tel, 'emri' => $emri, 'numri' => $numri ) as $k => $v ) {
+	$gjuha = 'de' === $f( 'nj_gjuha' ) ? 'de' : 'sq';
+	foreach ( array( 'lloji' => $lloji, 'kategoria' => $kat, 'vendi' => $vendi, 'telefoni' => $tel, 'emri' => $emri, 'numri' => $numri, 'gjuha' => $gjuha ) as $k => $v ) {
 		update_post_meta( $id, '_nj_' . $k, $v );
 	}
 	if ( urapress_nj_is_car( $kat ) ) {
@@ -509,3 +522,67 @@ function urapress_nj_footer_item( $items, $args ) {
 	return $items;
 }
 add_filter( 'wp_nav_menu_items', 'urapress_nj_footer_item', 10, 2 );
+
+/* ---- Google: Njoftime auch für deutsche Suchen ---- */
+
+/* Seitentitel */
+add_filter(
+	'document_title_parts',
+	function ( $parts ) {
+		if ( is_post_type_archive( 'njoftim' ) ) {
+			$kat = isset( $_GET['kategoria'] ) ? sanitize_key( wp_unslash( $_GET['kategoria'] ) ) : '';
+			$sq  = urapress_nj_cats()[ $kat ] ?? '';
+			$de  = urapress_nj_cats_de()[ $kat ] ?? '';
+			$parts['title'] = $sq
+				? "Njoftime {$sq} – Kleinanzeigen {$de} für Albaner in der Schweiz"
+				: 'Njoftime – Kleinanzeigen für Albaner in der Schweiz';
+		} elseif ( is_singular( 'njoftim' ) ) {
+			$id    = get_queried_object_id();
+			$kat   = get_post_meta( $id, '_nj_kategoria', true );
+			$vendi = get_post_meta( $id, '_nj_vendi', true );
+			$parts['title'] = get_the_title( $id ) . ( $vendi ? ' – ' . $vendi : '' ) . ' | Njoftim · Kleinanzeige ' . ( urapress_nj_cats_de()[ $kat ] ?? '' );
+		}
+		return $parts;
+	}
+);
+
+/* Beschreibung für Google (zweisprachig) */
+add_filter(
+	'urapress_meta_description',
+	function ( $desc ) {
+		if ( is_post_type_archive( 'njoftim' ) ) {
+			return 'Njoftime falas për shqiptarët në Zvicër: punë, zanatçi, banesë, vetura, shërbime. Gratis Kleinanzeigen der albanischen Community in der Schweiz: Handwerker, Wohnung, Auto, Dienstleistungen.';
+		}
+		if ( is_singular( 'njoftim' ) ) {
+			$id = get_queried_object_id();
+			return wp_trim_words( wp_strip_all_tags( get_post_field( 'post_content', $id ) ), 28, '…' ) . ' – ' . ( get_post_meta( $id, '_nj_vendi', true ) ?: 'Schweiz' ) . ', UraPress Njoftime / Kleinanzeigen.';
+		}
+		return $desc;
+	}
+);
+
+/* Vorschaubild beim Teilen: erstes Foto der Anzeige */
+add_filter(
+	'urapress_og_image',
+	function ( $img ) {
+		if ( is_singular( 'njoftim' ) ) {
+			$foto = urapress_nj_photo_ids( get_queried_object_id() );
+			if ( $foto ) {
+				return wp_get_attachment_image_url( $foto[0], 'large' ) ?: $img;
+			}
+		}
+		return $img;
+	}
+);
+
+/* Anzeige auf Deutsch geschrieben → Seite meldet sich als Deutsch */
+add_filter(
+	'language_attributes',
+	function ( $out ) {
+		if ( ! is_admin() && is_singular( 'njoftim' ) && 'de' === get_post_meta( get_queried_object_id(), '_nj_gjuha', true ) ) {
+			return preg_replace( '/lang="[^"]*"/', 'lang="de"', $out );
+		}
+		return $out;
+	},
+	20
+);

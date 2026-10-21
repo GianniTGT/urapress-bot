@@ -54,6 +54,7 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 	<header class="up-njs__hero">
 		<h1 class="up-njs__title">Njoftime</h1>
 		<p class="up-njs__sub">Kërkoni ose ofroni diçka brenda komunitetit – punë, zanatçi, banesë, veturë, shërbime. Falas.</p>
+		<p class="up-njs__sub up-njs__sub--de" lang="de">Gratis Kleinanzeigen der albanischen Community in der Schweiz – Handwerker, Wohnung, Auto, Dienstleistungen. Auch auf Deutsch.</p>
 		<form class="up-njs__search" method="get" action="<?php echo esc_url( $urapress_base ); ?>" role="search">
 			<div class="up-njs__tog">
 				<?php foreach ( array( '' => 'Të gjitha' ) + urapress_nj_types() as $k => $v ) : ?>
@@ -78,6 +79,7 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 			<a class="up-njs__tile<?php echo $k === $urapress_kat ? ' is-active' : ''; ?>" href="<?php echo esc_url( $urapress_url ); ?>" style="--b:<?php echo esc_attr( $urapress_bg ); ?>">
 				<span class="up-njs__pic"><svg viewBox="0 0 120 120" aria-hidden="true"><?php echo $urapress_svg; // phpcs:ignore -- feste Zeichnung ?></svg></span>
 				<b><?php echo esc_html( $v ); ?></b>
+				<i class="up-njs__de" lang="de"><?php echo esc_html( urapress_nj_cats_de()[ $k ] ); ?></i>
 				<small><?php echo esc_html( $urapress_n ? $urapress_n . ' ' . ( 1 === $urapress_n ? 'njoftim' : 'njoftime' ) : 'bëhu i pari' ); ?></small>
 			</a>
 		<?php endforeach; ?>
@@ -176,6 +178,11 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 					<label>Modeli * <input type="text" name="nj_modeli" maxlength="40" placeholder="p.sh. Golf 1.4 TSI"></label>
 					<label><span data-nj-price>Çmimi (CHF) *</span> <input type="text" name="nj_cmimi" inputmode="numeric" maxlength="9" placeholder="p.sh. 12500"></label>
 				</div>
+			</fieldset>
+			<fieldset class="up-njs__lloji up-njs__numri">
+				<legend>Gjuha e njoftimit / Sprache der Anzeige</legend>
+				<label><input type="radio" name="nj_gjuha" value="sq" checked> Shqip</label>
+				<label><input type="radio" name="nj_gjuha" value="de"> Deutsch</label>
 			</fieldset>
 			<label>Titulli <input type="text" name="nj_titulli" minlength="5" maxlength="80" required placeholder="p.sh. Kërkoj pllakashtrues për 2 ditë punë (banjo)"></label>
 			<label>Teksti <textarea name="nj_teksti" rows="5" minlength="10" maxlength="600" required placeholder="Përshkruani shkurt: çfarë, kur, ku…"></textarea></label>

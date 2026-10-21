@@ -808,3 +808,6 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-nj__foto--icon { display: flex; align-items: center; justify-content: center; background: var(--b); }
 .up-nj__foto--icon svg { width: 42%; height: auto; filter: drop-shadow(0 6px 8px rgba(0,0,0,.15)); }
 .up-nj__fund .up-nj__meta { flex-basis: 100%; }
+/* 1.16.0 – Njoftime auch auf Deutsch */
+.up-njs__sub--de { margin-top: 2px; font-size: 15px; }
+.up-njs__de { display: block; font-style: normal; font-size: 13px; color: var(--up-muted); margin-top: -2px; }

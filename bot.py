@@ -597,7 +597,8 @@ async def check_njoftime(context: ContextTypes.DEFAULT_TYPE) -> None:
         title = it["title"].get("raw") or html.unescape(it["title"].get("rendered", ""))
         text = (f"📌 <b>Njoftim i ri #{nj_id}</b>\n"
                 f"{NJ_TYPES.get(m.get('_nj_lloji'), '')} · {e(NJ_CATS.get(m.get('_nj_kategoria'), ''))}"
-                f"{' · 📍 ' + e(m.get('_nj_vendi')) if m.get('_nj_vendi') else ''}\n\n"
+                f"{' · 📍 ' + e(m.get('_nj_vendi')) if m.get('_nj_vendi') else ''}"
+                f"{' · 🇩🇪 Deutsch' if m.get('_nj_gjuha') == 'de' else ''}\n\n"
                 + (f"🚗 <b>{e(m.get('_nj_marka', ''))} {e(m.get('_nj_modeli', ''))}</b> · "
                    f"{int(m.get('_nj_cmimi') or 0):,} CHF\n".replace(",", "'") if m.get('_nj_marka') else "")
                 + f"<b>{e(title)}</b>\n{e(it['content'].get('raw', ''))}\n\n"

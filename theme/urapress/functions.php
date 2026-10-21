@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.15.2' );
+define( 'URAPRESS_VERSION', '1.16.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 require_once __DIR__ . '/inc/llogaria.php';
 
@@ -383,6 +383,8 @@ function urapress_open_graph() {
 			$image = get_the_post_thumbnail_url( $post, 'urapress-lead' );
 		}
 	}
+	$desc  = apply_filters( 'urapress_meta_description', $desc );
+	$image = apply_filters( 'urapress_og_image', $image );
 	// Ohne Beitragsbild: festes UraPress-Bild, sonst holt Facebook ein fremdes Bild von der Seite.
 	if ( '' === $image ) {
 		$image = get_template_directory_uri() . '/assets/og-default.jpg';
