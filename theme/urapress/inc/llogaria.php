@@ -80,7 +80,7 @@ function urapress_hyr_send_code() {
 	set_transient( $ipk, $n + 1, HOUR_IN_SECONDS );
 
 	$code  = (string) wp_rand( 100000, 999999 );
-	$token = wp_generate_password( 20, false );
+	$token = strtolower( wp_generate_password( 20, false ) );
 	set_transient(
 		'urapress_hyr_t_' . $token,
 		array( 'email' => strtolower( $email ), 'hash' => wp_hash_password( $code ), 'tries' => 0 ),
