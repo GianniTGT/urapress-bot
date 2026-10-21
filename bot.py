@@ -629,6 +629,7 @@ async def on_njoftim(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         return
     action, raw_id = q.data.split(":")
     nj_id = int(raw_id)
+    db.nj_forget(nj_id)
     try:
         if action == "nj_ok":
             res = await asyncio.to_thread(lambda: pipeline.WordPress().set_njoftim_status(nj_id, "publish"))

@@ -134,3 +134,9 @@ def nj_new_ids(ids: list[int]) -> list[int]:
                 c.execute("INSERT INTO njoftime(id, notified_at) VALUES (?,?)", (i, _now()))
                 out.append(i)
     return out
+
+
+def nj_forget(nj_id: int) -> None:
+    """Nach Freigabe/Löschen vergessen – wird die Anzeige später geändert, meldet der Bot sie neu."""
+    with closing(_conn()) as c, c:
+        c.execute("DELETE FROM njoftime WHERE id=?", (nj_id,))

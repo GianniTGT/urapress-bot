@@ -266,43 +266,23 @@ function urapress_nj_submit() {
 	if ( $count >= 3 ) {
 		$go( 'shume' );
 	}
-	$f = function ( $k ) {
-		return isset( $_POST[ $k ] ) ? wp_unslash( $_POST[ $k ] ) : ''; // phpcs:ignore
-	};
-	$lloji   = sanitize_key( $f( 'nj_lloji' ) );
-	$kat     = sanitize_key( $f( 'nj_kategoria' ) );
-	$titulli = sanitize_text_field( $f( 'nj_titulli' ) );
-	$teksti  = sanitize_textarea_field( $f( 'nj_teksti' ) );
-	$vendi   = sanitize_text_field( $f( 'nj_vendi' ) );
-	$emri    = sanitize_text_field( $f( 'nj_emri' ) );
-	$tel     = trim( preg_replace( '/[^0-9+ ]/', '', $f( 'nj_telefoni' ) ) );
-	$marka   = sanitize_text_field( $f( 'nj_marka' ) );
-	$modeli  = sanitize_text_field( $f( 'nj_modeli' ) );
-	$cmimi   = (int) preg_replace( '/\D/', '', $f( 'nj_cmimi' ) );
-	$ok      = isset( urapress_nj_types()[ $lloji ] ) && isset( urapress_nj_cats()[ $kat ] )
-		&& mb_strlen( $titulli ) >= 5 && mb_strlen( $titulli ) <= 80
-		&& mb_strlen( $teksti ) >= 10 && mb_strlen( $teksti ) <= 600
-		&& mb_strlen( $vendi ) <= 40 && mb_strlen( $emri ) <= 40
-		&& strlen( preg_replace( '/\D/', '', $tel ) ) >= 9
-		&& ! empty( $_POST['nj_pranoj'] )
-		&& ( ! urapress_nj_is_car( $kat ) || ( mb_strlen( $marka ) >= 2 && mb_strlen( $marka ) <= 30 && mb_strlen( $modeli ) >= 1 && mb_strlen( $modeli ) <= 40 && $cmimi > 0 && $cmimi < 10000000 ) );
-	if ( ! $ok ) {
+	$d = urapress_nj_read_fields();
+	if ( ! $d || empty( $_POST['nj_pranoj'] ) ) {
 		$go( 'mungon' );
 	}
+	extract( $d ); // phpcs:ignore -- $lloji, $kat, $titulli, $teksti, $vendi, $emri, $tel, $marka, $modeli, $cmimi, $numri, $gjuha
 	$id = wp_insert_post(
 		array(
 			'post_type'    => 'njoftim',
 			'post_status'  => 'pending',
 			'post_title'   => $titulli,
 			'post_content' => $teksti,
-			'post_author'  => 0,
+			'post_author'  => get_current_user_id(),
 		)
 	);
 	if ( ! $id || is_wp_error( $id ) ) {
 		$go( 'gabim' );
 	}
-	$numri = 'anetaret' === $f( 'nj_numri' ) ? 'anetaret' : 'te_gjithe';
-	$gjuha = 'de' === $f( 'nj_gjuha' ) ? 'de' : 'sq';
 	foreach ( array( 'lloji' => $lloji, 'kategoria' => $kat, 'vendi' => $vendi, 'telefoni' => $tel, 'emri' => $emri, 'numri' => $numri, 'gjuha' => $gjuha ) as $k => $v ) {
 		update_post_meta( $id, '_nj_' . $k, $v );
 	}
@@ -316,7 +296,37 @@ function urapress_nj_submit() {
 		update_post_meta( $id, '_nj_foto', implode( ',', $foto ) );
 	}
 	set_transient( $ip_key, $count + 1, HOUR_IN_SECONDS );
+	if ( is_user_logged_in() ) { // nächstes Mal vorausfüllen
+		update_user_meta( get_current_user_id(), 'urapress_nj_emri', $emri );
+		update_user_meta( get_current_user_id(), 'urapress_nj_telefoni', $tel );
+	}
 	$go( 'ok' );
+}
+
+/* Felder aus dem Formular lesen und prüfen (für Neu und Ändern). false = etwas fehlt. */
+function urapress_nj_read_fields() {
+	$f       = fn( $k ) => isset( $_POST[ $k ] ) ? wp_unslash( $_POST[ $k ] ) : ''; // phpcs:ignore
+	$d       = array(
+		'lloji'   => sanitize_key( $f( 'nj_lloji' ) ),
+		'kat'     => sanitize_key( $f( 'nj_kategoria' ) ),
+		'titulli' => sanitize_text_field( $f( 'nj_titulli' ) ),
+		'teksti'  => sanitize_textarea_field( $f( 'nj_teksti' ) ),
+		'vendi'   => sanitize_text_field( $f( 'nj_vendi' ) ),
+		'emri'    => sanitize_text_field( $f( 'nj_emri' ) ),
+		'tel'     => trim( preg_replace( '/[^0-9+ ]/', '', $f( 'nj_telefoni' ) ) ),
+		'marka'   => sanitize_text_field( $f( 'nj_marka' ) ),
+		'modeli'  => sanitize_text_field( $f( 'nj_modeli' ) ),
+		'cmimi'   => (int) preg_replace( '/\D/', '', $f( 'nj_cmimi' ) ),
+		'numri'   => 'anetaret' === $f( 'nj_numri' ) ? 'anetaret' : 'te_gjithe',
+		'gjuha'   => 'de' === $f( 'nj_gjuha' ) ? 'de' : 'sq',
+	);
+	$ok = isset( urapress_nj_types()[ $d['lloji'] ] ) && isset( urapress_nj_cats()[ $d['kat'] ] )
+		&& mb_strlen( $d['titulli'] ) >= 5 && mb_strlen( $d['titulli'] ) <= 80
+		&& mb_strlen( $d['teksti'] ) >= 10 && mb_strlen( $d['teksti'] ) <= 600
+		&& mb_strlen( $d['vendi'] ) <= 40 && mb_strlen( $d['emri'] ) <= 40
+		&& strlen( preg_replace( '/\D/', '', $d['tel'] ) ) >= 9
+		&& ( ! urapress_nj_is_car( $d['kat'] ) || ( mb_strlen( $d['marka'] ) >= 2 && mb_strlen( $d['marka'] ) <= 30 && mb_strlen( $d['modeli'] ) >= 1 && mb_strlen( $d['modeli'] ) <= 40 && $d['cmimi'] > 0 && $d['cmimi'] < 10000000 ) );
+	return $ok ? $d : false;
 }
 add_action( 'admin_post_nopriv_urapress_nj', 'urapress_nj_submit' );
 add_action( 'admin_post_urapress_nj', 'urapress_nj_submit' );
@@ -447,6 +457,10 @@ function urapress_nj_detail( $post ) {
 			<?php elseif ( $tel ) : ?>
 				<a class="up-njd__btn up-njd__btn--tel" href="<?php echo esc_url( urapress_hyr_url( get_permalink( $post ) ) ); ?>" rel="nofollow">🔒 Hyr për ta parë numrin</a>
 				<p class="up-njd__note">Shitësi e shfaq numrin vetëm për anëtarët. Kyçja është falas – vetëm me email, pa fjalëkalim.</p>
+			<?php endif; ?>
+			<?php urapress_save_button( $post->ID ); ?>
+			<?php if ( urapress_nj_is_mine( $post ) ) : ?>
+				<a class="up-njd__mine" href="<?php echo esc_url( add_query_arg( 'ndrysho', $post->ID, home_url( '/llogaria/' ) ) ); ?>">✏️ Ky është njoftimi juaj – ndryshoje</a>
 			<?php endif; ?>
 			<p class="up-njd__note">🔒 Mos paguani kurrë paraprakisht. Takohuni në vend publik.</p>
 			<p class="up-njd__lab">Shpërndaje</p>

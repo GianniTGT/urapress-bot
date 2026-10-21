@@ -811,3 +811,40 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 /* 1.16.0 – Njoftime auch auf Deutsch */
 .up-njs__sub--de { margin-top: 2px; font-size: 15px; }
 .up-njs__de { display: block; font-style: normal; font-size: 13px; color: var(--up-muted); margin-top: -2px; }
+
+/* =====================================================================
+   1.17.0 – Llogaria ime, Ruaje
+   ===================================================================== */
+.up-njd__btn--save { width: 100%; border: 2px solid var(--up-ink); background: #fff; color: var(--up-ink); font: inherit; font-weight: 900; font-size: 17px; cursor: pointer; }
+.up-njd__btn--save:hover { color: var(--up-ink); background: var(--up-soft); }
+.up-njd__btn--save.is-saved { background: #FFD400; border-color: #E3A80F; }
+.up-njd__side form { margin: 0; }
+.up-njd__mine { font-size: 14px; font-weight: 700; color: var(--up-red); }
+.up-njs__me { margin: 8px 0 0; font-size: 15px; color: var(--up-muted); }
+.up-njs__me a { font-weight: 800; color: var(--up-ink); text-decoration: underline; text-underline-offset: 3px; }
+.up-llog { padding-top: 28px; padding-bottom: 48px; max-width: 1000px; }
+.up-llog__head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; border-bottom: 3px solid var(--up-ink); padding-bottom: 14px; margin-bottom: 18px; }
+.up-llog__head h1 { margin: 0; font-size: 38px; font-weight: 900; }
+.up-llog__head p { margin: 4px 0 0; color: var(--up-muted); }
+.up-llog__head .up-njhome__add { padding: 10px 18px; border-radius: 10px; font-weight: 800; }
+.up-llog__sec { margin-top: 30px; }
+.up-llog__sec h2 { font-size: 24px; font-weight: 900; margin: 0 0 12px; }
+.up-llog__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.up-llog__item { display: flex; align-items: center; gap: 14px; padding: 12px; background: #fff; border: 1px solid var(--up-line); border-radius: 12px; flex-wrap: wrap; }
+.up-llog__thumb { width: 72px; height: 72px; border-radius: 10px; overflow: hidden; flex: none; }
+.up-llog__thumb img, .up-llog__thumb > span { width: 100%; height: 100%; object-fit: cover; display: flex; align-items: center; justify-content: center; }
+.up-llog__thumb svg { width: 60%; }
+.up-llog__info { flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; }
+.up-llog__info a { color: var(--up-ink); font-size: 17px; }
+.up-llog__st { font-size: 13px; font-weight: 800; }
+.up-llog__st--online { color: #1D6B36; }
+.up-llog__st--pritje { color: #9A6B00; }
+.up-llog__st--skaduar { color: #9B1C1C; }
+.up-llog__acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.up-llog__acts form { margin: 0; }
+.up-llog__btn { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid #C9CCD3; background: #fff; color: var(--up-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.up-llog__btn:hover { background: var(--up-soft); color: var(--up-ink); }
+.up-llog__btn.is-main { background: #2E9E4F; border-color: #2E9E4F; color: #fff; }
+.up-llog__btn.is-del { color: #9B1C1C; border-color: #F0B4B4; }
+.up-llog__edit { max-width: none; margin-top: 0; }
+.up-llog__formbtns { display: flex; gap: 16px; align-items: center; }

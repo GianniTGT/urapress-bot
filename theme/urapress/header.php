@@ -34,6 +34,9 @@
 		<div class="up-header__center"><?php urapress_logo( is_front_page() ? 'h1' : 'div' ); ?></div>
 		<nav class="up-header__right" aria-label="<?php esc_attr_e( 'Faqet', 'urapress' ); ?>">
 			<a href="<?php echo esc_url( get_post_type_archive_link( 'njoftim' ) ); ?>">Njoftime</a>
+			<?php if ( is_user_logged_in() && ! current_user_can( 'edit_posts' ) ) : ?>
+				<a href="<?php echo esc_url( home_url( '/llogaria/' ) ); ?>">👤 Llogaria</a>
+			<?php endif; ?>
 			<?php if ( urapress_zazu_cat_id() ) : ?>
 				<a href="<?php echo esc_url( get_category_link( urapress_zazu_cat_id() ) ); ?>">ZaZu</a>
 			<?php endif; ?>

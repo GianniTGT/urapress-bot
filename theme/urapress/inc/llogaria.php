@@ -152,3 +152,134 @@ function urapress_hyr_verify() {
 }
 add_action( 'admin_post_nopriv_urapress_hyr_verifiko', 'urapress_hyr_verify' );
 add_action( 'admin_post_urapress_hyr_verifiko', 'urapress_hyr_verify' );
+
+/* =====================================================================
+   Llogaria ime: eigene Anzeigen (ändern, verlängern, löschen) und gemerkte Anzeigen
+   ===================================================================== */
+add_action(
+	'init',
+	function () {
+		add_rewrite_rule( '^llogaria/?$', 'index.php?urapress_llog=1', 'top' );
+		if ( '1' !== get_option( 'urapress_llog_flushed' ) ) {
+			flush_rewrite_rules( false );
+			update_option( 'urapress_llog_flushed', '1' );
+		}
+	}
+);
+add_filter( 'query_vars', fn( $v ) => array_merge( $v, array( 'urapress_llog' ) ) );
+add_filter(
+	'template_include',
+	function ( $t ) {
+		if ( ! get_query_var( 'urapress_llog' ) ) {
+			return $t;
+		}
+		if ( ! is_user_logged_in() ) {
+			wp_safe_redirect( urapress_hyr_url( home_url( '/llogaria/' ) ) );
+			exit;
+		}
+		return get_template_directory() . '/template-llogaria.php';
+	}
+);
+add_filter( 'wp_robots', fn( $r ) => get_query_var( 'urapress_llog' ) ? array( 'noindex' => true, 'nofollow' => true ) : $r );
+add_filter( 'pre_get_document_title', fn( $t ) => get_query_var( 'urapress_llog' ) ? 'Llogaria ime – UraPress' : $t );
+
+/* Gemerkte Anzeigen */
+function urapress_saved_ids( $uid = 0 ) {
+	$ids = get_user_meta( $uid ?: get_current_user_id(), 'urapress_ruajtur', true );
+	return is_array( $ids ) ? array_values( array_map( 'absint', $ids ) ) : array();
+}
+
+/* Knopf «Ruaje» (Formular, funktioniert ohne JavaScript) */
+function urapress_save_button( $post_id ) {
+	if ( ! is_user_logged_in() ) {
+		printf( '<a class="up-njd__btn up-njd__btn--save" href="%s" rel="nofollow">☆ Ruaje</a>', esc_url( urapress_hyr_url( get_permalink( $post_id ) ) ) );
+		return;
+	}
+	$saved = in_array( (int) $post_id, urapress_saved_ids(), true );
+	?>
+	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+		<input type="hidden" name="action" value="urapress_llog">
+		<input type="hidden" name="veprim" value="ruaj">
+		<input type="hidden" name="id" value="<?php echo (int) $post_id; ?>">
+		<input type="hidden" name="kthehu" value="<?php echo esc_url( get_permalink( $post_id ) ); ?>">
+		<?php wp_nonce_field( 'urapress_llog_' . $post_id, 'llog_nonce' ); ?>
+		<button class="up-njd__btn up-njd__btn--save<?php echo $saved ? ' is-saved' : ''; ?>" type="submit"><?php echo $saved ? '★ E ruajtur' : '☆ Ruaje'; ?></button>
+	</form>
+	<?php
+}
+
+/* Darf diese Person die Anzeige verwalten? */
+function urapress_nj_is_mine( $post ) {
+	return $post && 'njoftim' === $post->post_type && is_user_logged_in() && (int) $post->post_author === get_current_user_id();
+}
+
+/* Kann verlängert werden: online und älter als 20 Tage (oder schon abgelaufen) */
+function urapress_nj_can_renew( $post ) {
+	return 'publish' === $post->post_status && ( time() - get_post_time( 'U', true, $post ) ) > 20 * DAY_IN_SECONDS;
+}
+
+/* Aktionen: ruaj (merken), fshi (löschen), rinovo (verlängern), ndrysho (ändern speichern) */
+function urapress_llog_action() {
+	$id     = absint( $_POST['id'] ?? 0 );
+	$veprim = sanitize_key( wp_unslash( $_POST['veprim'] ?? '' ) );
+	$back   = isset( $_POST['kthehu'] ) ? wp_validate_redirect( esc_url_raw( wp_unslash( $_POST['kthehu'] ) ), home_url( '/llogaria/' ) ) : home_url( '/llogaria/' );
+	$go     = function ( $msg ) use ( $back ) {
+		wp_safe_redirect( add_query_arg( 'msg', $msg, $back ) );
+		exit;
+	};
+	if ( ! is_user_logged_in() ) {
+		wp_safe_redirect( urapress_hyr_url( $back ) );
+		exit;
+	}
+	if ( ! isset( $_POST['llog_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['llog_nonce'] ) ), 'urapress_llog_' . $id ) ) {
+		$go( 'gabim' );
+	}
+	$post = get_post( $id );
+	$uid  = get_current_user_id();
+
+	if ( 'ruaj' === $veprim ) {
+		if ( ! $post || 'njoftim' !== $post->post_type ) {
+			$go( 'gabim' );
+		}
+		$ids = urapress_saved_ids();
+		$ids = in_array( $id, $ids, true ) ? array_diff( $ids, array( $id ) ) : array_merge( $ids, array( $id ) );
+		update_user_meta( $uid, 'urapress_ruajtur', array_slice( array_values( array_unique( $ids ) ), -100 ) );
+		$go( 'ruajtur' );
+	}
+	if ( ! urapress_nj_is_mine( $post ) ) {
+		$go( 'gabim' );
+	}
+	if ( 'fshi' === $veprim ) {
+		wp_trash_post( $id ); // Fotos werden mitgelöscht (urapress_nj_delete_photos)
+		$go( 'fshire' );
+	}
+	if ( 'rinovo' === $veprim && urapress_nj_can_renew( $post ) ) {
+		$now = current_time( 'mysql' );
+		wp_update_post( array( 'ID' => $id, 'post_date' => $now, 'post_date_gmt' => get_gmt_from_date( $now ) ) );
+		$go( 'rinovuar' );
+	}
+	if ( 'ndrysho' === $veprim ) {
+		$d = urapress_nj_read_fields();
+		if ( ! $d ) {
+			wp_safe_redirect( add_query_arg( array( 'ndrysho' => $id, 'msg' => 'mungon' ), home_url( '/llogaria/' ) ) );
+			exit;
+		}
+		// Nach einer Änderung prüft die Redaktion die Anzeige noch einmal.
+		wp_update_post( array( 'ID' => $id, 'post_title' => $d['titulli'], 'post_content' => $d['teksti'], 'post_status' => 'pending' ) );
+		foreach ( array( 'lloji' => $d['lloji'], 'kategoria' => $d['kat'], 'vendi' => $d['vendi'], 'telefoni' => $d['tel'], 'emri' => $d['emri'], 'numri' => $d['numri'], 'gjuha' => $d['gjuha'] ) as $k => $v ) {
+			update_post_meta( $id, '_nj_' . $k, $v );
+		}
+		foreach ( array( 'marka', 'modeli', 'cmimi' ) as $k ) {
+			if ( urapress_nj_is_car( $d['kat'] ) ) {
+				update_post_meta( $id, '_nj_' . $k, (string) $d[ $k ] );
+			} else {
+				delete_post_meta( $id, '_nj_' . $k );
+			}
+		}
+		wp_safe_redirect( add_query_arg( 'msg', 'ndryshuar', home_url( '/llogaria/' ) ) );
+		exit;
+	}
+	$go( 'gabim' );
+}
+add_action( 'admin_post_urapress_llog', 'urapress_llog_action' );
+add_action( 'admin_post_nopriv_urapress_llog', 'urapress_llog_action' );

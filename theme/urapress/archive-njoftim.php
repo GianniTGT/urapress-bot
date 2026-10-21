@@ -54,6 +54,7 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 	<header class="up-njs__hero">
 		<h1 class="up-njs__title">Njoftime</h1>
 		<p class="up-njs__sub">Kërkoni ose ofroni diçka brenda komunitetit – punë, zanatçi, banesë, veturë, shërbime. Falas.</p>
+		<p class="up-njs__me"><?php if ( is_user_logged_in() ) : ?><a href="<?php echo esc_url( home_url( '/llogaria/' ) ); ?>">👤 Llogaria ime – njoftimet e mia dhe të ruajturat</a><?php else : ?><a href="<?php echo esc_url( urapress_hyr_url( $urapress_base ) ); ?>">👤 Hyr</a> – për të menaxhuar njoftimet tuaja dhe për t'i ruajtur<?php endif; ?></p>
 		<p class="up-njs__sub up-njs__sub--de" lang="de">Gratis Kleinanzeigen der albanischen Community in der Schweiz – Handwerker, Wohnung, Auto, Dienstleistungen. Auch auf Deutsch.</p>
 		<form class="up-njs__search" method="get" action="<?php echo esc_url( $urapress_base ); ?>" role="search">
 			<div class="up-njs__tog">
@@ -147,6 +148,7 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 
 	<section class="up-njs__form" id="shto">
 		<h2>Shto njoftim falas</h2>
+		<?php if ( ! is_user_logged_in() ) : ?><p class="up-njs__biz">👤 <a href="<?php echo esc_url( urapress_hyr_url( $urapress_base . '#shto' ) ); ?>">Hyni</a> para se ta dërgoni, që ta ndryshoni, rinovoni ose fshini njoftimin vetë më vonë.</p><?php endif; ?>
 		<p class="up-njs__note">Njoftimi del pas kontrollit nga redaksia dhe qëndron <?php echo (int) URAPRESS_NJ_DAYS; ?> ditë. Numri juaj i telefonit shfaqet në njoftim që të mund t'ju kontaktojnë.</p>
 		<p class="up-njs__biz">⭐ <b>Keni biznes?</b> Një njoftim është falas. Me <b>19 CHF</b> njoftimi juaj del <b>i theksuar në krye</b> për 30 ditë – na shkruani në <a href="https://wa.me/41762411974" target="_blank" rel="noopener">WhatsApp 076 241 19 74</a>.</p>
 		<?php if ( isset( $urapress_msgs[ $urapress_msg ] ) ) : ?>
@@ -187,8 +189,8 @@ $urapress_show_examples = ! $urapress_filtered && array_sum( urapress_nj_counts(
 			<label>Titulli <input type="text" name="nj_titulli" minlength="5" maxlength="80" required placeholder="p.sh. Kërkoj pllakashtrues për 2 ditë punë (banjo)"></label>
 			<label>Teksti <textarea name="nj_teksti" rows="5" minlength="10" maxlength="600" required placeholder="Përshkruani shkurt: çfarë, kur, ku…"></textarea></label>
 			<div class="up-njs__row">
-				<label>Emri <input type="text" name="nj_emri" maxlength="40" placeholder="p.sh. Arben"></label>
-				<label>Telefoni / WhatsApp <input type="tel" name="nj_telefoni" required placeholder="079 123 45 67"></label>
+				<label>Emri <input type="text" name="nj_emri" maxlength="40" placeholder="p.sh. Arben" value="<?php echo esc_attr( get_user_meta( get_current_user_id(), 'urapress_nj_emri', true ) ); ?>"></label>
+				<label>Telefoni / WhatsApp <input type="tel" name="nj_telefoni" required placeholder="079 123 45 67" value="<?php echo esc_attr( get_user_meta( get_current_user_id(), 'urapress_nj_telefoni', true ) ); ?>"></label>
 			</div>
 			<fieldset class="up-njs__lloji up-njs__numri">
 				<legend>Kush e sheh numrin tënd?</legend>
