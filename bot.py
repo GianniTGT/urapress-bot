@@ -209,6 +209,16 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         return
     msg = update.message
+    # Befehl ohne Telegram-Markierung (z. B. kopiert/eingefügt mit unsichtbarem Zeichen): trotzdem ausführen
+    raw = (msg.text or "").lstrip(" \u200b\u200c\u200d\u2060\ufeff\u00a0").replace("\uff0f", "/")
+    if raw.startswith("/"):
+        name, _, rest = raw[1:].partition(" ")
+        handler = {"skano": cmd_scan, "zazu": cmd_zazu, "shkruaj": cmd_write, "anulo": cmd_cancel,
+                   "statusi": cmd_status}.get(name.split("@")[0].strip().lower())
+        if handler:
+            context.args = rest.split()
+            await handler(update, context)
+            return
     if context.chat_data.get("zazu"):
         await make_comic(msg, context, msg.text or "")
         return
