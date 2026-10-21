@@ -54,7 +54,13 @@ class WordPress:
         for t in self._req("GET", f"/{taxonomy}", params={"search": name, "per_page": 100}):
             if html.unescape(t["name"]).casefold() == name.casefold():
                 return t["id"]
-        return self._req("POST", f"/{taxonomy}", json={"name": name})["id"]
+        r = self.s.post(f"{self.api}/{taxonomy}", json={"name": name}, timeout=60)
+        if r.status_code == 400 and r.json().get("code") == "term_exists":
+            # Gibt es schon (z. B. «Kulturë & Showbiz» – die Suche findet das «&» nicht)
+            return int(r.json()["data"]["term_id"])
+        if r.status_code >= 400:
+            raise WordPressError(f"POST /{taxonomy} → {r.status_code}: {r.text[:300]}")
+        return r.json()["id"]
 
     # --- Beitrag --------------------------------------------------------------
     def create_post(self, *, title: str, content: str, excerpt: str, categories: list[int],
