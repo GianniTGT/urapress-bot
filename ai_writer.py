@@ -23,6 +23,10 @@ Wähle aus der Kandidatenliste die besten Meldungen für heute aus. Kriterien:
 2. Mischung: Wenn eine passende Meldung dabei ist, soll mindestens EINE aus Kulturë & Showbiz
    stammen – bekannte albanische Sänger, Schauspieler, TV-Gesichter, Influencer, Skandale,
    Streit, Liebe/Trennung, Auftritte. Das lesen die Leute am liebsten.
+   Internationale Showbiz-Meldungen (auch aus deutschen/englischen Quellen) NUR wählen, wenn
+   sie einen albanischen Bezug haben – Stars mit albanischen Wurzeln wie Dua Lipa, Rita Ora,
+   Bebe Rexha, Ava Max, Era Istrefi, Loredana, Capital Bra-Umfeld, Granit Xhaka u. a. – oder
+   wenn es ein weltweites Top-Thema ist, über das alle reden.
 3. Vielfalt: nicht mehrmals dasselbe Thema oder dasselbe Land.
 4. Ausschliessen: Gedichte, Werbung/Firmen-Promotion, reine Meinungsbeiträge ohne
    Nachrichtenkern, reine Gerüchte ohne Quelle (Showbiz-Meldungen über Aussagen, Posts oder
