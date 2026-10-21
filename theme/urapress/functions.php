@@ -820,3 +820,14 @@ add_action(
 	},
 	50
 );
+
+/**
+ * Sprache der Seite für Google und Browser: Albanisch (sq).
+ * Das Backend bleibt auf Deutsch – nur die Webseite meldet sich als albanisch.
+ */
+add_filter(
+	'language_attributes',
+	function ( $out ) {
+		return is_admin() ? $out : preg_replace( '/lang="[^"]*"/', 'lang="sq"', $out );
+	}
+);
