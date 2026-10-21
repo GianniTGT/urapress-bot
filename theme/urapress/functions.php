@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.13.0' );
+define( 'URAPRESS_VERSION', '1.13.1' );
 require_once __DIR__ . '/inc/njoftime.php';
 
 /**
@@ -794,7 +794,7 @@ function urapress_share( $url, $title ) {
 
 function urapress_share_native( $url, $title ) {
 	printf(
-		'<button type="button" class="up-share__native" data-share-url="%s" data-share-title="%s">📤 Shpërndaje</button>',
+		'<button type="button" class="up-share__native" data-share-url="%s" data-share-title="%s" aria-label="Shpërndaje" title="Shpërndaje"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M5 11v9h14v-9"/></svg></button>',
 		esc_url( $url ),
 		esc_attr( $title )
 	);
@@ -811,7 +811,7 @@ add_action(
 			var d = { title: b.dataset.shareTitle, text: b.dataset.shareTitle, url: b.dataset.shareUrl };
 			if (navigator.share) { navigator.share(d).catch(function () {}); return; }
 			(navigator.clipboard ? navigator.clipboard.writeText(d.url) : Promise.reject()).then(function () {
-				b.textContent = '✔ Lidhja u kopjua';
+				b.classList.add('is-done'); b.title = 'Lidhja u kopjua';
 			}, function () { window.prompt('Kopjo lidhjen:', d.url); });
 		});
 		</script>

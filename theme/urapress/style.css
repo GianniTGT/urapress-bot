@@ -738,3 +738,6 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-njs__hint { margin: -8px 0 0; font-size: 13px; color: var(--up-muted); }
 .up-njs__hint.is-err { color: #9B1C1C; font-weight: 700; }
 @media (max-width: 760px) { .up-njs__row3 { grid-template-columns: minmax(0, 1fr); } }
+/* 1.13.1 – Teilen-Knopf nur als Symbol */
+.up-share .up-share__native { width: 44px; min-height: 44px; padding: 0; justify-content: center; border-radius: 50%; }
+.up-share__native.is-done { background: #128C4B; border-color: #128C4B; color: #fff; }
