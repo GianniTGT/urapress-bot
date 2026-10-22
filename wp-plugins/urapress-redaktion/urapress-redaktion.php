@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UraPress Redaktion
  * Description: Einfache Redaktionsmaske fuer Beitraege mit Text, Fett, Kursiv, Medien und Beitragsbild.
- * Version: 1.1.0
+ * Version: 1.2.0
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
@@ -39,10 +39,8 @@ function urapress_redaktion_page() {
             // Markierung auf dem Foto (TOP LAJM, SKANDAL …) – ist ein Schlagwort
             $badges = array( 'e-fundit' => 'E FUNDIT', 'top-lajm' => 'TOP LAJM', 'skandal' => 'SKANDAL', 'ekskluzive' => 'EKSKLUZIVE' );
             $badge  = isset( $_POST['badge'] ) ? sanitize_key( wp_unslash( $_POST['badge'] ) ) : '';
-            $keep   = array();
-            foreach ( (array) wp_get_post_tags( $post_id ) as $t ) {
-                if ( ! isset( $badges[ $t->slug ] ) ) { $keep[] = $t->name; }
-            }
+            // Stichwörter aus dem Feld (mit Komma getrennt)
+            $keep = array_filter( array_map( 'trim', explode( ',', sanitize_text_field( wp_unslash( $_POST['tags'] ?? '' ) ) ) ) );
             if ( isset( $badges[ $badge ] ) ) { $keep[] = $badges[ $badge ]; }
             wp_set_post_tags( $post_id, $keep, false );
             $thumb = isset( $_POST['thumb_id'] ) ? (int) $_POST['thumb_id'] : 0;
@@ -62,10 +60,11 @@ function urapress_redaktion_page() {
         $cat_id   = $cats ? (int) $cats[0]->term_id : 0;
         $thumb_id = (int) get_post_thumbnail_id( $post->ID );
     }
+    $tags_now  = array();
     $badge_now = '';
     if ( $post ) {
         foreach ( (array) wp_get_post_tags( $post->ID ) as $t ) {
-            if ( in_array( $t->slug, array( 'e-fundit', 'top-lajm', 'skandal', 'ekskluzive' ), true ) ) { $badge_now = $t->slug; }
+            if ( in_array( $t->slug, array( 'e-fundit', 'top-lajm', 'skandal', 'ekskluzive' ), true ) ) { $badge_now = $t->slug; } else { $tags_now[] = $t->name; }
         }
     }
     $thumb_src = $thumb_id ? wp_get_attachment_image_url( $thumb_id, 'medium' ) : '';
@@ -104,6 +103,9 @@ function urapress_redaktion_page() {
                         <option value="<?php echo (int) $c->term_id; ?>" <?php selected( $cat_id, $c->term_id ); ?>><?php echo esc_html( $c->name ); ?></option>
                     <?php endforeach; ?>
                 </select></label></p>
+
+            <p><label><strong>Stichwörter</strong> <span style="color:#666">(mit Komma trennen, z. B. Fribourg, Hauteville, kafshë)</span><br>
+                <input type="text" name="tags" value="<?php echo esc_attr( implode( ', ', $tags_now ) ); ?>" style="width:100%;padding:6px"></label></p>
 
             <p><strong>Shenjë mbi foto</strong><br>
                 <?php foreach ( array( '' => 'Asnjë', 'e-fundit' => '🔴 E FUNDIT', 'top-lajm' => '🔥 TOP LAJM', 'skandal' => '⚠️ SKANDAL', 'ekskluzive' => '⭐ EKSKLUZIVE' ) as $k => $v ) : ?>
