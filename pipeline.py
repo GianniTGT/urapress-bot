@@ -37,40 +37,66 @@ def build_drafts(theme: str | None = None) -> tuple[list[int], list[str]]:
     for i, story in enumerate(picks):
         db.mark_seen(story["link"], story["title"], story["source"])
         try:
-            story = feeds.ensure_fulltext(story)
-            art = ai_writer.rewrite(story)
-
-            image_kind, image_ref, media_id = "none", None, None
-            if art["persona"] and wp:
-                media = images.find_person_photo(wp, art["persona"])
-                if media:
-                    image_kind, image_ref, media_id = "wp", media["source_url"], media["id"]
-            if image_kind == "none":
-                try:
-                    path = images.generate_ai_image(art.get("prompt_imazhi") or art["titulli"],
-                                                    f"ai-{stamp}-{i}")
-                    if path:
-                        image_kind, image_ref = "ai", str(path)
-                except Exception as exc:
-                    errors.append(f"KI-Bild für «{art['titulli']}» fehlgeschlagen: {exc}")
-
-            ids.append(db.add_draft({
-                "source_name": story["source"],
-                "source_link": story["link"],
-                "title": art["titulli"],
-                "excerpt": art.get("permbledhja", ""),
-                "paragraphs": art["paragrafet"],
-                "category": art["kategoria"],
-                "tags": art.get("etiketat", [])[:5],
-                "person": art["persona"],
-                "image_kind": image_kind,
-                "image_ref": image_ref,
-                "wp_media_id": media_id,
-            }))
+            ids.append(_make_draft(story, wp, f"{stamp}-{i}", errors))
         except Exception as exc:
             log.exception("Fehler bei %s", story["link"])
             errors.append(f"«{story['title']}» konnte nicht verarbeitet werden: {exc}")
     return ids, errors
+
+
+def _make_draft(story: dict, wp, stamp: str, errors: list[str]) -> int:
+    """Eine Meldung: Volltext holen, neu schreiben, Foto suchen/erzeugen, als Entwurf speichern."""
+    story = feeds.ensure_fulltext(story)
+    art = ai_writer.rewrite(story)
+
+    image_kind, image_ref, media_id = "none", None, None
+    if art["persona"] and wp:
+        media = images.find_person_photo(wp, art["persona"])
+        if media:
+            image_kind, image_ref, media_id = "wp", media["source_url"], media["id"]
+    if image_kind == "none":
+        try:
+            path = images.generate_ai_image(art.get("prompt_imazhi") or art["titulli"], f"ai-{stamp}")
+            if path:
+                image_kind, image_ref = "ai", str(path)
+        except Exception as exc:
+            errors.append(f"KI-Bild für «{art['titulli']}» fehlgeschlagen: {exc}")
+
+    return db.add_draft({
+        "source_name": story["source"],
+        "source_link": story["link"],
+        "title": art["titulli"],
+        "excerpt": art.get("permbledhja", ""),
+        "paragraphs": art["paragrafet"],
+        "category": art["kategoria"],
+        "tags": art.get("etiketat", [])[:5],
+        "person": art["persona"],
+        "image_kind": image_kind,
+        "image_ref": image_ref,
+        "wp_media_id": media_id,
+    })
+
+
+def build_from_link(url: str) -> tuple[int, list[str]]:
+    """Eine Meldung aus einem Link (z. B. 20min.ch) neu schreiben. Gibt (Entwurfs-ID, Hinweise) zurück."""
+    import requests
+    from bs4 import BeautifulSoup
+
+    link = feeds.normalize_link(url)
+    resp = requests.get(link, headers=feeds.BROWSER_HEADERS, timeout=25)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    og = soup.find("meta", property="og:title")
+    title = (og.get("content") if og else "") or (soup.title.get_text() if soup.title else "")
+    text = feeds.fetch_fulltext(link)
+    if len(text) < 200:
+        raise ValueError("Nga kjo faqe nuk u lexua dot teksti i artikullit (ndoshta me pagesë ose i bllokuar).")
+    story = {"title": title.strip(), "link": link, "source": feeds.source_name(link), "published": "",
+             "categories": [], "text": text, "needs_fulltext": False}
+    db.mark_seen(link, story["title"], story["source"])
+    errors: list[str] = []
+    draft_id = _make_draft(story, _wp_or_none(), "link-" + datetime.now().strftime("%Y%m%d-%H%M%S"), errors)
+    return draft_id, errors
 
 
 def build_content(d: dict) -> str:

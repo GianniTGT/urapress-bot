@@ -6,6 +6,7 @@ Befehle im Telegram-Chat:
   /skano    Scan sofort starten (optional: religjion | sport | politik | showbiz | gjermani)
   /shkruaj  eigenen Artikel schreiben (ohne Quelle)
   /zazu     ZaZu-Comic aus Text-Zeilen zeichnen
+  /link     Meldung aus einem Link neu schreiben (oder einfach den Link schicken)
   /ndihme   alle Befehle (auch /help oder einfach ?)
   /statusi  Statistik
 """
@@ -215,7 +216,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if raw.startswith("/"):
         name, _, rest = raw[1:].lstrip().partition(" ")
         handler = {"skano": cmd_scan, "zazu": cmd_zazu, "shkruaj": cmd_write, "anulo": cmd_cancel,
-                   "statusi": cmd_status, "ndihme": cmd_help, "ndihmë": cmd_help, "help": cmd_help,
+                   "statusi": cmd_status, "link": cmd_link, "ndihme": cmd_help, "ndihmë": cmd_help, "help": cmd_help,
                    "komandat": cmd_help}.get(name.split("@")[0].strip().lower())
         if handler:
             context.args = rest.split()
@@ -226,6 +227,10 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     if context.chat_data.get("zazu"):
         await make_comic(msg, context, msg.text or "")
+        return
+    if URL_RE.match(raw.strip()) and not context.chat_data.get("shkruaj") and not context.chat_data.get("ndrysho") \
+            and not msg.reply_to_message:
+        await make_from_link(msg, raw.strip())
         return
     # Ziel: Reply auf eine Nachricht mit #N, sonst der Entwurf, der gerade bearbeitet wird
     draft_id = None
@@ -496,6 +501,34 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await q.message.reply_text(f"📘 #{draft_id} në Facebook:\n{fb_url}")
 
 
+# --- Meldung aus Link ------------------------------------------------------------
+URL_RE = re.compile(r"^https?://\S+$")
+
+
+async def make_from_link(msg, url: str) -> None:
+    await msg.reply_text("🔗 Duke e lexuar dhe rishkruar lajmin … (rreth 1 minutë)",
+                         link_preview_options=NO_PREVIEW)
+    try:
+        draft_id, notes = await asyncio.to_thread(pipeline.build_from_link, url)
+    except Exception as exc:
+        log.exception("Link fehlgeschlagen: %s", url)
+        await msg.reply_text(f"⚠️ Lajmi nuk u krijua: {exc}")
+        return
+    for n in notes:
+        await msg.reply_text(f"ℹ️ {n}")
+    await send_draft(msg.get_bot(), db.get_draft(draft_id))
+
+
+async def cmd_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    url = (context.args or [""])[0].strip()
+    if not URL_RE.match(url):
+        await update.message.reply_text("🔗 Dërgo: /link https://… – ose thjesht vetëm lidhjen e lajmit.")
+        return
+    await make_from_link(update.message, url)
+
+
 # --- ZaZu-Comic --------------------------------------------------------------------
 ZAZU_HELP = (
     "😺 Shkruaj skicën – një rresht = një foto (1 deri 4):\n\n"
@@ -663,6 +696,8 @@ HELP_TEXT = (
     "🔎 <b>/skano</b> – kërko lajme tani\n"
     "     <code>/skano showbiz</code> · <code>/skano gjermani</code> · <code>/skano sport</code>\n"
     "     <code>/skano politik</code> · <code>/skano religjion</code>\n\n"
+    "🔗 <b>/link</b> – dërgo lidhjen e një lajmi (p.sh. 20min.ch) → bot-i e rishkruan shqip\n"
+    "     ose thjesht ngjit vetëm lidhjen këtu\n\n"
     "✍️ <b>/shkruaj</b> – shkruaj lajmin tënd (pa burim)\n"
     "     rreshti i parë = titulli, pastaj paragrafët\n\n"
     "😺 <b>/zazu</b> – vizato ZaZu-n (një rresht = një foto)\n"
@@ -680,6 +715,7 @@ HELP_TEXT = (
 
 COMMANDS = [
     BotCommand("skano", "Kërko lajme (showbiz, gjermani, sport, politik, religjion)"),
+    BotCommand("link", "Lajm nga një lidhje (20min, Blick …)"),
     BotCommand("shkruaj", "Shkruaj lajmin tënd"),
     BotCommand("zazu", "Vizato ZaZu"),
     BotCommand("statusi", "Statistika"),
@@ -712,6 +748,7 @@ def main() -> None:
     app.add_handler(CommandHandler("shkruaj", cmd_write))
     app.add_handler(CommandHandler("anulo", cmd_cancel))
     app.add_handler(CommandHandler("zazu", cmd_zazu))
+    app.add_handler(CommandHandler("link", cmd_link))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
     app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no|star):\d+$"))
