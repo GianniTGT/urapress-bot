@@ -332,6 +332,23 @@ async def _remove_buttons(msg) -> None:
             pass
 
 
+def _to_jpg(src, dst, max_side: int = 2400) -> None:
+    """Jedes Bildformat (WEBP, PNG mit Transparenz, …) in ein normales JPG umwandeln."""
+    from PIL import Image, ImageOps
+
+    with Image.open(src) as im:
+        im = ImageOps.exif_transpose(im)
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGBA")
+            bg = Image.new("RGB", im.size, "white")
+            bg.paste(im, mask=im.split()[-1])
+            im = bg
+        else:
+            im = im.convert("RGB")
+        im.thumbnail((max_side, max_side))
+        im.save(dst, "JPEG", quality=88, optimize=True)
+
+
 async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         return
@@ -345,9 +362,20 @@ async def on_photo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not d or d["status"] not in ("pending", "posted"):
         await update.message.reply_text(f"ℹ️ #{draft_id} nuk mund të ndryshohet më.")
         return
-    tg_file = await update.message.photo[-1].get_file()
+    # Foto (komprimiert) oder als Datei geschickt (WEBP, PNG, HEIC …) → immer als JPG speichern
+    msg = update.message
+    tg_file = await (msg.photo[-1] if msg.photo else msg.document).get_file()
+    raw = config.IMAGE_DIR / f"manual-{draft_id}.upload"
+    await tg_file.download_to_drive(raw)
     path = config.IMAGE_DIR / f"manual-{draft_id}.jpg"
-    await tg_file.download_to_drive(path)
+    try:
+        await asyncio.to_thread(_to_jpg, raw, path)
+    except Exception as exc:
+        log.warning("Bild nicht lesbar: %s", exc)
+        await msg.reply_text("⚠️ Ky format fotoje nuk lexohet. Dërgoje si foto (jo si skedar) ose si JPG/PNG/WEBP.")
+        return
+    finally:
+        raw.unlink(missing_ok=True)
 
     # Schon online: Foto nachträglich einsetzen, dann FB anbieten
     if d["status"] == "posted" and d["wp_post_id"]:
@@ -753,7 +781,7 @@ def main() -> None:
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
     app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no|star):\d+$"))
     app.add_handler(CallbackQueryHandler(on_zazu, pattern=r"^zz_(ok|pfb|no):\d+$"))
-    app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, on_photo))
+    app.add_handler(MessageHandler((filters.PHOTO | filters.Document.IMAGE) & filters.ChatType.PRIVATE, on_photo))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho|shenje):\d+$"))
 
     hour, minute = map(int, config.SCAN_TIME.split(":"))
