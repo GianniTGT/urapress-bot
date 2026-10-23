@@ -33,19 +33,23 @@ MOODS = {
              "shtrire": "shtrire", "shtrihet": "shtrire", "shtrire ne divan": "shtrire",
              "fle": "fle", "flen": "fle", "gjume": "fle", "ne gjume": "fle",
              "ecen": "ecen", "vrapon": "ecen", "shetit": "ecen", "shkon": "ecen"},
+    "gianni": {"": "normal", "normal": "normal", "gezuar": "normal", "lumtur": "normal",
+               "merzitur": "merzitur", "serioz": "merzitur", "inatosur": "merzitur",
+               "habitur": "habitur", "shokuar": "habitur"},
     "sara": {"": "normal", "normal": "normal", "gezuar": "normal", "lumtur": "normal",
              "merzitur": "merzitur", "serioz": "merzitur", "inatosur": "merzitur",
              "habitur": "habitur", "shokuar": "habitur",
              "topi": "topi", "bowling": "topi"},
 }
-NAMES = {"zazu": "ZaZu", "sara": "Sara"}
-ORDER = ["sara", "zazu"]   # links → rechts
+NAMES = {"zazu": "ZaZu", "sara": "Sara", "gianni": "Gianni"}
+ORDER = ["gianni", "sara", "zazu"]   # links → rechts
 
 # Platz im Bild (Einheiten): (Mitte x, Grösse, max. Breite) je nach Anzahl Figuren.
 # Alle Figuren stehen auf der gleichen Bodenlinie, egal ob sitzend, liegend oder laufend.
 PLACE = {
     1: {"sara": (198, 1.0, 330), "zazu": (198, .9, 340)},
-    2: {"sara": (100, .85, 170), "zazu": (282, .78, 205)},
+    2: {"sara": (100, .85, 170), "gianni": (100, .85, 170), "zazu": (282, .78, 205)},
+    3: {"gianni": (70, .66, 130), "sara": (190, .66, 120), "zazu": (318, .62, 150)},
 }
 GROUND_Y = 362
 
@@ -70,7 +74,7 @@ def parse(text: str) -> list[dict]:
             raise ComicError(f"Nuk e kuptoj rreshtin: «{line}». Shkruaj p.sh. «ZaZu (mërzitur): teksti»")
         who, mood, said = _plain(m.group(1)), _plain(m.group(2) or ""), m.group(3).strip()
         if who not in MOODS:
-            raise ComicError(f"«{m.group(1).strip()}» nuk njihet. Personazhet: ZaZu, Sara")
+            raise ComicError(f"«{m.group(1).strip()}» nuk njihet. Personazhet: ZaZu, Sara, Gianni")
         if mood not in MOODS[who]:
             known = ", ".join(sorted({k for k in MOODS[who] if k}))
             raise ComicError(f"Gjendja «{m.group(2)}» nuk njihet për {NAMES[who]}. Mundësitë: {known}")
@@ -102,9 +106,10 @@ def _wrap(text: str, font, width_px: int) -> list[str]:
     return lines + ([cur] if cur else [])
 
 
-def _bubble(draw, text: str, sx: float, head_top: float) -> None:
-    """Sprechblase oben im Bild, Spitze zeigt auf den Kopf (sx, head_top). Alles in Einheiten."""
-    room = head_top - 22 - 14
+def _bubble(draw, text: str, sx: float, head_top: float, all_top: float | None = None) -> None:
+    """Sprechblase oben im Bild, über ALLEN Köpfen (verdeckt kein Gesicht), Spitze zeigt auf den Sprecher."""
+    limit = min(head_top, all_top if all_top is not None else head_top)
+    room = limit - 22 - 14
     for fs in (22, 20, 18, 16, 14):
         font = _font(fs)
         lines = _wrap(text, font, (PANEL - 44) * S)
@@ -114,7 +119,7 @@ def _bubble(draw, text: str, sx: float, head_top: float) -> None:
             break
     w = min(PANEL - 20, max(110, max(font.getlength(t) for t in lines) / S + 32))
     x = min(max(sx - w / 2, 10), PANEL - 10 - w)
-    y = max(14, head_top - 34 - h)   # Blase nahe beim Kopf, kurze Spitze
+    y = max(14, limit - 30 - h)      # Blase knapp über dem höchsten Kopf
     bottom = y + h
     bx = min(max(sx, x + 26), x + w - 26)
     tip = (sx, head_top - 6)
@@ -135,8 +140,11 @@ def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None) -> Im
     im = Image.new("RGB", (PANEL * S, PANEL * S), BG)
     d = ImageDraw.Draw(im)
     d.rectangle((0, 318 * S, PANEL * S, PANEL * S), fill=GROUND)
-    place = PLACE[len(cast)]
+    place = dict(PLACE[len(cast)])
+    if len(cast) == 2 and "zazu" not in cast:                 # Gianni und Sara: Sara rechts
+        place["sara"] = (282, .85, 170)
     head_top = None
+    tops: list[float] = []
     for who in cast:
         pose = p["pose"] if who == p["who"] else ((last or {}).get(who) if (last or {}).get(who) in KEEP else "normal")
         name = f"{who}-{pose}"
@@ -149,10 +157,11 @@ def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None) -> Im
         left = round(cx * S - w / 2)                     # Figur mittig auf ihrem Platz
         top = round(GROUND_Y * S - h)                    # unten auf der Bodenlinie
         im.paste(sp, (left, top), sp)
+        ox, oy = (left + m["ox"] * sc) / S, (top + m["oy"] * sc) / S   # Kopfmitte
+        tops.append(oy + m["top"] * sc)
         if who == p["who"]:
-            ox, oy = (left + m["ox"] * sc) / S, (top + m["oy"] * sc) / S   # Kopfmitte
             head_top, sx = oy + m["top"] * sc, ox
-    _bubble(d, p["text"], sx, head_top)
+    _bubble(d, p["text"], sx, head_top, min(tops))
     d.rectangle((0, 0, PANEL * S - 1, PANEL * S - 1), outline=INK, width=5 * S)
     return im
 

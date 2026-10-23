@@ -221,3 +221,42 @@ function zazuWalk(x, y, opt = {}) {
   s += zazuHead(id, mode, look, mouth) + '</g>';
   return s;
 }
+
+// ---- Gianni: kurze dunkle Haare mit grauen Schläfen, kurzer Bart, blaues Hemd ----
+const GHAIR = '#3A2E28', GGREY = '#8E8680', GSHIRT = '#2C4F86', GSHIRT2 = '#223F6C';
+function gianni(x, y, opt = {}) {
+  const { mouth = 'smile', sc = 1, brow = 0 } = opt;
+  const id = uid('g');
+  let s = `<g transform="translate(${x} ${y}) scale(${sc})"><defs>
+    <radialGradient id="${id}sk" cx="45%" cy="40%" r="70%"><stop offset="0" stop-color="#F5D3B6"/><stop offset="1" stop-color="#E7B894"/></radialGradient>
+    <linearGradient id="${id}sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${GSHIRT}"/><stop offset="1" stop-color="${GSHIRT2}"/></linearGradient></defs>`;
+  s += `<ellipse cx="0" cy="214" rx="86" ry="10" fill="#000" opacity=".1"/>`;
+  // Hemd mit Kragen und Knopfleiste
+  s += `<path d="M-78 212 Q-80 120 -30 100 L30 100 Q80 120 78 212 Z" fill="url(#${id}sh)" ${sw(3.5)}/>`;
+  s += `<path d="M-24 100 L0 132 L24 100" fill="#fff" ${sw(3)}/><path d="M-24 100 L-10 128 L-30 122 Z M24 100 L10 128 L30 122 Z" fill="${GSHIRT}" ${sw(3)}/>`;
+  s += `<path d="M0 132 L0 210" stroke="${GSHIRT2}" stroke-width="3"/><circle cx="0" cy="150" r="3" fill="#E8E8E8"/><circle cx="0" cy="176" r="3" fill="#E8E8E8"/><circle cx="0" cy="202" r="3" fill="#E8E8E8"/>`;
+  s += `<path d="M-46 180 l-6 30 M46 180 l6 30" stroke="${GSHIRT2}" stroke-width="3" stroke-linecap="round"/>`;
+  // Hals, Ohren, Gesicht
+  s += `<path d="M-14 74 L-14 104 Q0 112 14 104 L14 74 Z" fill="#E2AE8A"/>`;
+  s += `<ellipse cx="-52" cy="20" rx="9" ry="13" fill="#EDBF9C" ${sw(3)}/><ellipse cx="52" cy="20" rx="9" ry="13" fill="#EDBF9C" ${sw(3)}/>`;
+  s += `<path d="M-50 -6 Q-52 60 -26 78 Q0 92 26 78 Q52 60 50 -6 Q50 -50 0 -52 Q-50 -50 -50 -6 Z" fill="url(#${id}sk)" ${sw(3.5)}/>`;
+  // kurzer Bart (Kinn + Wangen) und Schnurrbart
+  s += `<path d="M-46 26 Q-44 64 -24 76 Q0 90 24 76 Q44 64 46 26 Q40 52 24 58 Q0 66 -24 58 Q-40 52 -46 26 Z" fill="${GHAIR}" opacity=".85"/>`;
+  s += `<path d="M-16 44 Q0 38 16 44 Q10 48 0 47 Q-10 48 -16 44 Z" fill="${GHAIR}"/>`;
+  for (const [a, b] of [[-36, 50], [-30, 60], [30, 60], [36, 50], [-20, 70], [20, 70]]) s += `<circle cx="${a}" cy="${b}" r="1.6" fill="#5A4A40"/>`;
+  // Augen (braun), Augenbrauen kräftig
+  for (const k of [-1, 1]) {
+    const ex = k * 19;
+    s += `<ellipse cx="${ex}" cy="16" rx="8" ry="7.5" fill="#fff" ${sw(2.5)}/><circle cx="${ex}" cy="17" r="5" fill="#6B4226"/><circle cx="${ex}" cy="17" r="2.6" fill="#14100E"/><circle cx="${ex - 2}" cy="15" r="1.6" fill="#fff"/>`;
+    s += `<path d="M${ex - k * 12} ${4 + brow} Q${ex} ${-4 - brow} ${ex + k * 12} ${2 - brow}" fill="none" stroke="${GHAIR}" stroke-width="5.5" stroke-linecap="round"/>`;
+  }
+  s += `<path d="M2 20 Q-4 34 4 36" fill="none" stroke="#C99577" stroke-width="3" stroke-linecap="round"/>`;
+  if (mouth === 'smile') s += `<path d="M-13 51 Q0 62 13 51 Q0 56 -13 51 Z" fill="#B5524C" ${sw(2.5)}/>`;
+  else if (mouth === 'o') s += `<ellipse cx="0" cy="54" rx="6" ry="7" fill="#8E3A35" ${sw(2.5)}/>`;
+  else s += `<path d="M-10 54 Q0 50 10 54" fill="none" ${sw(3)}/>`;
+  // Haare kurz, graue Schläfen
+  s += `<path d="M-50 4 Q-56 -50 -6 -60 Q46 -62 52 0 Q46 -24 40 -30 Q10 -40 -20 -34 Q-40 -30 -44 -14 Z" fill="${GHAIR}" ${sw(3.5)}/>`;
+  s += `<path d="M-50 4 Q-52 -10 -46 -20 L-44 -4 Z M50 4 Q52 -10 46 -20 L44 -4 Z" fill="${GGREY}"/>`;
+  s += `<path d="M-30 -48 Q-10 -56 14 -52 M-20 -40 Q0 -46 22 -42" stroke="#5A4A40" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  return s + '</g>';
+}

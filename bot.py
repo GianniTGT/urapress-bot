@@ -566,7 +566,8 @@ ZAZU_HELP = (
     "Gjendja në kllapa (pa kllapa = normal):\n"
     "ZaZu: gëzuar · mërzitur · habitur · putra\n"
     "         shtrirë · fle · ecën\n"
-    "Sara: mërzitur · habitur · topi\n\n"
+    "Sara: mërzitur · habitur · topi\n"
+    "Gianni: mërzitur · habitur\n\n"
     "/anulo për ta ndërprerë.")
 
 
