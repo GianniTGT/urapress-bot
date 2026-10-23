@@ -127,14 +127,18 @@ def _bubble(draw, text: str, sx: float, head_top: float) -> None:
         draw.text(((x + w / 2) * S, (y + 11 + i * lh) * S), t, font=font, fill=INK, anchor="mt")
 
 
-def _panel(p: dict, cast: list[str], meta: dict) -> Image.Image:
+# Körperhaltungen bleiben, auch wenn die Figur im nächsten Bild nichts sagt (Gesichter nicht)
+KEEP = {"shtrire", "fle", "ecen", "topi"}
+
+
+def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None) -> Image.Image:
     im = Image.new("RGB", (PANEL * S, PANEL * S), BG)
     d = ImageDraw.Draw(im)
     d.rectangle((0, 318 * S, PANEL * S, PANEL * S), fill=GROUND)
     place = PLACE[len(cast)]
     head_top = None
     for who in cast:
-        pose = p["pose"] if who == p["who"] else "normal"
+        pose = p["pose"] if who == p["who"] else ((last or {}).get(who) if (last or {}).get(who) in KEEP else "normal")
         name = f"{who}-{pose}"
         cx, sc, max_w = place[who]
         m = meta[name]
@@ -164,8 +168,10 @@ def render(panels: list[dict], out: Path, day: date | None = None) -> Path:
     day = day or date.today()
     d.text((10 * S + _font(34).getlength("ZaZu") + 14 * S, 40 * S), f"nga UraPress · {day:%d.%m.%Y}",
            font=_font(20, bold=False), fill="#777777", anchor="ls")
+    last: dict = {}
     for i, p in enumerate(panels):
-        im.paste(_panel(p, cast, meta), ((10 + i * (PANEL + GAP)) * S, 60 * S))
+        im.paste(_panel(p, cast, meta, last), ((10 + i * (PANEL + GAP)) * S, 60 * S))
+        last[p["who"]] = p["pose"]
     d.text(((width - 10) * S, 468 * S), "© UraPress · ZaZu", font=_font(14, bold=False), fill="#999999", anchor="rs")
     out.parent.mkdir(parents=True, exist_ok=True)
     im.save(out, optimize=True)
