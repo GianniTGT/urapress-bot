@@ -24,6 +24,9 @@ POSES = {
     "zazu-merzitur": "zazuSit(0,0,{mode:'grumpy'})",
     "zazu-habitur":  "zazuSit(0,0,{mode:'wide',mouth:'o'})",
     "zazu-putra":    "zazuSit(0,0,{mode:'flat',look:1,paw:true})",
+    "zazu-shtrire":  "zazuLie(0,0,{mode:'flat'})",
+    "zazu-fle":      "zazuSleep(0,0,{})",
+    "zazu-ecen":     "zazuWalk(0,0,{mode:'wide',mouth:'w'})",
     "sara-normal":   "sara(0,0,{ball:false})",
     "sara-merzitur": "sara(0,0,{ball:false,mouth:'flat',brow:3})",
     "sara-habitur":  "sara(0,0,{ball:false,mouth:'o'})",
@@ -39,11 +42,14 @@ def main() -> None:
         b = p.chromium.launch()
         pg = b.new_page(viewport={"width": px, "height": px})
         for name, call in POSES.items():
-            html = (f'<html><body style="margin:0;background:transparent">'
+            font = (ROOT / "comic_assets" / "fonts" / "ComicNeue-700.ttf").as_uri()
+            html = (f'<html><head><style>@font-face{{font-family:"Comic Neue";src:url({font})}}</style></head>'
+                    f'<body style="margin:0;background:transparent">'
                     f'<svg xmlns="http://www.w3.org/2000/svg" width="{px}" height="{px}" '
                     f'viewBox="{-BOX/2} {-BOX/2} {BOX} {BOX}" id="s"></svg>'
                     f'<script>{{{JS}\ndocument.getElementById("s").innerHTML={call};}}</script></body></html>')
             pg.set_content(html)
+            pg.wait_for_timeout(150)
             raw = OUT / f"{name}.png"
             pg.screenshot(path=str(raw), omit_background=True)
             im = Image.open(raw)

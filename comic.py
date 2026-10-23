@@ -29,7 +29,10 @@ MOODS = {
              "gezuar": "gezuar", "lumtur": "gezuar", "qesh": "gezuar",
              "merzitur": "merzitur", "inatosur": "merzitur", "nervoz": "merzitur", "ofenduar": "merzitur",
              "habitur": "habitur", "shokuar": "habitur",
-             "putra": "putra", "gishta": "putra", "kemba": "putra"},
+             "putra": "putra", "gishta": "putra", "kemba": "putra",
+             "shtrire": "shtrire", "shtrihet": "shtrire", "shtrire ne divan": "shtrire",
+             "fle": "fle", "flen": "fle", "gjume": "fle", "ne gjume": "fle",
+             "ecen": "ecen", "vrapon": "ecen", "shetit": "ecen", "shkon": "ecen"},
     "sara": {"": "normal", "normal": "normal", "gezuar": "normal", "lumtur": "normal",
              "merzitur": "merzitur", "serioz": "merzitur", "inatosur": "merzitur",
              "habitur": "habitur", "shokuar": "habitur",
@@ -38,12 +41,13 @@ MOODS = {
 NAMES = {"zazu": "ZaZu", "sara": "Sara"}
 ORDER = ["sara", "zazu"]   # links → rechts
 
-# Platz im Bild (Einheiten): (x, y, Grösse) je nach Anzahl Figuren
+# Platz im Bild (Einheiten): (Mitte x, Grösse, max. Breite) je nach Anzahl Figuren.
+# Alle Figuren stehen auf der gleichen Bodenlinie, egal ob sitzend, liegend oder laufend.
 PLACE = {
-    1: {"sara": (198, 178, 1.0), "zazu": (198, 182, .9)},
-    2: {"sara": (108, 205, .85), "zazu": (284, 200, .78)},
+    1: {"sara": (198, 1.0, 330), "zazu": (198, .9, 340)},
+    2: {"sara": (100, .85, 170), "zazu": (282, .78, 205)},
 }
-PAW_SHIFT = {1: -40, 2: -40}   # Pose mit Pfote braucht rechts mehr Platz
+GROUND_Y = 362
 
 
 class ComicError(ValueError):
@@ -132,15 +136,18 @@ def _panel(p: dict, cast: list[str], meta: dict) -> Image.Image:
     for who in cast:
         pose = p["pose"] if who == p["who"] else "normal"
         name = f"{who}-{pose}"
-        x, y, sc = place[who]
-        if name == "zazu-putra":
-            x += PAW_SHIFT[len(cast)]
+        cx, sc, max_w = place[who]
         m = meta[name]
         sp = Image.open(ASSETS / "sprites" / f"{name}.png")
-        sp = sp.resize((round(sp.width * sc), round(sp.height * sc)), Image.LANCZOS)
-        im.paste(sp, (round(x * S - m["ox"] * sc), round(y * S - m["oy"] * sc)), sp)
+        sc = min(sc, max_w * S / sp.width)               # breite Posen (liegend, laufend) kleiner
+        w, h = round(sp.width * sc), round(sp.height * sc)
+        sp = sp.resize((w, h), Image.LANCZOS)
+        left = round(cx * S - w / 2)                     # Figur mittig auf ihrem Platz
+        top = round(GROUND_Y * S - h)                    # unten auf der Bodenlinie
+        im.paste(sp, (left, top), sp)
         if who == p["who"]:
-            head_top, sx = y + m["top"] * sc, x
+            ox, oy = (left + m["ox"] * sc) / S, (top + m["oy"] * sc) / S   # Kopfmitte
+            head_top, sx = oy + m["top"] * sc, ox
     _bubble(d, p["text"], sx, head_top)
     d.rectangle((0, 0, PANEL * S - 1, PANEL * S - 1), outline=INK, width=5 * S)
     return im

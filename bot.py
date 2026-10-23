@@ -565,6 +565,7 @@ ZAZU_HELP = (
     "ZaZu (mërzitur): S'ka shans. Gishta të vegjël.\n\n"
     "Gjendja në kllapa (pa kllapa = normal):\n"
     "ZaZu: gëzuar · mërzitur · habitur · putra\n"
+    "         shtrirë · fle · ecën\n"
     "Sara: mërzitur · habitur · topi\n\n"
     "/anulo për ta ndërprerë.")
 
@@ -729,7 +730,8 @@ HELP_TEXT = (
     "✍️ <b>/shkruaj</b> – shkruaj lajmin tënd (pa burim)\n"
     "     rreshti i parë = titulli, pastaj paragrafët\n\n"
     "😺 <b>/zazu</b> – vizato ZaZu-n (një rresht = një foto)\n"
-    "     <code>Sara: …</code> · <code>ZaZu (mërzitur): …</code>\n\n"
+    "     <code>Sara: …</code> · <code>ZaZu (mërzitur): …</code>\n"
+    "     ZaZu: gëzuar, mërzitur, habitur, putra, shtrirë, fle, ecën\n\n"
     "📊 <b>/statusi</b> – sa lajme janë postuar / në pritje\n"
     "↩️ <b>/anulo</b> – ndërprit (shkruaj, ndrysho, zazu)\n"
     "📖 <b>/ndihme</b> ose <b>?</b> – kjo listë\n\n"
