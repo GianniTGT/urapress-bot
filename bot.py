@@ -787,9 +787,10 @@ def main() -> None:
     app.add_handler(MessageHandler((filters.PHOTO | filters.Document.IMAGE) & filters.ChatType.PRIVATE, on_photo))
     app.add_handler(CallbackQueryHandler(on_button, pattern=r"^(posto|pfb|refuzo|anulo|fb|ndrysho|shenje):\d+$"))
 
-    hour, minute = map(int, config.SCAN_TIME.split(":"))
-    app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),
-                            name="daily-scan")
+    for i, t in enumerate(x.strip() for x in config.SCAN_TIME.split(",") if x.strip()):
+        hour, minute = map(int, t.split(":"))
+        app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),
+                                name=f"scan-{i}")
     app.job_queue.run_repeating(check_njoftime, interval=60, first=15, name="njoftime")
     log.info("Bot läuft – täglicher Scan um %s (%s)", config.SCAN_TIME, config.TIMEZONE)
     app.run_polling(allowed_updates=Update.ALL_TYPES)

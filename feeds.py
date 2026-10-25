@@ -15,12 +15,17 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; urapress-bot/1.0; +https://ur
 BROWSER_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                                  "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"}
 MIN_TEXT_LENGTH = 300   # darunter gilt der Feed-Text als Anriss → Volltext von der Webseite
-MAX_PER_FEED = 25       # nur die neuesten Einträge pro Quelle (Alsat liefert >50)
+MAX_PER_FEED = 12       # nur die neuesten Einträge pro Quelle (viele Quellen → Auswahl bleibt überschaubar)
 
 
 def normalize_link(link: str) -> str:
-    """Entfernt utm_*-Parameter, damit derselbe Artikel nicht doppelt erkannt wird."""
+    """Entfernt utm_*-Parameter, damit derselbe Artikel nicht doppelt erkannt wird.
+    Bing-News-Links (…/apiclick.aspx?url=…) werden auf die echte Artikel-Adresse aufgelöst."""
     p = urlparse(link)
+    if p.netloc.endswith("bing.com") and "url=" in p.query:
+        real = dict(parse_qsl(p.query)).get("url")
+        if real:
+            p = urlparse(real)
     query = [(k, v) for k, v in parse_qsl(p.query) if not k.lower().startswith("utm_")]
     return urlunparse(p._replace(query=urlencode(query), fragment=""))
 

@@ -20,6 +20,13 @@ Wähle aus der Kandidatenliste die besten Meldungen für heute aus. Kriterien:
    grösste albanische Diaspora) sowie im übrigen deutschsprachigen Raum.
    Meldungen mit direktem Diaspora-Bezug klar bevorzugen – Meldungen über Albaner in
    Deutschland genauso wie über Albaner in der Schweiz.
+1b. SPANNUNG: Bevorzuge Meldungen, über die man spricht und die man teilen will – überraschend,
+   emotional, empörend, skurril, Skandal, Kriminalfall, grosser Erfolg oder Schicksal eines Albaners
+   im Ausland (Deutschland, Schweiz, Österreich, Italien, USA, UK …), Streit unter Politikern, Rekorde.
+   Langweilige Routine (Sitzungen, Protokoll, Statistik ohne Überraschung) nur, wenn sonst nichts da ist.
+   Aber: nur echte Nachrichten mit Fakten – keine Gerüchte, keine erfundenen Zuspitzungen.
+1c. Herkunft mischen: wenn möglich je eine Meldung aus der Diaspora (Ausland), aus Kosova/Shqipëri
+   und eine leichte/unterhaltsame.
 2. Mischung: Wenn eine passende Meldung dabei ist, soll mindestens EINE aus Kulturë & Showbiz
    stammen – bekannte albanische Sänger, Schauspieler, TV-Gesichter, Influencer, Skandale,
    Streit, Liebe/Trennung, Auftritte. Das lesen die Leute am liebsten.

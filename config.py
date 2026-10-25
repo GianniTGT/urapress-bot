@@ -47,12 +47,12 @@ FB_PAGE_TOKEN = _get("FB_PAGE_TOKEN", "")
 # --- Quellen & Ablauf -------------------------------------------------------
 FEEDS = [f.strip() for f in _get(
     "FEEDS",
-    "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/,https://partner-feeds.20min.ch/rss/20minuten,https://www.b92.net/rss/b92/info,https://telegrafi.com/feeds/feed.rss?geo=CH,https://zhurnal.mk/feed/,https://telegrafi.com/feeds/feed.rss?geo=DE,https://rss.dw.com/rdf/rss-alb-all,https://www.gazetaexpress.com/feed/,https://partner-feeds.20min.ch/rss/20minuten/people,https://www.blick.ch/people-tv/rss.xml,https://www.billboard.com/feed/",
+    "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/,https://partner-feeds.20min.ch/rss/20minuten,https://www.b92.net/rss/b92/info,https://telegrafi.com/feeds/feed.rss?geo=CH,https://zhurnal.mk/feed/,https://telegrafi.com/feeds/feed.rss?geo=DE,https://rss.dw.com/rdf/rss-alb-all,https://www.gazetaexpress.com/feed/,https://partner-feeds.20min.ch/rss/20minuten/people,https://www.blick.ch/people-tv/rss.xml,https://www.billboard.com/feed/,https://top-channel.tv/feed/,https://www.balkanweb.com/feed/,https://euronews.al/feed/,https://www.panorama.com.al/feed/,https://tvklan.al/feed/,https://kallxo.com/feed/,https://insajderi.org/feed/,https://www.bing.com/news/search?q=Albaner&format=rss&setlang=de&cc=DE,https://www.bing.com/news/search?q=Kosovaren&format=rss&setlang=de&cc=DE,https://www.bing.com/news/search?q=Albaner+Schweiz&format=rss&setlang=de&cc=CH,https://www.bing.com/news/search?q=Albanian+American&format=rss&setlang=en&cc=US,https://www.bing.com/news/search?q=Albania+Kosovo&format=rss&setlang=en&cc=US",
 
 ).split(",") if f.strip()]
-SCAN_TIME = _get("SCAN_TIME", "07:30")          # HH:MM
+SCAN_TIME = _get("SCAN_TIME", "07:30,17:30")    # HH:MM, mehrere mit Komma
 TIMEZONE = _get("TIMEZONE", "Europe/Zurich")
-ARTICLES_PER_DAY = int(_get("ARTICLES_PER_DAY", "3"))
+ARTICLES_PER_DAY = int(_get("ARTICLES_PER_DAY", "4"))   # pro Scan
 MAX_AGE_HOURS = int(_get("MAX_AGE_HOURS", "48"))
 CATEGORIES = [c.strip() for c in _get(
     "CATEGORIES",
