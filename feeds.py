@@ -52,6 +52,8 @@ def _entry_date(entry) -> datetime | None:
 
 def fetch_feed(url: str) -> list:
     resp = requests.get(url, headers=HEADERS, timeout=25)
+    if resp.status_code == 403:  # manche Seiten (Top Channel, Panorama …) blocken Bot-Namen
+        resp = requests.get(url, headers=BROWSER_HEADERS, timeout=25)
     resp.raise_for_status()
     return feedparser.parse(resp.content).entries
 
