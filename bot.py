@@ -204,6 +204,7 @@ async def cmd_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     context.chat_data.pop("shkruaj", None)
     context.chat_data.pop("ndrysho", None)
     context.chat_data.pop("zazu", None)
+    context.chat_data.pop("social", None)
     await update.message.reply_text("↩️ U anulua.")
 
 
@@ -227,6 +228,13 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
     if context.chat_data.get("zazu"):
         await make_comic(msg, context, msg.text or "")
+        return
+    if context.chat_data.get("social") and not msg.reply_to_message:
+        await make_from_social(msg, context, context.chat_data.pop("social"), raw)
+        return
+    first, note = (raw.strip().split(None, 1) + ["", ""])[:2]   # Link, danach eigener Text
+    if URL_RE.match(first) and pipeline.social_platform(first) and not msg.reply_to_message:
+        await make_from_social(msg, context, first, note)
         return
     if URL_RE.match(raw.strip()) and not context.chat_data.get("shkruaj") and not context.chat_data.get("ndrysho") \
             and not msg.reply_to_message:
@@ -547,12 +555,37 @@ async def make_from_link(msg, url: str) -> None:
     await send_draft(msg.get_bot(), db.get_draft(draft_id))
 
 
+async def make_from_social(msg, context, url: str, note: str) -> None:
+    """Instagram/X/TikTok: Gianni schreibt 1–2 Sätze, der Bot korrigiert sie und bettet den Beitrag ein."""
+    platform = pipeline.social_platform(url)
+    if len(note.strip()) < 15:
+        context.chat_data["social"] = url
+        await msg.reply_text(f"✍️ Postim nga {platform}. Shkruaj 1–2 fjali me fjalët e tua: për çfarë bëhet fjalë?\n"
+                             "Bot-i e korrigjon dhe e fut postimin origjinal në artikull. (/anulo për ta lënë)")
+        return
+    await msg.reply_text(f"✍️ Duke e shkruar lajmin me postimin nga {platform} … (rreth 1 minutë)",
+                         link_preview_options=NO_PREVIEW)
+    try:
+        draft_id, notes = await asyncio.to_thread(pipeline.build_from_social, url, note)
+    except Exception as exc:
+        log.exception("Social-Link fehlgeschlagen: %s", url)
+        await msg.reply_text(f"⚠️ Lajmi nuk u krijua: {exc}")
+        return
+    for n in notes:
+        await msg.reply_text(f"ℹ️ {n}")
+    await msg.reply_text(f"📲 Postimi origjinal nga {platform} futet automatikisht poshtë tekstit.")
+    await send_draft(msg.get_bot(), db.get_draft(draft_id))
+
+
 async def cmd_link(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not is_admin(update):
         return
     url = (context.args or [""])[0].strip()
     if not URL_RE.match(url):
         await update.message.reply_text("🔗 Dërgo: /link https://… – ose thjesht vetëm lidhjen e lajmit.")
+        return
+    if pipeline.social_platform(url):
+        await make_from_social(update.message, context, url, " ".join((context.args or [])[1:]))
         return
     await make_from_link(update.message, url)
 
@@ -727,6 +760,7 @@ HELP_TEXT = (
     "     <code>/skano showbiz</code> · <code>/skano gjermani</code> · <code>/skano sport</code>\n"
     "     <code>/skano politik</code> · <code>/skano religjion</code>\n\n"
     "🔗 <b>/link</b> – dërgo lidhjen e një lajmi (p.sh. 20min.ch) → bot-i e rishkruan shqip\n"
+    "📲 Instagram / X / TikTok: lidhja + 1–2 fjali tua → bot-i i korrigjon, postimi futet në artikull\n"
     "     ose thjesht ngjit vetëm lidhjen këtu\n\n"
     "✍️ <b>/shkruaj</b> – shkruaj lajmin tënd (pa burim)\n"
     "     rreshti i parë = titulli, pastaj paragrafët\n\n"

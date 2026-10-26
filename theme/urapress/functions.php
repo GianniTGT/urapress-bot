@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.18.0' );
+define( 'URAPRESS_VERSION', '1.19.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 require_once __DIR__ . '/inc/llogaria.php';
 
@@ -843,6 +843,29 @@ add_action(
 		<?php
 	},
 	50
+);
+
+/**
+ * Eingebettete Beiträge (Instagram, X, TikTok): Skript der Plattform nur laden, wenn der Artikel einen enthält.
+ */
+add_action(
+	'wp_footer',
+	function () {
+		if ( ! is_singular() ) {
+			return;
+		}
+		$content = (string) get_post_field( 'post_content', get_queried_object_id() );
+		$scripts = array(
+			'instagram-media' => 'https://www.instagram.com/embed.js',
+			'twitter-tweet'   => 'https://platform.twitter.com/widgets.js',
+			'tiktok-embed'    => 'https://www.tiktok.com/embed.js',
+		);
+		foreach ( $scripts as $class => $src ) {
+			if ( false !== strpos( $content, $class ) ) {
+				printf( '<script async src="%s"></script>' . "\n", esc_url( $src ) );
+			}
+		}
+	}
 );
 
 /**

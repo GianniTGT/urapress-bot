@@ -242,13 +242,25 @@ def _copy_ratio(source: str, data: dict) -> float:
         return 0.0
     return len(out_grams & _ngrams(source)) / len(out_grams)
 
+SOCIAL_NOTE = """
+
+SONDERFALL – Beitrag aus {platform}: Die "Notiz der Redaktion" hat der Redakteur selbst geschrieben
+(evtl. mit Tipp- oder Grammatikfehlern, evtl. auf Deutsch). Mach daraus eine kurze, saubere Meldung
+auf Albanisch: Sprache korrigieren, Inhalt und Aussage des Redakteurs beibehalten, NICHTS dazuerfinden.
+Länge: 1–3 Absätze, ca. 50–150 Wörter. Der Original-Beitrag wird automatisch unter dem Text
+eingebettet – darauf darfst du verweisen ("siç shihet në postimin më poshtë"), {platform} einmal nennen."""
+
+
 def rewrite(story: dict) -> dict:
     user = (
         f"Quelle: {story['source']}\nOriginaltitel: {story['title']}\n\n"
         f"Originaltext:\n{story['text'][:7000]}"
     )
-    data = _ask(REWRITE_SYSTEM, user)
-    ratio = _copy_ratio(story["text"], data)
+    if story.get("social"):  # eigener Text der Redaktion: korrigieren statt Kopie-Prüfung
+        data = _ask(REWRITE_SYSTEM + SOCIAL_NOTE.format(platform=story["social"]), user)
+    else:
+        data = _ask(REWRITE_SYSTEM, user)
+    ratio = 0.0 if story.get("social") else _copy_ratio(story["text"], data)
     if ratio > COPY_LIMIT:
         log.warning("Entwurf zu nah am Original (%.0f%%), zweiter Versuch", ratio * 100)
         strict = user + ("\n\nWICHTIG: Der letzte Entwurf war zu nah am Original. Schreibe alles "

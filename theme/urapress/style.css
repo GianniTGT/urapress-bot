@@ -888,3 +888,6 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 	.up-nav .up-nav__sub li a::after { display: none; }
 	.up-nav .up-nav__sub li a { padding: 10px 4px 10px 14px !important; }
 }
+
+/* 1.19.0 – eingebettete Beiträge (Instagram, X, TikTok) mittig */
+.instagram-media, .twitter-tweet, .tiktok-embed { margin: 1.5em auto !important; }

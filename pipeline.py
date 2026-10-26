@@ -1,8 +1,10 @@
 """Ablauf: Quellen → Auswahl → Neu schreiben → Bild → Entwurf; und Veröffentlichung."""
 import html
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 import ai_writer
 import db
@@ -99,8 +101,62 @@ def build_from_link(url: str) -> tuple[int, list[str]]:
     return draft_id, errors
 
 
+# Beiträge aus sozialen Netzen: Text schreibt die Redaktion, der Original-Beitrag wird eingebettet
+SOCIAL = {"instagram.com": "Instagram", "x.com": "X", "twitter.com": "X", "tiktok.com": "TikTok"}
+
+
+def social_platform(url: str) -> str | None:
+    host = urlparse(url or "").netloc.lower().removeprefix("www.").removeprefix("m.").removeprefix("vm.")
+    return SOCIAL.get(host)
+
+
+def social_embed(url: str) -> str:
+    """Offizieller Einbettungs-Code der Plattform: Bild/Video kommt live von dort, wird nicht kopiert."""
+    u = html.escape(url)
+    kind = social_platform(url)
+    if kind == "Instagram":
+        return (f'<blockquote class="instagram-media" data-instgrm-permalink="{u}" data-instgrm-version="14">'
+                f'<a href="{u}">Shiko postimin në Instagram</a></blockquote>')
+    if kind == "X":
+        tw = html.escape(re.sub(r"//(www\.)?x\.com/", "//twitter.com/", url))
+        return f'<blockquote class="twitter-tweet"><a href="{tw}">Shiko postimin në X</a></blockquote>'
+    m = re.search(r"/video/(\d+)", url)
+    vid = f' data-video-id="{m.group(1)}"' if m else ""
+    return f'<blockquote class="tiktok-embed" cite="{u}"{vid}><a href="{u}">Shiko videon në TikTok</a></blockquote>'
+
+
+def _social_caption(url: str) -> str:
+    """Text des Beitrags, falls die Seite ihn ohne Anmeldung zeigt (oft nur bei Instagram). Sonst leer."""
+    import requests
+    from bs4 import BeautifulSoup
+    try:
+        resp = requests.get(url, headers=feeds.BROWSER_HEADERS, timeout=15)
+        og = BeautifulSoup(resp.text, "html.parser").find("meta", property="og:description")
+        return (og.get("content") or "").strip() if og else ""
+    except Exception:
+        return ""
+
+
+def build_from_social(url: str, note: str) -> tuple[int, list[str]]:
+    """Meldung zu einem Instagram/X/TikTok-Beitrag: die Notiz der Redaktion wird korrigiert und
+    zu einer kurzen Meldung ausgebaut, der Original-Beitrag kommt eingebettet darunter."""
+    platform = social_platform(url)
+    caption = _social_caption(url) if platform == "Instagram" else ""
+    text = f"Notiz der Redaktion:\n{note.strip()}"
+    if caption:
+        text += f"\n\nText des Beitrags:\n{caption}"
+    story = {"title": "", "link": url, "source": platform, "published": "", "categories": [],
+             "text": text, "needs_fulltext": False, "social": platform}
+    db.mark_seen(url, note[:80], platform)
+    errors: list[str] = []
+    draft_id = _make_draft(story, _wp_or_none(), "social-" + datetime.now().strftime("%Y%m%d-%H%M%S"), errors)
+    return draft_id, errors
+
+
 def build_content(d: dict) -> str:
     body = "\n".join(f"<p>{html.escape(p, quote=False)}</p>" for p in d["paragraphs"])
+    if social_platform(d["source_link"]):
+        body += "\n" + social_embed(d["source_link"])
     source = ""
     if d["source_link"]:  # eigener Text der Redaktion: ohne Quelle
         # nur der Name der Quelle, ohne Link (keine Besucher zur Konkurrenz schicken)
