@@ -855,3 +855,7 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 @media (max-width: 760px) { .up-header__right .up-header__acc span { display: none; } .up-header__right a.up-header__acc { font-size: 22px; } }
 /* 1.17.2 – Markierung (TOP LAJM …) auch auf der Artikelseite */
 .up-card__badge.up-article__badge { position: static; display: inline-flex; margin: 0 10px 8px 0; vertical-align: middle; box-shadow: none; }
+/* 1.17.3 – Quelle unauffällig: klein, grau, ohne Kasten */
+.up-content .dj-burimi { margin: 1.6em 0 0; padding: 0; background: none; border-radius: 0; font-size: 12.5px; color: #8A8F99; letter-spacing: .01em; }
+.up-content .dj-burimi a { color: #8A8F99; font-weight: 400; text-decoration: underline; text-decoration-color: #C9CCD3; text-underline-offset: 2px; }
+.up-content .dj-burimi a:hover { color: var(--up-muted); }
