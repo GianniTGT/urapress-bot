@@ -891,3 +891,19 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 
 /* 1.19.0 – eingebettete Beiträge (Instagram, X, TikTok) mittig */
 .instagram-media, .twitter-tweet, .tiktok-embed { margin: 1.5em auto !important; }
+
+/* 1.19.1 – Njoftime-Karten ca. 20 % kleiner (Foto flacher, Schrift und Abstände kleiner) */
+.up-njs__grid { gap: 14px; }
+.up-njs__grid .up-nj { gap: 6px; padding: 14px; }
+.up-njs__grid .up-nj__foto { margin: -14px -14px 2px; aspect-ratio: 16 / 10; }
+.up-njs__grid .up-nj__foto svg { max-height: 70%; }
+.up-njs__grid .up-nj__titulli { font-size: 17px; }
+.up-njs__grid .up-nj__teksti { font-size: 14px; line-height: 1.45; }
+.up-njs__grid .up-nj__top, .up-njs__grid .up-nj__meta { font-size: 12px; }
+.up-njs__grid .up-nj__btn { padding: 5px 11px; font-size: 13px; }
+.up-njhome { padding: 20px; }
+.up-njhome__tiles { gap: 10px; margin-top: 14px; }
+.up-njhome__tiles a { padding: 10px 6px; gap: 6px; font-size: 14px; }
+.up-njhome__tiles span { width: 56px; height: 56px; border-radius: 15px; }
+.up-njhome__tiles svg { width: 44px; height: 44px; }
+.up-njhome__list { margin-top: 14px; }
