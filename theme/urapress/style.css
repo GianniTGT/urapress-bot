@@ -859,3 +859,32 @@ h1, h2, h3, h4 { color: var(--up-ink); line-height: 1.2; margin: 0 0 .5em; font-
 .up-content .dj-burimi { margin: 1.6em 0 0; padding: 0; background: none; border-radius: 0; font-size: 12.5px; color: #8A8F99; letter-spacing: .01em; }
 .up-content .dj-burimi a { color: #8A8F99; font-weight: 400; text-decoration: underline; text-decoration-color: #C9CCD3; text-underline-offset: 2px; }
 .up-content .dj-burimi a:hover { color: var(--up-muted); }
+
+/* =====================================================================
+   1.18.0 – «Regjionet» als Aufklappmenü in der Rubriken-Leiste
+   ===================================================================== */
+.up-nav ul { overflow: visible; }
+.up-nav__reg { position: relative; }
+.up-nav__regbtn { font: inherit; font-size: 15.5px; font-weight: 700; color: var(--up-ink); background: none; border: 0; cursor: pointer; padding: 14px 6px 20px; position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.up-nav__regbtn span { font-size: 12px; transition: transform .2s; }
+.up-nav__reg.is-open .up-nav__regbtn span, .up-nav__reg:hover .up-nav__regbtn span { transform: rotate(180deg); }
+.up-nav__sub { display: none !important; position: absolute; left: -10px; top: 100%; z-index: 60; min-width: 230px; flex-direction: column !important; padding: 8px !important; background: #fff; border: 1px solid var(--up-line); border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.12); }
+.up-nav__reg.is-open .up-nav__sub, .up-nav__reg:hover .up-nav__sub, .up-nav__reg:focus-within .up-nav__sub { display: flex !important; }
+.up-nav .up-nav__sub li a { padding: 10px 12px 10px 30px !important; border-radius: 8px; font-size: 15.5px; }
+.up-nav .up-nav__sub li a::after { left: 14px !important; top: 50%; bottom: auto !important; width: 9px !important; height: 9px !important; border-radius: 50% !important; transform: translateY(-50%) !important; }
+.up-nav .up-nav__sub li a:hover { background: var(--up-soft); }
+.up-nav__reg.current-cat .up-nav__regbtn { color: var(--up-red); }
+@media (min-width: 761px) {
+	.up-nav__regbtn::after { content: ""; position: absolute; left: 50%; bottom: 6px; width: 14px; height: 7px; transform: translateX(-50%); border-radius: 0 0 14px 14px;
+		background: conic-gradient(#D7141A 0 25%, #2346A0 0 50%, #8B1E3F 0 75%, #F08A24 0); }
+	.up-nav__reg.current-cat .up-nav__regbtn::after { width: 34px; height: 17px; bottom: -4px; }
+	.up-nav ul { justify-content: flex-start; gap: 18px; }
+}
+@media (max-width: 760px) {
+	.up-nav__reg { width: 100%; }
+	.up-nav__regbtn { width: 100%; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--up-line); }
+	.up-nav__sub { position: static; display: flex !important; box-shadow: none; border: 0; padding: 0 0 0 10px !important; min-width: 0; }
+	.up-nav__reg:not(.is-open) .up-nav__sub { display: none !important; }
+	.up-nav .up-nav__sub li a::after { display: none; }
+	.up-nav .up-nav__sub li a { padding: 10px 4px 10px 14px !important; }
+}

@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'URAPRESS_VERSION', '1.17.3' );
+define( 'URAPRESS_VERSION', '1.18.0' );
 require_once __DIR__ . '/inc/njoftime.php';
 require_once __DIR__ . '/inc/llogaria.php';
 
@@ -95,6 +95,7 @@ function urapress_assets() {
 	wp_add_inline_script(
 		'urapress-nav',
 		"(function(){var b=document.querySelector('.up-menu-toggle'),n=document.querySelector('.up-nav');if(!b||!n)return;b.addEventListener('click',function(){var o=n.classList.toggle('is-open');b.setAttribute('aria-expanded',o?'true':'false');});})();"
+		. "(function(){var r=document.querySelector('.up-nav__reg');if(!r)return;var b=r.querySelector('button');b.addEventListener('click',function(e){e.stopPropagation();var o=r.classList.toggle('is-open');b.setAttribute('aria-expanded',o?'true':'false');});document.addEventListener('click',function(e){if(!r.contains(e.target)){r.classList.remove('is-open');b.setAttribute('aria-expanded','false');}});document.addEventListener('keydown',function(e){if(e.key==='Escape'){r.classList.remove('is-open');b.setAttribute('aria-expanded','false');}});})();"
 	);
 
 	// Leuchtendes Tiff-Logo-Aufblitzen (zufällig, einmal pro Besuch). Braucht die Glow-Engine.
@@ -305,7 +306,28 @@ function urapress_fallback_menu() {
 		is_front_page() ? ' current-cat' : '',
 		esc_url( home_url( '/' ) )
 	);
+	// Regionen zusammen unter «Regjionet» (Aufklappmenü), die Themen-Rubriken direkt
+	$regions = array( 'Zvicër', 'Diaspora', 'Kosovë', 'Shqipëri', 'Maqedoni e Veriut', 'Mal i Zi', 'Lugina e Preshevës', 'Bota' );
+	$sub     = '';
+	$in_reg  = false;
+	foreach ( $regions as $name ) {
+		$term = urapress_category_by_name( $name );
+		if ( ! $term ) {
+			continue;
+		}
+		$cur     = is_category( $term->term_id ) || ( is_single() && has_category( $term->term_id ) && urapress_primary_category() && urapress_primary_category()->term_id === $term->term_id );
+		$in_reg  = $in_reg || $cur;
+		$sub    .= sprintf( '<li class="%s"><a href="%s">%s</a></li>', $cur ? 'current-cat' : '', esc_url( get_category_link( $term ) ), esc_html( $term->name ) );
+	}
+	printf(
+		'<li class="up-nav__reg%s"><button type="button" class="up-nav__regbtn" aria-expanded="false" aria-haspopup="true">Regjionet <span aria-hidden="true">▾</span></button><ul class="up-nav__sub">%s</ul></li>',
+		$in_reg ? ' current-cat' : '',
+		$sub // phpcs:ignore -- oben escaped
+	);
 	foreach ( urapress_main_categories() as $name ) {
+		if ( in_array( $name, $regions, true ) ) {
+			continue;
+		}
 		$term = urapress_category_by_name( $name );
 		if ( ! $term ) {
 			continue;
