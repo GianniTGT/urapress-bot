@@ -833,3 +833,18 @@ add_filter(
 		return is_admin() ? $out : preg_replace( '/lang="[^"]*"/', 'lang="sq"', $out );
 	}
 );
+
+/**
+ * Quelle am Artikelende nur als Text, ohne Link (gilt auch für ältere Artikel).
+ */
+add_filter(
+	'the_content',
+	function ( $html ) {
+		return preg_replace_callback(
+			'#<p class="dj-burimi">.*?</p>#s',
+			fn( $m ) => preg_replace( '#</?a\b[^>]*>#i', '', $m[0] ),
+			$html
+		);
+	},
+	20
+);
