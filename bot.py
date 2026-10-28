@@ -738,6 +738,20 @@ async def check_njoftime(context: ContextTypes.DEFAULT_TYPE) -> None:
                                        reply_markup=kb, link_preview_options=NO_PREVIEW)
 
 
+def _nj_done_text(nj_id: int, res: dict, star: bool) -> str:
+    """Kurze Bestätigung wie bei den Lajme: ohne große Link-Vorschau."""
+    e = html.escape
+    title = (res.get("title") or {}).get("raw") or html.unescape((res.get("title") or {}).get("rendered", "")) \
+        if isinstance(res.get("title"), dict) else (res.get("title") or "")
+    lines = [f"⭐ <b>Njoftimi #{nj_id} u publikua · i theksuar 30 ditë</b>" if star
+             else f"✅ <b>Njoftimi #{nj_id} u publikua</b>"]
+    if res.get("link"):
+        lines.append(f"🌐 <a href=\"{e(res['link'])}\">Në web</a>")
+    if title:
+        lines.append(f"Titulli: {e(title)}")
+    return "\n".join(lines)
+
+
 async def on_njoftim(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     q = update.callback_query
     if not is_admin(update):
@@ -752,13 +766,15 @@ async def on_njoftim(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             await q.answer("U publikua")
             await _remove_buttons(q.message)
             star = InlineKeyboardMarkup([[InlineKeyboardButton("⭐ Theksoje (30 ditë)", callback_data=f"nj_star:{nj_id}")]])
-            await q.message.reply_text(f"✅ Njoftimi #{nj_id} është online:\n{res.get('link', '')}", reply_markup=star)
+            await q.message.reply_text(_nj_done_text(nj_id, res, star=False), parse_mode=ParseMode.HTML,
+                                       reply_markup=star, link_preview_options=NO_PREVIEW)
         elif action == "nj_star":
             until = int(time.time()) + 30 * 86400
             res = await asyncio.to_thread(lambda: pipeline.WordPress().highlight_njoftim(nj_id, until))
             await q.answer("⭐ I theksuar")
             await _remove_buttons(q.message)
-            await q.message.reply_text(f"⭐ Njoftimi #{nj_id} është online dhe i theksuar në krye për 30 ditë:\n{res.get('link', '')}")
+            await q.message.reply_text(_nj_done_text(nj_id, res, star=True), parse_mode=ParseMode.HTML,
+                                       link_preview_options=NO_PREVIEW)
         else:
             await asyncio.to_thread(lambda: pipeline.WordPress().trash_njoftim(nj_id))
             await q.answer("U fshi")
