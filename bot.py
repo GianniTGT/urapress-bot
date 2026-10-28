@@ -272,7 +272,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await msg.reply_text(f"ℹ️ #{draft_id} nuk mund të ndryshohet më.")
         return
     db.update_draft(draft_id, title=title, excerpt=excerpt,
-                    paragraphs=json.dumps(paras, ensure_ascii=False), source_name="", source_link="")
+                    paragraphs=json.dumps(paras, ensure_ascii=False), **_no_source(d))
+    EDITED.add(draft_id)
     context.chat_data.pop("ndrysho", None)
     await msg.reply_text(f"✏️ #{draft_id} u ndryshua (pa burim). Ja versioni i ri:")
     await send_draft(context.bot, db.get_draft(draft_id))
@@ -308,6 +309,14 @@ def _draft_id_from(msg) -> int | None:
     return None
 
 
+def _no_source(d: dict) -> dict:
+    """Quelle entfernen – ausser bei Instagram/X/TikTok, dort braucht es den Link für den eingebetteten Beitrag."""
+    return {} if pipeline.social_platform(d["source_link"]) else {"source_name": "", "source_link": ""}
+
+
+EDITED: set[int] = set()   # Entwürfe, bei denen ✏️ Ndrysho gedrückt wurde (Quelle entfernt)
+
+
 async def publish(message, draft_id: int, to_fb: bool) -> None:
     """Veröffentlicht auf der Website, bei to_fb zusätzlich auf Facebook. Antwortet auf message."""
     if not db.claim(draft_id, "publishing"):
@@ -321,15 +330,22 @@ async def publish(message, draft_id: int, to_fb: bool) -> None:
         db.update_draft(draft_id, status="pending", error=str(exc))
         await message.reply_text(f"⚠️ #{draft_id} nuk u publikua: {exc}", reply_markup=keyboard(draft_id))
         return
-    msg = f"✅ #{draft_id} u publikua:\n{post['link']}"
+    d = db.get_draft(draft_id)
+    e = html.escape
+    lines = [f"✅ <b>#{draft_id} u publikua</b>", f"🌐 <a href=\"{e(post['link'])}\">Në web</a>"]
     if to_fb:
         try:
             fb_url = await asyncio.to_thread(pipeline.post_to_facebook, draft_id)
-            msg += f"\n📘 Facebook: {fb_url}"
+            lines.append(f"📘 <a href=\"{e(fb_url)}\">Në Facebook</a>")
         except Exception as exc:
             log.exception("Facebook fehlgeschlagen")
-            msg += f"\n⚠️ Facebook dështoi: {exc}"
-    await message.reply_text(msg)
+            lines.append(f"⚠️ Facebook dështoi: {e(str(exc))}")
+    else:
+        lines.append("📘 Pa Facebook")
+    lines.append({"manual": "📷 Me foto", "wp": "📷 Me foto (mediateka)", "ai": "🖼 Foto AI"}.get(d["image_kind"], "⬜ Pa foto"))
+    lines.append("✏️ E ndryshuar · pa burim" if draft_id in EDITED else (f"🔗 Burimi: {e(d['source_name'])}" if d["source_name"] else "Pa burim"))
+    lines.append(f"Titulli: {e(d['title'])}")
+    await message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, link_preview_options=NO_PREVIEW)
 
 
 async def _remove_buttons(msg) -> None:
@@ -484,10 +500,14 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return
         context.chat_data.pop("shkruaj", None)
         context.chat_data["ndrysho"] = draft_id
-        await q.answer()
+        # Gianni übernimmt die Verantwortung: Quelle sofort weg, auch wenn der Text gleich bleibt
+        if _no_source(d):
+            db.update_draft(draft_id, **_no_source(d))
+        EDITED.add(draft_id)
+        await q.answer("Burimi u hoq")
         await q.message.reply_text(
-            f"✏️ #{draft_id}: kopjo tekstin më poshtë, ndryshoje dhe dërgoje këtu. "
-            "Rreshti i parë = titulli. Burimi hiqet. /anulo për ta ndërprerë.")
+            f"✏️ #{draft_id}: burimi u hoq. Nëse do, kopjo tekstin më poshtë, ndryshoje dhe dërgoje këtu "
+            "(rreshti i parë = titulli) – ose posto direkt. /anulo për ta ndërprerë.")
         text = plain_text(d)
         for k in range(0, len(text), 4000):
             await q.message.reply_text(text[k:k + 4000])
