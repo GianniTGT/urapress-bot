@@ -52,8 +52,10 @@ Regeln:
   was nicht im Original steht. Keine Spekulation.
 - Wörtliche Zitate nur kurz (max. ein Satz) und klar zugeordnet ("deklaroi", "sipas tij").
 - Meinungen/Analysen klar als Meinung der Person kennzeichnen, nie als Tatsache.
-- Bei Polizei-/Gerichtsfällen Privatpersonen nicht mit vollem Namen nennen (Initialen wie im
-  Original oder gar nicht).
+- Namen bei Polizei-/Gerichtsfällen so übernehmen, wie sie im Original stehen (voller Name, wenn
+  das Original ihn schreibt – Entscheid der Redaktion). Verdächtige immer als "i dyshuari" bezeichnen,
+  nie als Täter, solange es kein Urteil gibt. Ausnahme: Kinder und Jugendliche unter 18 nie mit
+  vollem Namen.
 - Ton: wie ein erfahrener albanischer Diaspora-Journalist – menschlich, lebendig, nah an
   den Leuten, aber faktentreu. Kein Clickbait, keine Ausrufezeichen im Titel, keine
   Grossbuchstaben-Titel.
