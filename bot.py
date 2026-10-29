@@ -249,6 +249,13 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             and not msg.reply_to_message:
         await make_from_link(msg, raw.strip())
         return
+    # «Teilen»-Text aus einer News-App (z. B. «Geteilt über Blick» + Titel + Link): immer als Link behandeln,
+    # auch im /shkruaj-Modus – sonst würde der deutsche Text als eigener Artikel gespeichert.
+    shared = shared_link(raw)
+    if shared and not msg.reply_to_message and not context.chat_data.get("ndrysho"):
+        context.chat_data.pop("shkruaj", None)
+        await make_from_link(msg, shared)
+        return
     # Ziel: Reply auf eine Nachricht mit #N, sonst der Entwurf, der gerade bearbeitet wird
     draft_id = None
     if msg.reply_to_message:
@@ -630,6 +637,20 @@ async def on_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # --- Meldung aus Link ------------------------------------------------------------
 URL_RE = re.compile(r"^https?://\S+$")
+URL_ANY = re.compile(r"https?://\S+")
+SHARE_HINTS = ("geteilt über", "geteilt via", "shared via", "partagé via", "ndarë përmes", "%20")
+
+
+def shared_link(text: str) -> str | None:
+    """Erkennt geteilte News-Links mit wenig Begleittext (Teilen-Menü am Handy). Gibt den Link zurück."""
+    links = URL_ANY.findall(text or "")
+    if len(links) != 1 or pipeline.social_platform(links[0]):
+        return None
+    rest = URL_ANY.sub("", text).strip()
+    low = rest.lower()
+    if any(h in low for h in SHARE_HINTS) or len(rest) < 250:
+        return links[0].rstrip(").,;»\"'")
+    return None
 
 
 async def make_from_link(msg, url: str) -> None:
