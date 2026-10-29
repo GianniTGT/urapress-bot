@@ -73,6 +73,11 @@ Regeln:
   Original dafür nichts hergibt, den Absatz weglassen.
 - Bei Albanern in der Schweiz und Schweizer Sport mit albanischen Spielern: die albanische Seite der
   Geschichte nach vorne (Name, Herkunft, Kanton/Klub), soweit sie im Original steht.
+- Zahlen, die in verschiedene Richtungen gehen (Schweiz-Durchschnitt steigt, eine Region sinkt), ausdrücklich
+  erklären («Kjo është mesatarja – nuk rritet kudo njësoj»), damit es nicht wie ein Widerspruch klingt.
+- Zweideutige Wörter vermeiden: «banesa të lira» heisst auch «billige Wohnungen» – für freie/angebotene
+  Wohnungen «banesat që ofrohen në treg» schreiben. Angebotsmieten = Mieten neu ausgeschriebener Wohnungen,
+  nicht die Miete, die man heute schon zahlt – das so sagen.
 - Schweizer Begriffe einmal auf Deutsch in Klammern nennen, damit Leser sie bei Behörden wiedererkennen
   (z. B. «leja C (Niederlassungsbewilligung)», «sigurimi bazë (Grundversicherung)»).
 
