@@ -10,7 +10,8 @@ import ai_writer
 import db
 import feeds
 import images
-from config import AI_IMAGE_CAPTION, ARTICLES_PER_DAY, FEEDS, MAX_AGE_HOURS, POST_STATUS
+from config import (AI_IMAGE_CAPTION, ARTICLES_PER_DAY, CH_FEEDS, CH_MAX_PER_FEED, FEEDS, MAX_AGE_HOURS,
+                    MAX_GENERAL_PER_SCAN, OTHER_MAX_PER_FEED, POST_STATUS)
 from wordpress import WordPress
 
 log = logging.getLogger(__name__)
@@ -24,14 +25,29 @@ def _wp_or_none() -> WordPress | None:
         return None
 
 
+def gather_candidates() -> list[dict]:
+    """Schweizer Quellen zuerst (mehr Einträge), danach Balkan/Welt (weniger Einträge). Doppelte Links weg."""
+    ch_set = set(CH_FEEDS)
+    out = feeds.fetch_candidates(CH_FEEDS, MAX_AGE_HOURS, CH_MAX_PER_FEED, group="ch")
+    out += feeds.fetch_candidates([f for f in FEEDS if f not in ch_set], MAX_AGE_HOURS, OTHER_MAX_PER_FEED,
+                                  group="other")
+    seen, unique = set(), []
+    for c in out:
+        if c["link"] not in seen:
+            seen.add(c["link"])
+            unique.append(c)
+    return unique
+
+
 def build_drafts(theme: str | None = None) -> tuple[list[int], list[str]]:
     """Gibt (Entwurfs-IDs, Fehlermeldungen) zurück. theme: optionales Thema für die Auswahl."""
     errors: list[str] = []
-    candidates = feeds.fetch_candidates(FEEDS, MAX_AGE_HOURS)
+    candidates = gather_candidates()
     if not candidates:
         return [], errors
 
-    picks = ai_writer.select_stories(candidates, ARTICLES_PER_DAY, db.recent_titles(), theme=theme)
+    picks = ai_writer.select_stories(candidates, ARTICLES_PER_DAY, db.recent_titles(), theme=theme,
+                                     max_general=MAX_GENERAL_PER_SCAN)
     wp = _wp_or_none()
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     ids: list[int] = []
@@ -76,7 +92,61 @@ def _make_draft(story: dict, wp, stamp: str, errors: list[str]) -> int:
         "image_kind": image_kind,
         "image_ref": image_ref,
         "wp_media_id": media_id,
+        "priority": story.get("prioriteti"),
+        "reason": story.get("pse"),
+        "kind": story.get("kind", "lajm"),
     })
+
+
+def next_guide_key() -> str | None:
+    """Nächster Udhëzues, der noch nie vorgeschlagen wurde (Reihenfolge wie in GUIDES)."""
+    for key in ai_writer.GUIDES:
+        if not db.guide_done(key):
+            return key
+    return None
+
+
+def build_guide(key: str) -> tuple[int, list[str]]:
+    """Praktischer Ratgeber aus offiziellen Seiten (SEM, Bund, Kanton). Gibt (Entwurfs-ID, Hinweise) zurück."""
+    g = ai_writer.GUIDES[key]
+    texts = []
+    for u in g["urls"]:
+        try:
+            t = feeds.fetch_fulltext(u)
+            if len(t) > 300:
+                texts.append((u, t))
+        except Exception as exc:
+            log.warning("Offizielle Seite nicht lesbar: %s (%s)", u, exc)
+    if not texts:
+        raise ValueError("Faqet zyrtare nuk u lexuan dot – udhëzuesi nuk u shkrua.")
+    art = ai_writer.write_guide(key, texts)
+    errors: list[str] = []
+    stamp = "guide-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    image_kind, image_ref = "none", None
+    try:
+        path = images.generate_ai_image(art.get("prompt_imazhi") or art["titulli"], f"ai-{stamp}")
+        if path:
+            image_kind, image_ref = "ai", str(path)
+    except Exception as exc:
+        errors.append(f"KI-Bild für «{art['titulli']}» fehlgeschlagen: {exc}")
+    db.mark_seen(f"udhezues:{key}", art["titulli"], "udhezues")
+    draft_id = db.add_draft({
+        "source_name": urlparse(texts[0][0]).netloc.removeprefix("www."),
+        "source_link": texts[0][0],
+        "title": art["titulli"],
+        "excerpt": art.get("permbledhja", ""),
+        "paragraphs": art["paragrafet"],
+        "category": "Zvicër",
+        "tags": art.get("etiketat", [])[:5],
+        "person": None,
+        "image_kind": image_kind,
+        "image_ref": image_ref,
+        "wp_media_id": None,
+        "priority": 1,
+        "reason": "Udhëzues praktik (Google-Suche)",
+        "kind": "udhezues",
+    })
+    return draft_id, errors
 
 
 def build_from_link(url: str) -> tuple[int, list[str]]:
@@ -153,12 +223,36 @@ def build_from_social(url: str, note: str) -> tuple[int, list[str]]:
     return draft_id, errors
 
 
-def build_content(d: dict) -> str:
-    body = "\n".join(f"<p>{html.escape(p, quote=False)}</p>" for p in d["paragraphs"])
+def _para_html(p: str) -> str:
+    """Absatz → HTML. "## Titel" = Zwischentitel, Zeilen mit "- " = Liste (für Udhëzues)."""
+    e = lambda t: html.escape(t, quote=False)
+    p = p.strip()
+    if p.startswith("## "):
+        return f"<h2>{e(p[3:].strip())}</h2>"
+    lines = [ln.strip() for ln in p.splitlines() if ln.strip()]
+    if lines and all(ln.startswith(("- ", "• ")) for ln in lines):
+        return "<ul>" + "".join(f"<li>{e(ln[2:].strip())}</li>" for ln in lines) + "</ul>"
+    return f"<p>{e(p)}</p>"
+
+
+def related_block(related: list[dict]) -> str:
+    """«Lexo edhe» mit 2–3 eigenen Artikeln – damit Leser von Facebook nicht nach einem Artikel gehen."""
+    if not related:
+        return ""
+    items = "".join(f'<li><a href="{html.escape(r["link"])}">{html.escape(r["title"])}</a></li>' for r in related)
+    return f'<div class="dj-lexo-edhe"><h3>Lexo edhe</h3><ul>{items}</ul></div>'
+
+
+def build_content(d: dict, related: list[dict] | None = None) -> str:
+    body = "\n".join(_para_html(p) for p in d["paragraphs"] if p.strip())
     if social_platform(d["source_link"]):
         body += "\n" + social_embed(d["source_link"])
+    body += "\n" + related_block(related or [])
     source = ""
-    if d["source_link"]:  # eigener Text der Redaktion: ohne Quelle
+    if d.get("kind") == "udhezues" and d["source_link"]:  # offizielle Quelle: mit Link (Glaubwürdigkeit)
+        source = (f'<p class="dj-burimi"><em>Burimi zyrtar: <a href="{html.escape(d["source_link"])}" '
+                  f'target="_blank" rel="noopener">{html.escape(d["source_name"])}</a></em></p>')
+    elif d["source_link"]:  # eigener Text der Redaktion: ohne Quelle
         # nur der Name der Quelle, ohne Link (keine Besucher zur Konkurrenz schicken)
         source = f'<p class="dj-burimi"><em>Burimi: {html.escape(d["source_name"])}</em></p>'
     if d["image_kind"] == "ai":
@@ -180,12 +274,56 @@ def publish_draft(draft_id: int) -> dict:
 
     category = wp.term_id("categories", d["category"])
     tags = [wp.term_id("tags", t) for t in d["tags"]]
-    post = wp.create_post(title=d["title"], content=build_content(d), excerpt=d["excerpt"],
+    try:
+        related = wp.related_posts(category, tags, limit=3)
+    except Exception as exc:  # «Lexo edhe» ist nett, darf das Publizieren aber nie stoppen
+        log.warning("Lexo edhe nicht geladen: %s", exc)
+        related = []
+    post = wp.create_post(title=d["title"], content=build_content(d, related), excerpt=d["excerpt"],
                           categories=[category], tags=tags, featured_media=media_id,
                           status=POST_STATUS)
     db.update_draft(draft_id, status="posted", wp_post_id=post["id"], wp_post_url=post["link"],
                     error=None)
     return post
+
+
+FB_SLOTS = {"mengjes": ((6, 30), (8, 0)), "mbremje": ((18, 30), (21, 0))}
+
+
+def best_fb_time(preferred: str, now: datetime | None = None) -> str:
+    """Nächstes passendes Zeitfenster (Morgen 06:30–08:00 oder Abend 18:30–21:00), Zürcher Zeit."""
+    from datetime import timedelta
+    from zoneinfo import ZoneInfo
+    from config import TIMEZONE
+
+    now = now or datetime.now(ZoneInfo(TIMEZONE))
+    order = [preferred] + [k for k in FB_SLOTS if k != preferred]
+    for day in range(0, 2):
+        date = (now + timedelta(days=day)).date()
+        for key in order:
+            (h1, m1), (h2, m2) = FB_SLOTS[key]
+            end = now.replace(year=date.year, month=date.month, day=date.day, hour=h2, minute=m2, second=0)
+            if end > now:
+                when = "sot" if day == 0 else "nesër"
+                return f"{when} {h1:02d}:{m1:02d}–{h2:02d}:{m2:02d}"
+    return "nesër 06:30–08:00"
+
+
+def facebook_draft(draft_id: int) -> dict:
+    """Facebook-Text für einen veröffentlichten Artikel erstellen (oder gespeicherten zurückgeben).
+    Wird NICHT automatisch gepostet – die Redaktion kopiert ihn."""
+    import json
+
+    d = db.get_draft(draft_id)
+    if d.get("fb_text"):
+        return json.loads(d["fb_text"])
+    fb = ai_writer.facebook_post(d["title"], d["excerpt"], d["paragraphs"], d["category"])
+    fb["text"] = (f"{fb['hyrja'].strip()}\n\n{fb['permbledhja'].strip()}\n\n{fb['pyetja'].strip()}\n\n"
+                  f"Lidhja në koment 👇\n\n{' '.join(fb['hashtags'])}")
+    fb["koment"] = d["wp_post_url"] or ""
+    fb["ora"] = best_fb_time(fb["koha"])
+    db.update_draft(draft_id, fb_text=json.dumps(fb, ensure_ascii=False))
+    return fb
 
 
 def post_to_facebook(draft_id: int) -> str:
@@ -202,13 +340,8 @@ def post_to_facebook(draft_id: int) -> str:
             image_url = WordPress().media_url(d["wp_media_id"]) or None
         except Exception as exc:
             log.warning("FB-Bild-URL nicht ermittelbar: %s", exc)
-    icons = {"E FUNDIT": "🔴", "TOP LAJM": "🔥", "SKANDAL": "⚠️", "EKSKLUZIVE": "⭐"}
-    badge = next((x for x in d["tags"] if x in icons), None)
-    message = f"{icons[badge]} {badge} | {d['title']}" if badge else d["title"]
-    if d["excerpt"]:
-        message += "\n\n" + d["excerpt"]
-    message += "\n\n" + link
-    return facebook.post(message, link, image_url)
+    fb = facebook_draft(draft_id)   # gleicher Text wie der Entwurf, Link im ersten Kommentar
+    return facebook.post(fb["text"], link, image_url, first_comment=link)
 
 
 def attach_photo(draft_id: int, path: Path) -> str:

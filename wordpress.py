@@ -71,6 +71,24 @@ class WordPress:
             payload["featured_media"] = featured_media
         return self._req("POST", "/posts", json=payload)
 
+    def related_posts(self, category: int, tags: list[int], limit: int = 3) -> list[dict]:
+        """Ähnliche, veröffentlichte Artikel: zuerst gleiche Schlagwörter, dann gleiche Kategorie."""
+        out: list[dict] = []
+        queries = []
+        if tags:
+            queries.append({"tags": ",".join(map(str, tags))})
+        if category:
+            queries.append({"categories": category})
+        for q in queries:
+            for p in self._req("GET", "/posts", params={**q, "per_page": 6, "status": "publish",
+                                                       "_fields": "id,title,link"}):
+                if len(out) >= limit:
+                    break
+                if all(p["id"] != o["id"] for o in out):
+                    out.append({"id": p["id"], "link": p["link"],
+                                "title": html.unescape(p["title"]["rendered"])})
+        return out[:limit]
+
     def set_featured_media(self, post_id: int, media_id: int) -> dict:
         return self._req("POST", f"/posts/{post_id}", json={"featured_media": media_id})
 

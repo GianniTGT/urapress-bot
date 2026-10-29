@@ -76,6 +76,10 @@ def fb_keyboard(draft_id: int) -> InlineKeyboardMarkup | None:
     return InlineKeyboardMarkup([[InlineKeyboardButton("📘 Posto në FB", callback_data=f"fb:{draft_id}")]])
 
 
+PRIO_LABELS = {1: "🇨🇭 P1 · Zvicër për diasporën", 2: "🤝 P2 · Shqiptarët në Zvicër",
+               3: "⚽ P3 · Sport CH", 4: "🧳 P4 · Atdheu ↔ diaspora", 5: "🌍 P5 · Lajm i përgjithshëm"}
+
+
 def preview_text(d: dict) -> str:
     e = html.escape
     photo = {
@@ -87,8 +91,13 @@ def preview_text(d: dict) -> str:
     body = "\n\n".join(d["paragraphs"])
     if len(body) > 2900:
         body = body[:2900].rsplit(" ", 1)[0] + " …"
+    prio = PRIO_LABELS.get(d.get("priority"))
+    head = "📘 <b>UDHËZUES</b>\n" if d.get("kind") == "udhezues" else ""
+    if prio and d.get("kind") != "udhezues":
+        head = f"{prio}" + (f" – <i>{e(d['reason'])}</i>" if d.get("reason") else "") + "\n"
     return (
-        f"🆕 <b>#{d['id']} · {e(d['title'])}</b>\n<i>{e(d['excerpt'])}</i>\n\n{e(body)}\n\n"
+        head
+        + f"🆕 <b>#{d['id']} · {e(d['title'])}</b>\n<i>{e(d['excerpt'])}</i>\n\n{e(body)}\n\n"
         f"📂 {e(d['category'])} · 🏷 {e(', '.join(d['tags']))}\n"
         + (f"🔗 Burimi: <a href=\"{e(d['source_link'])}\">{e(d['source_name'])}</a>\n" if d["source_link"]
            else "✍️ Tekst i redaksisë – pa burim\n")
@@ -216,7 +225,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     raw = (msg.text or "").lstrip(" \u200b\u200c\u200d\u2060\ufeff\u00a0").replace("\uff0f", "/")
     if raw.startswith("/"):
         name, _, rest = raw[1:].lstrip().partition(" ")
-        handler = {"skano": cmd_scan, "zazu": cmd_zazu, "shkruaj": cmd_write, "anulo": cmd_cancel,
+        handler = {"skano": cmd_scan, "udhezues": cmd_guide, "udhëzues": cmd_guide, "zazu": cmd_zazu, "shkruaj": cmd_write, "anulo": cmd_cancel,
                    "statusi": cmd_status, "link": cmd_link, "ndihme": cmd_help, "ndihmë": cmd_help, "help": cmd_help,
                    "komandat": cmd_help}.get(name.split("@")[0].strip().lower())
         if handler:
@@ -346,6 +355,33 @@ async def publish(message, draft_id: int, to_fb: bool) -> None:
     lines.append("✏️ E ndryshuar · pa burim" if draft_id in EDITED else (f"🔗 Burimi: {e(d['source_name'])}" if d["source_name"] else "Pa burim"))
     lines.append(f"Titulli: {e(d['title'])}")
     await message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, link_preview_options=NO_PREVIEW)
+    if not to_fb:
+        await send_fb_draft(message, draft_id)
+
+
+async def send_fb_draft(message, draft_id: int) -> None:
+    """Facebook-Entwurf zum Kopieren: Text, Link für den ersten Kommentar, beste Uhrzeit, gleiche Foto."""
+    e = html.escape
+    try:
+        fb = await asyncio.to_thread(pipeline.facebook_draft, draft_id)
+    except Exception as exc:
+        log.exception("FB-Entwurf fehlgeschlagen")
+        await message.reply_text(f"⚠️ Teksti për Facebook nuk u krijua: {exc}")
+        return
+    d = db.get_draft(draft_id)
+    if d.get("wp_media_id"):
+        try:
+            url = await asyncio.to_thread(lambda: pipeline.WordPress().media_url(d["wp_media_id"]))
+            if url:
+                await message.reply_photo(url, caption=f"📷 Foto për Facebook · #{draft_id}")
+        except Exception as exc:
+            log.warning("FB-Foto nicht gesendet: %s", exc)
+    await message.reply_text(
+        f"📘 <b>Facebook · #{draft_id}</b> (draft – kopjoje dhe postoje vetë)\n\n"
+        f"<pre>{e(fb['text'])}</pre>\n"
+        f"💬 <b>Komenti i parë:</b>\n<code>{e(fb.get('koment', ''))}</code>\n\n"
+        f"🕖 <b>Ora më e mirë:</b> {e(fb.get('ora', ''))}",
+        parse_mode=ParseMode.HTML, link_preview_options=NO_PREVIEW)
 
 
 async def _remove_buttons(msg) -> None:
@@ -448,6 +484,41 @@ async def cmd_scan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     label = ai_writer.THEMES[theme]["label"] if theme else None
     await update.message.reply_text(f"🔎 Duke skanuar burimet{f' · {label}' if label else ''} …")
     await run_scan(context.bot, theme)
+
+
+async def make_guide(bot, key: str | None = None) -> None:
+    key = key or pipeline.next_guide_key()
+    if not key:
+        await bot.send_message(config.TELEGRAM_CHAT_ID,
+                               "ℹ️ Të gjithë udhëzuesit janë shkruar. Shto tema të reja te GUIDES (ai_writer.py).")
+        return
+    await bot.send_message(config.TELEGRAM_CHAT_ID,
+                           f"📘 Duke shkruar udhëzuesin «{ai_writer.GUIDES[key]['titull']}» …")
+    try:
+        draft_id, errors = await asyncio.to_thread(pipeline.build_guide, key)
+    except Exception as exc:
+        log.exception("Udhëzues fehlgeschlagen")
+        await bot.send_message(config.TELEGRAM_CHAT_ID, f"⚠️ Udhëzuesi dështoi: {exc}")
+        return
+    await send_draft(bot, db.get_draft(draft_id))
+    for err in errors:
+        await bot.send_message(config.TELEGRAM_CHAT_ID, f"⚠️ {err}")
+
+
+async def cmd_guide(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not is_admin(update):
+        return
+    key = (context.args[0].lower() if context.args else None)
+    if key and key not in ai_writer.GUIDES:
+        await update.message.reply_text(
+            "Temat: " + " · ".join(f"/udhezues {k}" for k in ai_writer.GUIDES)
+            + "\n(ose thjesht /udhezues për temën e radhës)")
+        return
+    await make_guide(context.bot, key)
+
+
+async def scheduled_guide(context: ContextTypes.DEFAULT_TYPE) -> None:
+    await make_guide(context.bot)
 
 
 async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -795,6 +866,8 @@ HELP_TEXT = (
     "🔎 <b>/skano</b> – kërko lajme tani\n"
     "     <code>/skano showbiz</code> · <code>/skano gjermani</code> · <code>/skano sport</code>\n"
     "     <code>/skano politik</code> · <code>/skano religjion</code>\n\n"
+    "📘 <b>/udhezues</b> – udhëzues praktik nga burime zyrtare (leja C, naturalizim …)\n"
+    "     automatikisht çdo të martë dhe të premte në 09:00\n\n"
     "🔗 <b>/link</b> – dërgo lidhjen e një lajmi (p.sh. 20min.ch) → bot-i e rishkruan shqip\n"
     "📲 Instagram / X / TikTok: lidhja + 1–2 fjali tua → bot-i i korrigjon, postimi futet në artikull\n"
     "     ose thjesht ngjit vetëm lidhjen këtu\n\n"
@@ -816,6 +889,7 @@ HELP_TEXT = (
 
 COMMANDS = [
     BotCommand("skano", "Kërko lajme (showbiz, gjermani, sport, politik, religjion)"),
+    BotCommand("udhezues", "Udhëzues praktik (leja C, naturalizim, Krankenkasse …)"),
     BotCommand("link", "Lajm nga një lidhje (20min, Blick …)"),
     BotCommand("shkruaj", "Shkruaj lajmin tënd"),
     BotCommand("zazu", "Vizato ZaZu"),
@@ -850,6 +924,7 @@ def main() -> None:
     app.add_handler(CommandHandler("anulo", cmd_cancel))
     app.add_handler(CommandHandler("zazu", cmd_zazu))
     app.add_handler(CommandHandler("link", cmd_link))
+    app.add_handler(CommandHandler("udhezues", cmd_guide))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, on_text))
     app.add_handler(CallbackQueryHandler(on_category, pattern=r"^kat:\d+:\d+$"))
     app.add_handler(CallbackQueryHandler(on_njoftim, pattern=r"^nj_(ok|no|star):\d+$"))
@@ -862,6 +937,9 @@ def main() -> None:
         app.job_queue.run_daily(scheduled_scan, time=dtime(hour, minute, tzinfo=ZoneInfo(config.TIMEZONE)),
                                 name=f"scan-{i}")
     app.job_queue.run_repeating(check_njoftime, interval=60, first=15, name="njoftime")
+    # Udhëzues: Dienstag und Freitag 09:00 (1–2 pro Woche), Thema der Reihe nach
+    app.job_queue.run_daily(scheduled_guide, time=dtime(9, 0, tzinfo=ZoneInfo(config.TIMEZONE)),
+                            days=(2, 5), name="udhezues")
     log.info("Bot läuft – täglicher Scan um %s (%s)", config.SCAN_TIME, config.TIMEZONE)
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 

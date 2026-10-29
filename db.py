@@ -49,9 +49,17 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+EXTRA_COLUMNS = {"priority": "INTEGER", "reason": "TEXT", "kind": "TEXT DEFAULT 'lajm'",
+                 "fb_text": "TEXT"}   # fb_text: JSON mit dem Facebook-Entwurf
+
+
 def init() -> None:
     with closing(_conn()) as c, c:
         c.executescript(SCHEMA)
+        have = {r["name"] for r in c.execute("PRAGMA table_info(drafts)")}
+        for col, typ in EXTRA_COLUMNS.items():  # Migration für bestehende Datenbanken
+            if col not in have:
+                c.execute(f"ALTER TABLE drafts ADD COLUMN {col} {typ}")
 
 
 def is_seen(link: str) -> bool:
@@ -80,13 +88,14 @@ def add_draft(d: dict) -> int:
     with closing(_conn()) as c, c:
         cur = c.execute(
             """INSERT INTO drafts(source_name,source_link,title,excerpt,paragraphs,category,
-               tags,person,image_kind,image_ref,wp_media_id,created_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+               tags,person,image_kind,image_ref,wp_media_id,created_at,priority,reason,kind)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 d["source_name"], d["source_link"], d["title"], d["excerpt"],
                 json.dumps(d["paragraphs"], ensure_ascii=False), d["category"],
                 json.dumps(d["tags"], ensure_ascii=False), d.get("person"),
                 d["image_kind"], d.get("image_ref"), d.get("wp_media_id"), _now(),
+                d.get("priority"), d.get("reason"), d.get("kind") or "lajm",
             ),
         )
         return cur.lastrowid
@@ -116,6 +125,11 @@ def claim(draft_id: int, new_status: str) -> bool:
             "UPDATE drafts SET status=? WHERE id=? AND status='pending'", (new_status, draft_id)
         )
         return cur.rowcount == 1
+
+
+def guide_done(key: str) -> bool:
+    """Wurde dieser Udhëzues schon vorgeschlagen? (Schlüssel wird in 'seen' gemerkt)"""
+    return is_seen(f"udhezues:{key}")
 
 
 def stats() -> dict:

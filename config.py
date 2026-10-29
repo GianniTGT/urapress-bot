@@ -50,6 +50,39 @@ FEEDS = [f.strip() for f in _get(
     "https://shtegu.com/feed/,https://lajmpress.org/feed/,https://alsat.mk/feed/,https://portalix.mk/api/rss.xml,https://albinfo.ch/feed/,https://partner-feeds.20min.ch/rss/20minuten,https://www.b92.net/rss/b92/info,https://telegrafi.com/feeds/feed.rss?geo=CH,https://zhurnal.mk/feed/,https://telegrafi.com/feeds/feed.rss?geo=DE,https://rss.dw.com/rdf/rss-alb-all,https://www.gazetaexpress.com/feed/,https://partner-feeds.20min.ch/rss/20minuten/people,https://www.blick.ch/people-tv/rss.xml,https://www.billboard.com/feed/,https://top-channel.tv/feed/,https://www.balkanweb.com/feed/,https://euronews.al/feed/,https://www.panorama.com.al/feed/,https://tvklan.al/feed/,https://kallxo.com/feed/,https://insajderi.org/feed/,https://www.bing.com/news/search?q=Albaner&format=rss&setlang=de&cc=DE,https://www.bing.com/news/search?q=Kosovaren&format=rss&setlang=de&cc=DE,https://www.bing.com/news/search?q=Albaner+Schweiz&format=rss&setlang=de&cc=CH,https://www.bing.com/news/search?q=Albanian+American&format=rss&setlang=en&cc=US,https://www.bing.com/news/search?q=Albania+Kosovo&format=rss&setlang=en&cc=US",
 
 ).split(",") if f.strip()]
+# Schweizer Quellen (Priorität 1–3) – immer dabei, auch wenn FEEDS in .env überschrieben ist.
+# Getestet am 29.10.2026 (liefern Einträge). Blick/Watson/swissinfo blocken RSS → über Bing-News.
+_BING = "https://www.bing.com/news/search?format=rss&setlang=de&cc=CH&qft=sortbydate%3d%221%22&q="
+CH_FEEDS = [f.strip() for f in _get(
+    "CH_FEEDS",
+    ",".join([
+        "https://www.srf.ch/news/bnf/rss/1646",                     # SRF Schweiz
+        "https://www.srf.ch/sport/bnf/rss/718",                     # SRF Sport
+        "https://partner-feeds.20min.ch/rss/20minuten/schweiz",     # 20 Minuten Schweiz
+        "https://partner-feeds.20min.ch/rss/20minuten/sport",       # 20 Minuten Sport
+        "https://www.nzz.ch/schweiz.rss",                           # NZZ Schweiz
+        "https://www.tagesanzeiger.ch/rss.html",                    # Tages-Anzeiger
+        "https://www.bernerzeitung.ch/rss.html",                    # Berner Zeitung
+        "https://www.rts.ch/info/suisse/?format=rss/news",          # RTS Suisse
+        "https://www.newsd.admin.ch/newsd/feeds/rss?lang=de&org-nr=1",  # Bund (admin.ch) Medienmitteilungen
+        _BING + "%22Staatssekretariat+f%C3%BCr+Migration%22",
+        _BING + "Aufenthaltsbewilligung+Schweiz",
+        _BING + "Einb%C3%BCrgerung+Schweiz",
+        _BING + "Familiennachzug+Schweiz",
+        _BING + "Krankenkasse+Pr%C3%A4mien",
+        _BING + "AHV+Rente",
+        _BING + "Kosovare+Schweiz",
+        _BING + "Albaner+Schweiz",
+        _BING + "Xhaka+Nati",
+        _BING + "Super+League+YB+Basel+St.+Gallen",
+        _BING + "site%3Ablick.ch+Schweiz",
+        _BING + "site%3Awatson.ch+Schweiz",
+    ]),
+).split(",") if f.strip()]
+CH_MAX_PER_FEED = int(_get("CH_MAX_PER_FEED", "12"))     # Schweizer Quellen: mehr Einträge
+OTHER_MAX_PER_FEED = int(_get("OTHER_MAX_PER_FEED", "6"))  # Balkan/Welt: weniger, nur bei Diaspora-Bezug gewählt
+MAX_GENERAL_PER_SCAN = int(_get("MAX_GENERAL_PER_SCAN", "1"))  # Priorität 4–5 pro Scan (Ziel ~80 % aus 1–3)
+
 SCAN_TIME = _get("SCAN_TIME", "07:30,17:30")    # HH:MM, mehrere mit Komma
 TIMEZONE = _get("TIMEZONE", "Europe/Zurich")
 ARTICLES_PER_DAY = int(_get("ARTICLES_PER_DAY", "4"))   # pro Scan

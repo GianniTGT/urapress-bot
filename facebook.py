@@ -13,8 +13,9 @@ def enabled() -> bool:
     return bool(config.FB_PAGE_ID and config.FB_PAGE_TOKEN)
 
 
-def post(message: str, link: str, image_url: str | None = None) -> str:
+def post(message: str, link: str, image_url: str | None = None, first_comment: str | None = None) -> str:
     """Postet auf die Seite. Mit image_url → Foto-Beitrag (Bild gross), sonst Link-Beitrag.
+    first_comment: Link als erster Kommentar (Posts ohne Link im Text erreichen mehr Leute).
     Gibt die URL des Beitrags zurück."""
     if not enabled():
         raise RuntimeError("Facebook nuk është konfiguruar (FB_PAGE_ID / FB_PAGE_TOKEN në .env)")
@@ -33,4 +34,12 @@ def post(message: str, link: str, image_url: str | None = None) -> str:
         msg = (j.get("error", {}) or {}).get("message", r.text)
         raise RuntimeError(str(msg)[:300])
     pid = j.get("post_id") or j.get("id") or ""
+    if pid and first_comment:
+        try:
+            c = requests.post(f"{GRAPH}/{pid}/comments",
+                              data={"message": first_comment, "access_token": config.FB_PAGE_TOKEN}, timeout=30)
+            if c.status_code >= 400:
+                log.warning("Erster Kommentar fehlgeschlagen: %s", c.text[:200])
+        except Exception as exc:
+            log.warning("Erster Kommentar fehlgeschlagen: %s", exc)
     return f"https://www.facebook.com/{pid}" if pid else "OK"

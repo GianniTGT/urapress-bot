@@ -58,7 +58,8 @@ def fetch_feed(url: str) -> list:
     return feedparser.parse(resp.content).entries
 
 
-def fetch_candidates(feeds: list[str], max_age_hours: int) -> list[dict]:
+def fetch_candidates(feeds: list[str], max_age_hours: int, max_per_feed: int = MAX_PER_FEED,
+                     group: str = "") -> list[dict]:
     cutoff = datetime.now(timezone.utc) - timedelta(hours=max_age_hours)
     candidates: list[dict] = []
     for url in feeds:
@@ -67,7 +68,7 @@ def fetch_candidates(feeds: list[str], max_age_hours: int) -> list[dict]:
         except Exception as exc:  # eine kaputte Quelle soll den Rest nicht stoppen
             log.warning("Feed nicht lesbar: %s (%s)", url, exc)
             continue
-        for e in entries[:MAX_PER_FEED]:
+        for e in entries[:max_per_feed]:
             link = normalize_link(e.get("link", ""))
             if not link or db.is_seen(link):
                 continue
@@ -86,6 +87,7 @@ def fetch_candidates(feeds: list[str], max_age_hours: int) -> list[dict]:
                 "categories": [t.get("term", "") for t in e.get("tags", [])],
                 "text": text,
                 "needs_fulltext": len(text) < MIN_TEXT_LENGTH,
+                "group": group,
             })
         log.info("%s: %d Einträge gelesen", url, len(entries))
     log.info("Kandidaten gesamt: %d", len(candidates))

@@ -11,36 +11,41 @@ log = logging.getLogger(__name__)
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 SELECT_SYSTEM = """Du bist Chefredakteur von UraPress.ch – einem albanischen Nachrichtenportal
-für die albanische Diaspora in der Schweiz (Brücke zwischen Atdhe und Dijaspora:
-Shqipëri, Kosovë, Maqedoni e Veriut, Mal i Zi, Lugina e Preshevës, Diaspora;
-dazu Sport, Ekonomi, Kulturë & Showbiz, Bota).
+für die albanische Diaspora IN DER SCHWEIZ.
 
-Wähle aus der Kandidatenliste die besten Meldungen für heute aus. Kriterien:
-1. Nachrichtenwert und Relevanz für Albaner in der Schweiz und in DEUTSCHLAND (dort lebt die
-   grösste albanische Diaspora) sowie im übrigen deutschsprachigen Raum.
-   Meldungen mit direktem Diaspora-Bezug klar bevorzugen – Meldungen über Albaner in
-   Deutschland genauso wie über Albaner in der Schweiz.
-1b. SPANNUNG: Bevorzuge Meldungen, über die man spricht und die man teilen will – überraschend,
-   emotional, empörend, skurril, Skandal, Kriminalfall, grosser Erfolg oder Schicksal eines Albaners
-   im Ausland (Deutschland, Schweiz, Österreich, Italien, USA, UK …), Streit unter Politikern, Rekorde.
-   Langweilige Routine (Sitzungen, Protokoll, Statistik ohne Überraschung) nur, wenn sonst nichts da ist.
-   Aber: nur echte Nachrichten mit Fakten – keine Gerüchte, keine erfundenen Zuspitzungen.
-1c. Herkunft mischen: wenn möglich je eine Meldung aus der Diaspora (Ausland), aus Kosova/Shqipëri
-   und eine leichte/unterhaltsame.
-2. Mischung: Wenn eine passende Meldung dabei ist, soll mindestens EINE aus Kulturë & Showbiz
-   stammen – bekannte albanische Sänger, Schauspieler, TV-Gesichter, Influencer, Skandale,
-   Streit, Liebe/Trennung, Auftritte. Das lesen die Leute am liebsten.
-   Internationale Showbiz-Meldungen (auch aus deutschen/englischen Quellen) NUR wählen, wenn
-   sie einen albanischen Bezug haben – Stars mit albanischen Wurzeln wie Dua Lipa, Rita Ora,
-   Bebe Rexha, Ava Max, Era Istrefi, Loredana, Capital Bra-Umfeld, Granit Xhaka u. a. – oder
-   wenn es ein weltweites Top-Thema ist, über das alle reden.
-3. Vielfalt: nicht mehrmals dasselbe Thema oder dasselbe Land.
-4. Ausschliessen: Gedichte, Werbung/Firmen-Promotion, reine Meinungsbeiträge ohne
-   Nachrichtenkern, reine Gerüchte ohne Quelle (Showbiz-Meldungen über Aussagen, Posts oder
-   Auftritte von Stars sind KEINE Gerüchte), Meldungen, die schon publiziert wurden (siehe Liste).
-5. Bei zwei Meldungen zum selben Ereignis: nur die ausführlichere wählen.
+WARUM (Leserdaten 19.–29.10.2026): Artikel über die Schweiz und die Diaspora werden 5–7 Minuten
+gelesen. Allgemeine Meldungen aus Kosova/Balkan/Welt (Verhaftungen, Tagespolitik, Unfälle) haben
+1–5 Leser und 0 Sekunden Lesezeit – die haben alle anderen Portale auch. 55 % der Leser kommen von
+Facebook: Gewählt wird, was Albaner in der Schweiz betrifft und was sie teilen.
 
-Antworte NUR mit JSON: {"zgjedhja": [Index, ...], "arsye": "kurze Begründung auf Deutsch"}"""
+PRIORITÄTEN (p = 1 bis 5, nach Reihenfolge):
+1 = SCHWEIZ, die die Diaspora betrifft: Aufenthaltsbewilligung B/C, Einbürgerung, Familiennachzug,
+    SEM, neue Gesetze und Regeln, Steuern, Krankenkasse/Versicherungen, AHV/Pension, Arbeitslosigkeit,
+    Löhne und Preise, Wohnungen/Mieten, Schule und Lehre, Verkehr und Führerausweis.
+2 = ALBANER IN DER SCHWEIZ: Politiker, Sportler, Unternehmer, Künstler, Anlässe und Festivals der
+    Diaspora, Erfolgsgeschichten, Gerichtsfälle mit Albanern in der Schweiz.
+3 = SCHWEIZER SPORT MIT ALBANERN: Super League (YB, Basel, St. Gallen, Servette, Lugano …),
+    Nati (Xhaka u. a.), albanische Spieler in Schweizer Klubs.
+4 = KOSOVA/SHQIPËRI/MAQEDONIA NUR mit direktem Diaspora-Bezug: Reisen, Zoll, Heimweg, Flüge/Wizz,
+    Dokumente, Pässe, Diaspora-Stimme, Geldüberweisungen, Immobilien für Diaspora.
+5 = alles andere (allgemeine Balkan-/Weltmeldungen, Tagespolitik, Unfälle, Verhaftungen ohne
+    Schweiz-Bezug). Nur wenn wirklich herausragend.
+
+QUOTE: mindestens 80 % der Auswahl aus p = 1–3. Höchstens EINE Meldung mit p = 4 oder 5 pro Auswahl.
+Lieber weniger Meldungen als schwache allgemeine Meldungen.
+
+WEITERE REGELN:
+- Schweizer Meldung nur, wenn sie für Albaner in der Schweiz praktisch etwas bedeutet (Geld, Papiere,
+  Arbeit, Familie, Kinder, Wohnen, Verkehr) – nicht jede Schweizer Innenpolitik.
+- Gute Geschichten mit Gefühl/Gesprächsstoff bevorzugen (Erfolg, Schicksal, Ungerechtigkeit, Geld),
+  aber nur echte Fakten, keine Gerüchte.
+- Vielfalt: nicht zweimal dasselbe Thema.
+- Ausschliessen: Werbung, reine Meinung ohne Nachricht, Gerüchte, schon publizierte Themen (siehe Liste).
+- Bei zwei Meldungen zum selben Ereignis: die ausführlichere / Schweizer Originalquelle wählen.
+
+Antworte NUR mit JSON:
+{"zgjedhja": [{"i": Index, "p": 1-5, "pse": "1 Satz auf Deutsch: was es für Albaner in der Schweiz bedeutet"}],
+ "arsye": "kurze Gesamtbegründung auf Deutsch"}"""
 
 REWRITE_SYSTEM = f"""Du bist Redakteur bei UraPress.ch, einem albanischen Nachrichtenportal für
 die Diaspora in der Schweiz. Du schreibst eine Meldung aus einem anderen Medium VOLLSTÄNDIG
@@ -59,8 +64,17 @@ Regeln:
 - Ton: wie ein erfahrener albanischer Diaspora-Journalist – menschlich, lebendig, nah an
   den Leuten, aber faktentreu. Kein Clickbait, keine Ausrufezeichen im Titel, keine
   Grossbuchstaben-Titel.
-- Wenn es einen echten Bezug zur Diaspora gibt (Schweiz, Gastarbeiter, Rückkehr, Familie
-  in der Heimat), darf er im Text hervorgehoben werden – aber nur, wenn er im Original steht.
+- NICHT EINFACH ÜBERSETZEN: Erkläre, was die Meldung FÜR ALBANER IN DER SCHWEIZ bedeutet.
+  Bei Schweizer Themen (Bewilligung B/C, Einbürgerung, Familiennachzug, Krankenkasse, AHV, Steuern,
+  Löhne, Mieten, Lehre, Verkehr): ein eigener Absatz «Çfarë do të thotë kjo për ju» – wer ist betroffen
+  (z. B. Leute mit Ausweis B, Familien mit Kindern, Grenzgänger), ab wann, was man jetzt tun kann.
+  Nur mit Fakten aus dem Original oder allgemein bekannten, sicheren Grundregeln (z. B. «Kündigungsfrist
+  Grundversicherung 30. November»). KEINE neuen Zahlen, Fristen oder Behauptungen erfinden. Wenn das
+  Original dafür nichts hergibt, den Absatz weglassen.
+- Bei Albanern in der Schweiz und Schweizer Sport mit albanischen Spielern: die albanische Seite der
+  Geschichte nach vorne (Name, Herkunft, Kanton/Klub), soweit sie im Original steht.
+- Schweizer Begriffe einmal auf Deutsch in Klammern nennen, damit Leser sie bei Behörden wiedererkennen
+  (z. B. «leja C (Niederlassungsbewilligung)», «sigurimi bazë (Grundversicherung)»).
 
 SO VERMEIDEST DU DEN "KI-KLANG" (sehr wichtig – perfekte, gleichförmige Texte wirken maschinell):
 - SATZRHYTHMUS MISCHEN. Nicht jeder Satz gleich lang. Setze bewusst auch mal einen sehr
@@ -86,11 +100,17 @@ SO VERMEIDEST DU DEN "KI-KLANG" (sehr wichtig – perfekte, gleichförmige Texte
   Interview oder eine eigene Recherche des Mediums ("sipas një hulumtimi të …").
 - Erster Absatz beantwortet: wer, was, wo, wann.
 - Länge: 3–6 Absätze, insgesamt ca. 180–350 Wörter.
-- Titel: max. 90 Zeichen, informativ, als ganzer Satz oder klare Aussage. Keine
+- Titel: max. 90 Zeichen, informativ, als ganzer Satz oder klare Aussage. Mit den Wörtern, die Leute
+  bei Google auf Albanisch suchen: «Zvicër», Kanton/Stadt (Bernë, Cyrih, St. Gallen …), «leje», «franga»,
+  «Krankenkasse», «naturalizim», Klub- und Spielernamen. Keine
   Abkürzungen oder Kürzel aus dem Originaltitel (nicht "Kos:", "MK:", "VIDEO", "FOTO",
   "LAJMI I FUNDIT"), Ländernamen ausschreiben (Kosova, Shqipëria, Maqedonia e Veriut).
 
 Kategorie: genau eine aus {CATEGORIES}.
+Schweizer Themen → «Zvicër»; Albaner in der Schweiz → «Diaspora»; Schweizer Sport → «Sport».
+Schlagwörter (etiketat): immer den Kanton/Ort und das Hauptthema; bei Schweizer Fussball/Sport
+zusätzlich «Sport CH»; bei Bewilligungen «Leje qëndrimi»; bei Einbürgerung «Naturalizim»;
+bei Krankenkasse «Krankenkasse».
 
 Antworte NUR mit JSON in diesem Format:
 {{
@@ -201,12 +221,15 @@ def resolve_theme(word: str | None) -> str | None:
     return None
 
 
-def select_stories(candidates: list[dict], n: int, already_posted: list[str], theme: str | None = None) -> list[dict]:
-    if len(candidates) <= n and not theme:
-        return candidates
+def select_stories(candidates: list[dict], n: int, already_posted: list[str], theme: str | None = None,
+                   max_general: int = 1) -> list[dict]:
+    """Wählt Meldungen nach Priorität 1–5. Jede gewählte Meldung bekommt story['prioriteti'] und ['pse']."""
+    if not candidates:
+        return []
     lines = [
-        f"[{i}] ({c['source']}, {c['published'][:16]}, {', '.join(c['categories'])}) "
-        f"{c['title']}\n    {c['text'][:350].replace(chr(10), ' ')}"
+        f"[{i}] ({'CH' if c.get('group') == 'ch' else 'Balkan/Welt'} · {c['source']}, {c['published'][:16]}"
+        f"{', ' + ', '.join(c['categories'][:3]) if c['categories'] else ''}) "
+        f"{c['title']}\n    {c['text'][:300].replace(chr(10), ' ')}"
         for i, c in enumerate(candidates)
     ]
     fokus = ""
@@ -214,19 +237,151 @@ def select_stories(candidates: list[dict], n: int, already_posted: list[str], th
         fokus = (
             f"FOKUS SOT: Wähle NUR Meldungen zum Thema «{THEMES[theme]['label']}» – {THEMES[theme]['guide']}.\n"
             "Meldungen, die nicht zu diesem Thema passen, NICHT wählen. Mehrere zum selben Thema sind hier erlaubt.\n"
+            "Die Quote für p = 4–5 gilt bei einem Fokus-Thema nicht.\n"
             "Wenn gar keine passende Meldung dabei ist, gib eine leere Liste zurück.\n\n"
         )
     user = (
         fokus
-        + f"Wähle {n} Meldungen (weniger, wenn nicht genug gute dabei sind).\n\n"
+        + f"Wähle höchstens {n} Meldungen (weniger, wenn nicht genug gute dabei sind).\n\n"
         f"Bereits publiziert / vorgeschlagen:\n- " + "\n- ".join(already_posted or ["(keine)"])
         + "\n\nKandidaten:\n" + "\n".join(lines)
     )
-    result = _ask(SELECT_SYSTEM, user, max_tokens=1600)
+    result = _ask(SELECT_SYSTEM, user, max_tokens=2000)
     log.info("Auswahl: %s – %s", result.get("zgjedhja"), result.get("arsye"))
-    picks = [candidates[i] for i in result.get("zgjedhja", []) if 0 <= i < len(candidates)]
+    picks, general = [], 0
+    for item in result.get("zgjedhja", []):
+        if isinstance(item, int):  # Rückfall auf altes Format
+            item = {"i": item, "p": 5, "pse": ""}
+        i = item.get("i")
+        if not isinstance(i, int) or not 0 <= i < len(candidates):
+            continue
+        try:
+            prio = int(item.get("p", 5))
+        except (TypeError, ValueError):
+            prio = 5
+        if prio >= 4 and not theme:
+            if general >= max_general:
+                log.info("Übersprungen (Quote p4–5): %s", candidates[i]["title"])
+                continue
+            general += 1
+        story = dict(candidates[i], prioriteti=prio, pse=item.get("pse", ""))
+        picks.append(story)
+    picks.sort(key=lambda c: c["prioriteti"])
     return picks[:n]
 
+
+# --- Udhëzues (praktische Ratgeber, 1–2 pro Woche) ------------------------------------------
+# Quellen: offizielle Seiten (am 29.10.2026 geprüft, liefern Inhalt). Weitere Themen hier ergänzen.
+GUIDES = {
+    "leja-c": {
+        "titull": "Si merret leja C në Zvicër – kushtet dhe afatet",
+        "fokus": "Niederlassungsbewilligung C: nach wie vielen Jahren (Regel und vorzeitige Erteilung), "
+                 "Integrationskriterien, Sprachkenntnisse, was zum Verlust führen kann, wo man sie beantragt",
+        "urls": ["https://www.sem.admin.ch/sem/de/home/themen/aufenthalt/faq.html"],
+    },
+    "bashkim-familjar": {
+        "titull": "Bashkimi familjar në Zvicër – çfarë duhet të dini",
+        "fokus": "Familiennachzug: wer nachziehen darf (Ehepartner, Kinder bis welches Alter), Fristen, "
+                 "Wohnung, finanzielle Mittel, Sprache, Unterschied Ausweis B / C / Schweizer Bürger",
+        "urls": ["https://www.sem.admin.ch/sem/de/home/themen/aufenthalt/faq.html"],
+    },
+    "naturalizim": {
+        "titull": "Naturalizimi në Zvicër hap pas hapi",
+        "fokus": "ordentliche Einbürgerung: Ausweis C, Aufenthaltsjahre, Doppelzählung 8.–18. Altersjahr, "
+                 "Integration, Sprache, Ablauf Bund–Kanton–Gemeinde, Kosten, Doppelbürgerschaft",
+        "urls": ["https://www.sem.admin.ch/sem/de/home/integration-einbuergerung/schweizer-werden/ordentlich.html",
+                 "https://www.sem.admin.ch/sem/de/home/integration-einbuergerung/schweizer-werden/faq.html"],
+    },
+    "krankenkasse": {
+        "titull": "Krankenkasse 2027: si ta zgjidhni më të lirën",
+        "fokus": "Grundversicherung wechseln: Prämienrechner priminfo, Kündigungsfrist, Franchise, "
+                 "Modelle (Hausarzt, Telmed, HMO), Prämienverbilligung, worauf Familien achten müssen",
+        "urls": ["https://www.priminfo.admin.ch/de/praemien"],
+    },
+    "leja-biometrike": {
+        "titull": "Leja biometrike e të huajve në Zvicër – çfarë ndryshon dhe si merret",
+        "fokus": "biometrischer Ausländerausweis: wer ihn braucht, Termin, Kosten, Gültigkeit, Reisen",
+        "urls": ["https://www.sem.admin.ch/sem/de/home/themen/aufenthalt/biometr_auslaenderausweis.html"],
+    },
+}
+
+GUIDE_SYSTEM = f"""Du bist Redakteur bei UraPress.ch und schreibst einen PRAKTISCHEN RATGEBER (udhëzues) auf
+Albanisch (gjuha standarde, korrekte ë und ç) für Albaner, die in der Schweiz leben. Leute finden ihn über
+Google, wenn sie eine konkrete Frage haben.
+
+Grundlage ist NUR der offizielle Text (SEM, Bund, Kanton), den du bekommst. Regeln:
+- Alles muss stimmen. Nur Fakten aus dem offiziellen Text. Nichts erfinden, keine Zahlen, Fristen oder
+  Kosten, die dort nicht stehen. Wo der Kanton entscheidet, das so sagen («varet nga kantoni»).
+- Eigene Worte, einfach und klar, wie man es einem Nachbarn erklärt. Kurze Sätze.
+- Schweizer Begriffe einmal auf Deutsch in Klammern (z. B. «leja C (Niederlassungsbewilligung)»).
+- Aufbau: kurzer Einstieg (für wen ist das), dann Zwischentitel als eigene Absätze, die mit "## " beginnen
+  (z. B. "## Kush ka të drejtë", "## Hapat", "## Afatet", "## Kujdes"), Listen als Absätze mit Zeilen,
+  die mit "- " beginnen. Am Ende ein Absatz "## Ku informoheni" mit der zuständigen Stelle.
+- Am Schluss der Satz: «Ky udhëzues bazohet në informacionet zyrtare të [Stelle] në datën e publikimit.
+  Rregullat mund të ndryshojnë – për rastin tuaj pyesni zyrën e migracionit të kantonit.»
+- Länge: 500–900 Wörter.
+- Titel: max. 90 Zeichen, mit Suchwörtern (Zvicër, leje, franga …).
+
+Kategorie: «Zvicër». Antworte NUR mit JSON:
+{{
+  "titulli": "...",
+  "permbledhja": "1–2 Sätze",
+  "paragrafet": ["...", "## Zwischentitel", "- Punkt 1\n- Punkt 2", "..."],
+  "kategoria": "Zvicër",
+  "etiketat": ["Udhëzues", "3 bis 4 weitere Schlagwörter"],
+  "persona": null,
+  "prompt_imazhi": "English prompt for a symbolic, realistic editorial photo of the topic. No people's faces, no text."
+}}"""
+
+
+def write_guide(key: str, official_texts: list[tuple[str, str]]) -> dict:
+    g = GUIDES[key]
+    src = "\n\n".join(f"=== Quelle: {u} ===\n{t[:9000]}" for u, t in official_texts)
+    user = (f"Thema: {g['titull']}\nWas der Ratgeber beantworten soll: {g['fokus']}\n\n"
+            f"Offizieller Text:\n{src}")
+    data = _ask(GUIDE_SYSTEM, user, max_tokens=5000)
+    data["kategoria"] = "Zvicër"
+    data["persona"] = None
+    tags = [t for t in (data.get("etiketat") or []) if t]
+    if "Udhëzues" not in tags:
+        tags.insert(0, "Udhëzues")
+    data["etiketat"] = tags[:5]
+    return data
+
+
+FB_SYSTEM = """Du schreibst für die Facebook-Seite von UraPress.ch einen Post auf Albanisch (gjuha standarde,
+korrekte ë und ç) zu einem Artikel. Leser: Albaner in der Schweiz, viele lesen am Handy auf dem Arbeitsweg.
+
+Regeln:
+1. "hyrja" (erste Zeile): macht neugierig, aber ehrlich – kein falsches Clickbait, keine Grossbuchstaben,
+   höchstens ein Ausrufe- oder Fragezeichen. Gut: «Nga 1 janari ndryshon Krankenkasse – kush paguan më
+   shumë në kantonin e Bernës?» Schlecht: «NUK DO TA BESONI çfarë ndodhi në Zvicër!!!»
+2. "permbledhja": 2–3 Sätze: was passiert ist und warum es Albaner in der Schweiz betrifft.
+   Nur Fakten aus dem Artikel, nichts dazuerfinden.
+3. "pyetja": eine Frage für die Kommentare, die Leute wirklich beantworten wollen
+   (z. B. «Si e keni ju këtë në kantonin tuaj?»). Bei Unglücken/Verbrechen/Todesfällen KEINE
+   Frage nach Meinungen über Personen – dann eine respektvolle, sachliche Frage oder ein Wunsch.
+4. KEIN Link im Text. Der Link kommt in den ersten Kommentar.
+5. "hashtags": 2 bis 3, z. B. #Zvicër #Diaspora #Shqiptarët – passend zum Thema (#Bernë, #SportCH …).
+6. "koha": "mengjes" (06:30–08:00, Arbeitsweg) oder "mbremje" (18:30–21:00) – was für dieses Thema besser
+   passt (Praktisches/Nachrichten eher Morgen, Geschichten/Sport/Unterhaltung eher Abend).
+
+Antworte NUR mit JSON:
+{"hyrja": "...", "permbledhja": "...", "pyetja": "...", "hashtags": ["#Zvicër", "#Diaspora"], "koha": "mengjes"}"""
+
+
+def facebook_post(title: str, excerpt: str, paragraphs: list[str], category: str) -> dict:
+    body = "\n\n".join(p for p in paragraphs if not p.startswith("## "))[:5000]
+    data = _ask(FB_SYSTEM, f"Kategorie: {category}\nTitel: {title}\nAuszug: {excerpt}\n\nArtikel:\n{body}",
+                max_tokens=900)
+    tags = []
+    for t in data.get("hashtags") or []:
+        t = "#" + str(t).lstrip("#").replace(" ", "")
+        if len(t) > 1 and t not in tags:
+            tags.append(t)
+    data["hashtags"] = (tags or ["#Zvicër", "#Diaspora"])[:3]
+    data["koha"] = "mbremje" if str(data.get("koha", "")).startswith("mbr") else "mengjes"
+    return data
 
 
 COPY_LIMIT = 0.12  # Anteil 6-Wort-Folgen aus dem Original, ab dem der Text als Kopie gilt
