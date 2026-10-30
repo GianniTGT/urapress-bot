@@ -327,6 +327,7 @@ Grundlage ist NUR der offizielle Text (SEM, Bund, Kanton), den du bekommst. Rege
   die mit "- " beginnen. Am Ende ein Absatz "## Ku informoheni" mit der zuständigen Stelle.
 - Am Schluss der Satz: «Ky udhëzues bazohet në informacionet zyrtare të [Stelle] në datën e publikimit.
   Rregullat mund të ndryshojnë – për rastin tuaj pyesni zyrën e migracionit të kantonit.»
+- Hervorhebung nur mit **fett** (zwei Sterne), sparsam. Kein anderes Markdown.
 - Länge: 500–900 Wörter.
 - Titel: max. 90 Zeichen, mit Suchwörtern (Zvicër, leje, franga …).
 

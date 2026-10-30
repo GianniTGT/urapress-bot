@@ -225,7 +225,8 @@ def build_from_social(url: str, note: str) -> tuple[int, list[str]]:
 
 def _para_html(p: str) -> str:
     """Absatz → HTML. "## Titel" = Zwischentitel, Zeilen mit "- " = Liste (für Udhëzues)."""
-    e = lambda t: html.escape(t, quote=False)
+    def e(t: str) -> str:  # escapen, danach **fett** → <strong>
+        return re.sub(r"\*\*([^*\n]{1,120})\*\*", r"<strong>\1</strong>", html.escape(t, quote=False))
     p = p.strip()
     if p.startswith("## "):
         return f"<h2>{e(p[3:].strip())}</h2>"
@@ -247,7 +248,7 @@ def build_content(d: dict, related: list[dict] | None = None) -> str:
     body = "\n".join(_para_html(p) for p in d["paragraphs"] if p.strip())
     if social_platform(d["source_link"]):
         body += "\n" + social_embed(d["source_link"])
-    body += "\n" + related_block(related or [])
+    # «Lexo edhe» zeigt das Theme direkt unter dem Artikel (mit Bildern) – kein zweiter Block im Text
     source = ""
     if d.get("kind") == "udhezues" and d["source_link"]:  # offizielle Quelle: mit Link (Glaubwürdigkeit)
         source = (f'<p class="dj-burimi"><em>Burimi zyrtar: <a href="{html.escape(d["source_link"])}" '
@@ -274,12 +275,7 @@ def publish_draft(draft_id: int) -> dict:
 
     category = wp.term_id("categories", d["category"])
     tags = [wp.term_id("tags", t) for t in d["tags"]]
-    try:
-        related = wp.related_posts(category, tags, limit=3)
-    except Exception as exc:  # «Lexo edhe» ist nett, darf das Publizieren aber nie stoppen
-        log.warning("Lexo edhe nicht geladen: %s", exc)
-        related = []
-    post = wp.create_post(title=d["title"], content=build_content(d, related), excerpt=d["excerpt"],
+    post = wp.create_post(title=d["title"], content=build_content(d), excerpt=d["excerpt"],
                           categories=[category], tags=tags, featured_media=media_id,
                           status=POST_STATUS)
     db.update_draft(draft_id, status="posted", wp_post_id=post["id"], wp_post_url=post["link"],
