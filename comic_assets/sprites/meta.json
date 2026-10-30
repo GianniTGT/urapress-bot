@@ -41,6 +41,51 @@
    "oy": 147.0,
    "top": -72.5
   },
+  "zazu-mbeshtetur": {
+   "ox": 262.0,
+   "oy": 160.0,
+   "top": -79.0
+  },
+  "zazu-mbeshtetur-kenaqur": {
+   "ox": 262.0,
+   "oy": 160.0,
+   "top": -79.0
+  },
+  "zazu-ide": {
+   "ox": 198.0,
+   "oy": 259.0,
+   "top": -128.5
+  },
+  "zazu-ha": {
+   "ox": 366.0,
+   "oy": 147.0,
+   "top": -72.5
+  },
+  "zazu-kuti": {
+   "ox": 306.0,
+   "oy": 147.0,
+   "top": -72.5
+  },
+  "zazu-kercen": {
+   "ox": 358.0,
+   "oy": 147.0,
+   "top": -72.5
+  },
+  "zazu-inat": {
+   "ox": 198.0,
+   "oy": 147.0,
+   "top": -72.5
+  },
+  "zazu-shpine": {
+   "ox": 162.0,
+   "oy": 170.0,
+   "top": -84.0
+  },
+  "zazu-qesh": {
+   "ox": 198.0,
+   "oy": 259.0,
+   "top": -128.5
+  },
   "gianni-normal": {
    "ox": 174.0,
    "oy": 126.0,

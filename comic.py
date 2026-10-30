@@ -32,7 +32,17 @@ MOODS = {
              "putra": "putra", "gishta": "putra", "kemba": "putra",
              "shtrire": "shtrire", "shtrihet": "shtrire", "shtrire ne divan": "shtrire",
              "fle": "fle", "flen": "fle", "gjume": "fle", "ne gjume": "fle",
-             "ecen": "ecen", "vrapon": "ecen", "shetit": "ecen", "shkon": "ecen"},
+             "ecen": "ecen", "vrapon": "ecen", "shetit": "ecen", "shkon": "ecen",
+             # Version 3
+             "mbeshtetur": "mbeshtetur", "ulur": "mbeshtetur", "relaks": "mbeshtetur", "filozof": "mbeshtetur",
+             "kenaqur": "mbeshtetur-kenaqur", "dinak": "mbeshtetur-kenaqur", "buzeqesh": "mbeshtetur-kenaqur",
+             "ide": "ide", "e kam": "ide", "gisht": "ide",
+             "qesh me ze": "qesh", "qeshet": "qesh", "gezim": "qesh", "fiton": "qesh",
+             "ha": "ha", "byrek": "ha", "uri": "ha", "ushqim": "ha",
+             "kuti": "kuti", "fshehur": "kuti", "fshihet": "kuti",
+             "kercen": "kercen", "frikesuar": "kercen", "tmerruar": "kercen", "panik": "kercen",
+             "inat": "inat", "krahet kryq": "inat", "ofenduar keq": "inat", "xheloz": "inat",
+             "shpine": "shpine", "dembel": "shpine", "lodhur": "shpine", "i vdekur": "shpine"},
     "gianni": {"": "normal", "normal": "normal", "gezuar": "normal", "lumtur": "normal",
                "merzitur": "merzitur", "serioz": "merzitur", "inatosur": "merzitur",
                "habitur": "habitur", "shokuar": "habitur"},
@@ -42,6 +52,11 @@ MOODS = {
              "topi": "topi", "bowling": "topi"},
 }
 NAMES = {"zazu": "ZaZu", "sara": "Sara", "gianni": "Gianni"}
+THINK = ["mendon", "mendim", "mendoj", "ne mendje", "heshtur"]
+# Farbiger Hintergrund pro Bild (Wand, Schatten, Boden) – wechselt von Bild zu Bild
+PALETTES = [("#C9DCEB", "#B3CBDD", "#7E9FB8"), ("#F5DC8A", "#EBCB6A", "#C9A24A"),
+            ("#D9C7E6", "#C7B1D8", "#9A80B3"), ("#BFE0C4", "#A8D0AE", "#7AAE84"),
+            ("#F6CDBE", "#EDB7A4", "#C98670")]
 ORDER = ["gianni", "sara", "zazu"]   # links → rechts
 
 # Platz im Bild (Einheiten): (Mitte x, Grösse, max. Breite) je nach Anzahl Figuren.
@@ -72,13 +87,18 @@ def parse(text: str) -> list[dict]:
         m = re.match(r"^([^:(]+?)\s*(?:\(([^)]*)\))?\s*:\s*(.+)$", line)
         if not m:
             raise ComicError(f"Nuk e kuptoj rreshtin: «{line}». Shkruaj p.sh. «ZaZu (mërzitur): teksti»")
-        who, mood, said = _plain(m.group(1)), _plain(m.group(2) or ""), m.group(3).strip()
+        who, said = _plain(m.group(1)), m.group(3).strip()
         if who not in MOODS:
             raise ComicError(f"«{m.group(1).strip()}» nuk njihet. Personazhet: ZaZu, Sara, Gianni")
+        # «mendon» = Gedankenblase; kann mit einer Pose kombiniert werden: (mbështetur, mendon)
+        parts = [_plain(x) for x in (m.group(2) or "").split(",")]
+        think = any(x in THINK for x in parts)
+        parts = [x for x in parts if x and x not in THINK]
+        mood = parts[0] if parts else ""
         if mood not in MOODS[who]:
-            known = ", ".join(sorted({k for k in MOODS[who] if k}))
+            known = ", ".join(sorted({k for k in MOODS[who] if k} | set(THINK[:1])))
             raise ComicError(f"Gjendja «{m.group(2)}» nuk njihet për {NAMES[who]}. Mundësitë: {known}")
-        panels.append({"who": who, "pose": MOODS[who][mood], "text": said})
+        panels.append({"who": who, "pose": MOODS[who][mood], "text": said, "think": think})
     if not panels:
         raise ComicError("Mungon teksti. Një rresht = një foto, p.sh. «Sara: ZaZu, hajde!»")
     if len(panels) > MAX_PANELS:
@@ -132,14 +152,60 @@ def _bubble(draw, text: str, sx: float, head_top: float, all_top: float | None =
         draw.text(((x + w / 2) * S, (y + 11 + i * lh) * S), t, font=font, fill=INK, anchor="mt")
 
 
+def _cloud(draw, text: str, sx: float, head_top: float, all_top: float | None = None) -> None:
+    """Gedankenblase: Wolke oben, kleine Kreise führen zum Kopf."""
+    limit = min(head_top, all_top if all_top is not None else head_top)
+    room = limit - 60
+    for fs in (22, 20, 18, 16, 14):
+        font = _font(fs)
+        lines = _wrap(text, font, (PANEL - 76) * S)
+        lh = fs * 1.18
+        h = len(lines) * lh + 34
+        if h <= room:
+            break
+    w = min(PANEL - 24, max(130, max(font.getlength(t) for t in lines) / S + 56))
+    x = min(max(sx - w / 2, 12), PANEL - 12 - w)
+    y = max(12, limit - 58 - h)
+    lw = int(3.2 * S)
+    # Wolke aus Kreisen am Rand + Fläche
+    import math
+    bumps = max(8, int((w + h) / 26))
+    cx, cy, rx, ry = x + w / 2, y + h / 2, w / 2, h / 2
+    pts = [(cx + rx * math.cos(2 * math.pi * i / bumps), cy + ry * math.sin(2 * math.pi * i / bumps)) for i in range(bumps)]
+    r = max(16, min(rx, ry) * 0.42)
+    for px, py in pts:
+        draw.ellipse(((px - r) * S, (py - r) * S, (px + r) * S, (py + r) * S), fill="white", outline=LINE, width=lw)
+    draw.ellipse(((cx - rx) * S, (cy - ry) * S, (cx + rx) * S, (cy + ry) * S), fill="white")
+    for px, py in pts:
+        rr = r - 3.4
+        draw.ellipse(((px - rr) * S, (py - rr) * S, (px + rr) * S, (py + rr) * S), fill="white")
+    # kleine Kreise zum Kopf
+    side = 1 if sx < PANEL - 70 else -1                  # Kreise schräg seitlich zum Kopf, nicht übereinander
+    by = y + h + r * 0.55
+    for k, rad in enumerate((10, 7, 4.5)):
+        qx = sx + side * (34 - k * 12)
+        qy = by + 6 + k * max(10, (head_top - 6 - by) / 3)
+        draw.ellipse(((qx - rad) * S, (qy - rad) * S, (qx + rad) * S, (qy + rad) * S), fill="white", outline=LINE,
+                     width=int(2.6 * S))
+    for i, t in enumerate(lines):
+        draw.text((cx * S, (cy - len(lines) * lh / 2 + i * lh) * S), t, font=font, fill=INK, anchor="mt")
+
+
 # Körperhaltungen bleiben, auch wenn die Figur im nächsten Bild nichts sagt (Gesichter nicht)
-KEEP = {"shtrire", "fle", "ecen", "topi"}
+KEEP = {"shtrire", "fle", "ecen", "topi", "mbeshtetur", "mbeshtetur-kenaqur", "kuti", "shpine"}
 
 
-def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None) -> Image.Image:
-    im = Image.new("RGB", (PANEL * S, PANEL * S), BG)
+def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None, idx: int = 0) -> Image.Image:
+    wall, shade, floor = PALETTES[idx % len(PALETTES)]
+    im = Image.new("RGB", (PANEL * S, PANEL * S), wall)
     d = ImageDraw.Draw(im)
-    d.rectangle((0, 318 * S, PANEL * S, PANEL * S), fill=GROUND)
+    # Schattenkeil an der Wand (Tiefe) und Boden
+    d.polygon(((0, 250 * S), (PANEL * S, 205 * S), (PANEL * S, 318 * S), (0, 318 * S)), fill=shade)
+    for yy in range(214, 318, 9):                        # feine Punkte wie Raster im Zeitungs-Comic
+        for xx in range(4 + (yy // 9 % 2) * 4, PANEL, 9):
+            if yy > 250 - xx * 45 / PANEL:
+                d.ellipse(((xx - 1.1) * S, (yy - 1.1) * S, (xx + 1.1) * S, (yy + 1.1) * S), fill=floor)
+    d.rectangle((0, 318 * S, PANEL * S, PANEL * S), fill=floor)
     place = dict(PLACE[len(cast)])
     if len(cast) == 2 and "zazu" not in cast:                 # Gianni und Sara: Sara rechts
         place["sara"] = (282, .85, 170)
@@ -161,7 +227,7 @@ def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None) -> Im
         tops.append(oy + m["top"] * sc)
         if who == p["who"]:
             head_top, sx = oy + m["top"] * sc, ox
-    _bubble(d, p["text"], sx, head_top, min(tops))
+    (_cloud if p.get("think") else _bubble)(d, p["text"], sx, head_top, min(tops))
     d.rectangle((0, 0, PANEL * S - 1, PANEL * S - 1), outline=INK, width=5 * S)
     return im
 
@@ -179,7 +245,7 @@ def render(panels: list[dict], out: Path, day: date | None = None) -> Path:
            font=_font(20, bold=False), fill="#777777", anchor="ls")
     last: dict = {}
     for i, p in enumerate(panels):
-        im.paste(_panel(p, cast, meta, last), ((10 + i * (PANEL + GAP)) * S, 60 * S))
+        im.paste(_panel(p, cast, meta, last, i), ((10 + i * (PANEL + GAP)) * S, 60 * S))
         last[p["who"]] = p["pose"]
     d.text(((width - 10) * S, 468 * S), "© UraPress · ZaZu", font=_font(14, bold=False), fill="#999999", anchor="rs")
     out.parent.mkdir(parents=True, exist_ok=True)

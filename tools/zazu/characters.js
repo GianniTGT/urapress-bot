@@ -79,7 +79,7 @@ function zazuHead(id, mode = 'flat', look = 0, mouth = 'flat') {
   s += `<path d="M-9 9 Q0 4 9 9 Q4 19 0 19 Q-4 19 -9 9 Z" fill="${ZNOSE}" ${sw(3)}/><ellipse cx="-2" cy="9" rx="3" ry="1.6" fill="#fff" opacity=".6"/>`;
   if (mouth === 'w') s += `<path d="M0 19 Q-6 29 -13 25 M0 19 Q6 29 13 25" fill="none" ${sw(3)}/>`;
   else if (mouth === 'o') s += `<path d="M0 19 L0 23" ${sw(3)}/><ellipse cx="0" cy="31" rx="6" ry="7" fill="#7a3b3b" ${sw(3)}/>`;
-  else s += `<path d="M0 19 L0 25 M-12 32 Q0 25 12 32" fill="none" ${sw(3)}/>`;
+  else if (mouth !== 'none') s += `<path d="M0 19 L0 25 M-12 32 Q0 25 12 32" fill="none" ${sw(3)}/>`;
   // Schnurrhaare
   s += `<path d="M-38 22 Q-64 14 -92 12 M-38 28 Q-64 28 -92 32 M-38 34 Q-60 40 -86 48 M38 22 Q64 14 92 12 M38 28 Q64 28 92 32 M38 34 Q60 40 86 48" stroke="${L}" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".85"/>`;
   return s;
@@ -258,5 +258,180 @@ function gianni(x, y, opt = {}) {
   s += `<path d="M-50 4 Q-56 -50 -6 -60 Q46 -62 52 0 Q46 -24 40 -30 Q10 -40 -20 -34 Q-40 -30 -44 -14 Z" fill="${GHAIR}" ${sw(3.5)}/>`;
   s += `<path d="M-50 4 Q-52 -10 -46 -20 L-44 -4 Z M50 4 Q52 -10 46 -20 L44 -4 Z" fill="${GGREY}"/>`;
   s += `<path d="M-30 -48 Q-10 -56 14 -52 M-20 -40 Q0 -46 22 -42" stroke="#5A4A40" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  return s + '</g>';
+}
+
+
+// ======================================================================================
+// Version 3 – mehr Ausdruck und Bewegung (30.10.2026). Neue Funktionen, die alten bleiben gleich.
+// ======================================================================================
+
+// Auge mit zusätzlichen Formen: half (zufrieden), joy (^^), side (schaut zur Seite)
+function zEyeX(id, cx, cy, mode, look) {
+  if (['flat', 'wide', 'grumpy', 'sleep'].includes(mode)) return zEye(id, cx, cy, mode, look);
+  if (mode === 'joy') {
+    return `<path d="M${cx - 15} ${cy + 6} Q${cx} ${cy - 12} ${cx + 15} ${cy + 6}" fill="none" ${sw(4.5)}/>`;
+  }
+  const cid = uid('c'), px = cx + (mode === 'side' ? 9 : look * 6);
+  let s = `<clipPath id="${cid}"><ellipse cx="${cx}" cy="${cy}" rx="17" ry="16"/></clipPath>`;
+  s += `<ellipse cx="${cx}" cy="${cy}" rx="17" ry="16" fill="url(#${id}e)"/>`;
+  s += `<ellipse cx="${px}" cy="${cy + 3}" rx="4.5" ry="10" fill="#1A1210"/><circle cx="${px - 3}" cy="${cy}" r="2.6" fill="#fff"/>`;
+  const lid = mode === 'half' ? cy + 3 : cy - 4;
+  s += `<g clip-path="url(#${cid})"><rect x="${cx - 20}" y="${cy - 22}" width="40" height="${lid - cy + 22}" fill="${ZF2}"/>`;
+  s += `<path d="M${cx - 19} ${lid} L${cx + 19} ${lid}" ${sw(3.5)}/></g>`;
+  s += `<ellipse cx="${cx}" cy="${cy}" rx="17" ry="16" fill="none" ${sw(3.5)}/>`;
+  return s;
+}
+
+// Kopf mit mehr Gesichtern. mouth: flat | w | o | smirk | open | grin ; brows: true = böse Brauen
+function zazuHeadX(id, mode = 'flat', look = 0, mouth = 'flat', brows = false) {
+  let s = zazuHead(id, 'flat', 0, 'none');               // Ohren, Kopf, Fell, Schnauze, Nase, Schnurrhaare
+  // Augenbereich neu malen (über die flachen Augen)
+  s += `<ellipse cx="-32" cy="-6" rx="20" ry="19" fill="url(#${id}h)"/><ellipse cx="32" cy="-6" rx="20" ry="19" fill="url(#${id}h)"/>`;
+  s += zEyeX(id, -32, -6, mode, look) + zEyeX(id, 32, -6, mode, look);
+  if (brows) s += `<path d="M-52 -30 L-16 -20 M52 -30 L16 -20" ${sw(5)}/>`;
+  // Mund
+  if (mouth === 'w') s += `<path d="M0 19 Q-6 29 -13 25 M0 19 Q6 29 13 25" fill="none" ${sw(3)}/>`;
+  else if (mouth === 'o') s += `<path d="M0 19 L0 23" ${sw(3)}/><ellipse cx="0" cy="31" rx="6" ry="7" fill="#7a3b3b" ${sw(3)}/>`;
+  else if (mouth === 'smirk') s += `<path d="M0 19 L0 24 M-10 30 Q2 33 16 22" fill="none" ${sw(3)}/>`;
+  else if (mouth === 'grin') s += `<path d="M0 19 L0 22 M-18 26 Q0 46 18 26 Z" fill="#7a3b3b" ${sw(3)}/><path d="M-10 34 Q0 40 10 34" stroke="#E27A84" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  else if (mouth === 'open') s += `<path d="M0 19 L0 22" ${sw(3)}/><ellipse cx="0" cy="38" rx="20" ry="20" fill="#6e3434" ${sw(3)}/><ellipse cx="0" cy="48" rx="11" ry="7" fill="#E27A84"/><path d="M-12 22 l3 8 M12 22 l-3 8" stroke="#fff" stroke-width="4" stroke-linecap="round"/>`;
+  else if (mouth !== 'none') s += `<path d="M0 19 L0 25 M-12 32 Q0 25 12 32" fill="none" ${sw(3)}/>`;
+  return s;
+}
+
+function zTail(d, w = 32) {
+  return `<path d="${d}" fill="none" stroke="${L}" stroke-width="${w}" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${ZF}" stroke-width="${w - 8}" stroke-linecap="round"/>`;
+}
+function zLimb(x1, y1, x2, y2, w = 34, c = ZF) {
+  return `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${L}" stroke-width="${w}" stroke-linecap="round"/><path d="M${x1} ${y1} L${x2} ${y2}" stroke="${c}" stroke-width="${w - 8}" stroke-linecap="round"/>`;
+}
+// Fusssohle von vorne mit 4 Zehenballen (ZaZu-Markenzeichen)
+function zSole(cx, cy, r = 1) {
+  let s = `<ellipse cx="${cx}" cy="${cy}" rx="${26 * r}" ry="${30 * r}" fill="${ZLIGHT}" ${sw()}/>`;
+  s += `<path d="M${cx - 13 * r} ${cy + 8 * r} Q${cx} ${cy - 6 * r} ${cx + 13 * r} ${cy + 8 * r} Q${cx + 11 * r} ${cy + 20 * r} ${cx} ${cy + 20 * r} Q${cx - 11 * r} ${cy + 20 * r} ${cx - 13 * r} ${cy + 8 * r} Z" fill="${ZPAD}" ${sw(2.5)}/>`;
+  [[-15, -10], [-5, -18], [6, -18], [16, -10]].forEach(([a, b]) => s += `<ellipse cx="${cx + a * r}" cy="${cy + b * r}" rx="${5.5 * r}" ry="${7 * r}" fill="${ZPAD}" ${sw(2)}/>`);
+  return s;
+}
+function zBody(id, cx = 0, cy = 116, rx = 90, ry = 88, rot = 0) {
+  let s = `<g transform="rotate(${rot} ${cx} ${cy})"><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#${id}b)" ${sw()}/>`;
+  s += `<path d="${tufts(cx, cy - 52, 46, 34, 0.05 * Math.PI, 0.95 * Math.PI, 12, 0.18)}" fill="${ZLIGHT}" stroke="none"/>`;
+  s += `<ellipse cx="${cx}" cy="${cy - 18}" rx="${rx * 0.44}" ry="${ry * 0.55}" fill="${ZLIGHT}"/>`;
+  s += `<path d="M${cx - 74} ${cy - 12} l-8 6 M${cx - 78} ${cy + 12} l-8 4 M${cx + 74} ${cy - 12} l8 6" stroke="${ZF2}" stroke-width="3" stroke-linecap="round"/></g>`;
+  return s;
+}
+function zFrontPaw(px) {
+  return `<ellipse cx="${px}" cy="192" rx="24" ry="13" fill="${ZLIGHT}" ${sw()}/><path d="M${px - 8} 186 l0 10 M${px + 4} 186 l0 10" ${sw(2.5)}/>`;
+}
+const zOpen = (x, y, sc, id) => `<g transform="translate(${x} ${y}) scale(${sc})">` + zDefs(id);
+
+// Angelehnt, Bauch raus, Hinterpfoten nach vorne (Sohlen zum Leser) – entspannt / philosophisch
+function zazuLean(x, y, opt = {}) {
+  const { mode = 'half', look = 0, mouth = 'flat', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="0" cy="214" rx="130" ry="12" fill="#000" opacity=".12"/>`;
+  s += zTail('M86 186 Q150 196 166 170');
+  s += zBody(id, 18, 120, 88, 92, 14);
+  s += zLimb(-10, 170, -58, 182, 44) + zLimb(40, 176, 4, 190, 44);
+  s += zSole(-66, 176) + zSole(-6, 186);
+  s += zLimb(-50, 90, -8, 118, 30) + zLimb(84, 96, 44, 124, 30);
+  s += `<ellipse cx="-4" cy="120" rx="16" ry="12" fill="${ZLIGHT}" ${sw(3.5)}/><ellipse cx="40" cy="126" rx="16" ry="12" fill="${ZLIGHT}" ${sw(3.5)}/>`;
+  s += `<g transform="rotate(8)">${zazuHeadX(id, mode, look, mouth, brows)}</g>`;
+  return s + '</g>';
+}
+
+// Sitzend mit erhobener Vorderpfote: «Ich hab's!»
+function zazuIdea(x, y, opt = {}) {
+  const { mode = 'wide', look = 0, mouth = 'w', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="6" cy="202" rx="104" ry="12" fill="#000" opacity=".12"/>`;
+  s += zTail('M70 152 Q138 152 124 98 Q116 72 96 84');
+  s += zBody(id);
+  s += zLimb(48, 96, 112, -26, 38);
+  s += `<ellipse cx="116" cy="-44" rx="22" ry="20" fill="${ZLIGHT}" ${sw()}/><path d="M104 -58 l-2 -8 M116 -62 l0 -9 M128 -58 l2 -8" ${sw(2.5)}/>`;
+  s += `<path d="M150 -92 l10 -12 M162 -64 l16 -2 M140 -110 l2 -16" stroke="#E8A317" stroke-width="5" stroke-linecap="round"/>`;
+  s += zFrontPaw(-36);
+  s += zazuHeadX(id, mode, look, mouth, brows);
+  return s + '</g>';
+}
+
+// Beim Essen: Maul weit offen, vor ihm ein Stück Byrek auf dem Teller
+function zazuEat(x, y, opt = {}) {
+  const { mode = 'joy', look = 0, mouth = 'open', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="6" cy="202" rx="120" ry="12" fill="#000" opacity=".12"/>`;
+  s += zTail('M70 152 Q138 152 124 98 Q116 72 96 84');
+  s += zBody(id);
+  s += zFrontPaw(-36) + zFrontPaw(36);
+  s += `<ellipse cx="-118" cy="196" rx="62" ry="13" fill="#fff" ${sw(3.5)}/><ellipse cx="-118" cy="194" rx="44" ry="7" fill="#E9EEF3"/>`;
+  s += `<path d="M-160 190 Q-150 150 -118 146 Q-86 150 -76 190 Z" fill="#E8B04B" ${sw(3.5)}/>`;
+  s += `<path d="M-146 182 Q-140 160 -118 158 Q-98 160 -92 182 M-134 182 Q-128 170 -118 170 Q-106 170 -104 182" stroke="#B8802A" stroke-width="3" fill="none"/>`;
+  s += `<path d="M-130 130 Q-124 116 -130 104 M-110 128 Q-104 114 -110 102" stroke="#B5A9A3" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>`;
+  s += zazuHeadX(id, mode, look, mouth, brows);
+  return s + '</g>';
+}
+
+// In der Kartonschachtel, nur Kopf und Pfoten schauen raus
+function zazuBox(x, y, opt = {}) {
+  const { mode = 'half', look = 0, mouth = 'flat', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="0" cy="212" rx="150" ry="12" fill="#000" opacity=".12"/>`;
+  s += `<path d="M-130 66 L-150 30 L-40 30 L-30 66 Z M130 66 L150 30 L40 30 L30 66 Z" fill="#C9955B" ${sw(3.5)}/>`;
+  s += `<rect x="-120" y="40" width="240" height="40" fill="#8E6538"/>`;
+  s += zazuHeadX(id, mode, look, mouth, brows);
+  s += `<path d="M-130 64 L130 64 L120 206 L-120 206 Z" fill="#D9A766" ${sw(4)}/>`;
+  s += `<path d="M-60 120 L60 120 M-40 140 L40 140" stroke="#B9834A" stroke-width="5" stroke-linecap="round"/><path d="M-110 80 l220 0" stroke="#B9834A" stroke-width="3"/>`;
+  s += `<ellipse cx="-50" cy="66" rx="26" ry="14" fill="${ZLIGHT}" ${sw()}/><ellipse cx="50" cy="66" rx="26" ry="14" fill="${ZLIGHT}" ${sw()}/>`;
+  s += `<path d="M-58 58 l0 10 M-44 58 l0 10 M44 58 l0 10 M58 58 l0 10" ${sw(2.5)}/>`;
+  return s + '</g>';
+}
+
+// Erschrocken in die Luft gesprungen: Fell gesträubt, Beine gespreizt
+function zazuJump(x, y, opt = {}) {
+  const { mode = 'wide', look = 0, mouth = 'o', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="0" cy="236" rx="70" ry="9" fill="#000" opacity=".1"/>`;
+  s += zTail('M70 100 Q120 40 112 -40', 34);
+  for (let i = 0; i < 7; i++) s += `<path d="M${100 + (i % 2 ? 14 : -14)} ${80 - i * 18} l${i % 2 ? 14 : -14} -6" stroke="${L}" stroke-width="4" stroke-linecap="round"/>`;
+  s += zLimb(-50, 130, -100, 196, 32) + zLimb(50, 130, 100, 196, 32) + zLimb(-24, 150, -40, 208, 30, ZF2) + zLimb(24, 150, 40, 208, 30, ZF2);
+  s += `<ellipse cx="-104" cy="202" rx="20" ry="11" fill="${ZLIGHT}" ${sw()}/><ellipse cx="104" cy="202" rx="20" ry="11" fill="${ZLIGHT}" ${sw()}/>`;
+  s += `<path d="${tufts(0, 104, 92, 70, 0, 2 * Math.PI, 30, 0.12)}" fill="url(#${id}b)" ${sw()}/>`;
+  s += `<ellipse cx="0" cy="92" rx="38" ry="40" fill="${ZLIGHT}"/>`;
+  s += `<path d="M-150 60 l-24 -6 M-150 100 l-26 4 M150 60 l24 -6 M150 100 l26 4" stroke="${L}" stroke-width="4" stroke-linecap="round"/>`;
+  s += zazuHeadX(id, mode, look, mouth, brows);
+  return s + '</g>';
+}
+
+// Beleidigt mit verschränkten Vorderpfoten
+function zazuCross(x, y, opt = {}) {
+  const { mode = 'grumpy', look = 0, mouth = 'flat', sc = 1, brows = true } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="6" cy="202" rx="104" ry="12" fill="#000" opacity=".12"/>`;
+  s += zTail('M70 152 Q138 152 124 98 Q116 72 96 84');
+  s += zBody(id);
+  s += `<path d="M-40 176 L-40 196 M40 176 L40 196" stroke="${ZF2}" stroke-width="3"/>` + zFrontPaw(-30) + zFrontPaw(30);
+  s += zLimb(-70, 96, 34, 124, 36) + `<ellipse cx="40" cy="124" rx="20" ry="15" fill="${ZLIGHT}" ${sw()}/>`;
+  s += zLimb(70, 100, -34, 132, 36) + `<ellipse cx="-40" cy="132" rx="20" ry="15" fill="${ZLIGHT}" ${sw()}/>`;
+  s += zazuHeadX(id, mode, look, mouth, brows);
+  return s + '</g>';
+}
+
+// Auf dem Rücken liegend, Pfoten in der Luft (faul / «tot»)
+function zazuBack(x, y, opt = {}) {
+  const { mode = 'joy', look = 0, mouth = 'w', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="90" cy="128" rx="170" ry="12" fill="#000" opacity=".12"/>`;
+  s += zTail('M230 110 Q270 110 280 80');
+  s += `<ellipse cx="110" cy="70" rx="140" ry="60" fill="url(#${id}b)" ${sw()}/><ellipse cx="110" cy="52" rx="84" ry="30" fill="${ZLIGHT}"/>`;
+  s += zLimb(40, 30, 20, -50, 32) + zLimb(90, 22, 96, -56, 32) + zLimb(150, 24, 168, -46, 32, ZF2) + zLimb(200, 36, 230, -30, 32, ZF2);
+  for (const [a, b] of [[18, -62], [96, -68], [170, -58], [232, -42]]) s += `<ellipse cx="${a}" cy="${b}" rx="20" ry="14" fill="${ZLIGHT}" ${sw()}/>`;
+  s += `<g transform="rotate(-18) translate(8 34)">${zazuHeadX(id, mode, look, mouth, brows)}</g>`;
   return s + '</g>';
 }
