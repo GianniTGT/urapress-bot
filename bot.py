@@ -76,8 +76,8 @@ def fb_keyboard(draft_id: int) -> InlineKeyboardMarkup | None:
     return InlineKeyboardMarkup([[InlineKeyboardButton("📘 Posto në FB", callback_data=f"fb:{draft_id}")]])
 
 
-PRIO_LABELS = {1: "🇨🇭 P1 · Zvicër për diasporën", 2: "🤝 P2 · Shqiptarët në Zvicër",
-               3: "⚽ P3 · Sport CH", 4: "🧳 P4 · Atdheu ↔ diaspora", 5: "🌍 P5 · Lajm i përgjithshëm"}
+PRIO_LABELS = {1: "🇨🇭 P1 · Zvicër për diasporën", 2: "🤝 P2 · Shqiptarët jashtë",
+               3: "⚽ P3 · Sport me shqiptarë", 4: "🔥 P4 · Histori e madhe nga atdheu", 5: "🌍 P5 · Lajm i përgjithshëm"}
 
 
 def preview_text(d: dict) -> str:

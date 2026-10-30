@@ -80,8 +80,8 @@ CH_FEEDS = [f.strip() for f in _get(
     ]),
 ).split(",") if f.strip()]
 CH_MAX_PER_FEED = int(_get("CH_MAX_PER_FEED", "12"))     # Schweizer Quellen: mehr Einträge
-OTHER_MAX_PER_FEED = int(_get("OTHER_MAX_PER_FEED", "6"))  # Balkan/Welt: weniger, nur bei Diaspora-Bezug gewählt
-MAX_GENERAL_PER_SCAN = int(_get("MAX_GENERAL_PER_SCAN", "1"))  # Priorität 4–5 pro Scan (Ziel ~80 % aus 1–3)
+OTHER_MAX_PER_FEED = int(_get("OTHER_MAX_PER_FEED", "10"))  # Balkan/Diaspora-Quellen
+MAX_GENERAL_PER_SCAN = int(_get("MAX_GENERAL_PER_SCAN", "1"))  # höchstens so viele p=5 pro Scan
 
 SCAN_TIME = _get("SCAN_TIME", "07:30,17:30")    # HH:MM, mehrere mit Komma
 TIMEZONE = _get("TIMEZONE", "Europe/Zurich")

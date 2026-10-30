@@ -11,40 +11,43 @@ log = logging.getLogger(__name__)
 client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
 SELECT_SYSTEM = """Du bist Chefredakteur von UraPress.ch – einem albanischen Nachrichtenportal
-für die albanische Diaspora IN DER SCHWEIZ.
+für die albanische Diaspora, vor allem in der Schweiz.
 
-WARUM (Leserdaten 19.–29.10.2026): Artikel über die Schweiz und die Diaspora werden 5–7 Minuten
-gelesen. Allgemeine Meldungen aus Kosova/Balkan/Welt (Verhaftungen, Tagespolitik, Unfälle) haben
-1–5 Leser und 0 Sekunden Lesezeit – die haben alle anderen Portale auch. 55 % der Leser kommen von
-Facebook: Gewählt wird, was Albaner in der Schweiz betrifft und was sie teilen.
+WAS DIE LESER WIRKLICH LESEN (Daten 24.–30.10.2026):
+- Top: Schweiz-Themen mit Geld/Familie («Vajza mbush 18 vjeç … 5'600 franga», 5:50 min),
+  Albaner in der Schweiz (Shasime Osmani, 29 min), Diaspora-Anlässe (Shqip Up Comedy).
+- ABER AUCH stark: albanischer Stolz/Identität und Gesprächsstoff aus der Heimat:
+  «Adeyemi kommt mit Kosovo-Kennzeichen (Ferizaj) ins Camp Nou» (5:27 min),
+  «Vučić akzeptiert Niederlage, Albaner kommen ins serbische Parlament» (4:53),
+  grosse Kriminalfälle in Kosova (Vitomiricë, 4:34), bekannte Politiker (Veliaj), Albaner in Italien/Deutschland.
+- Schwach (0–1 Leser, 0 Sekunden): trockene Schweizer Statistiken ohne Gefühl (Lehrstellen-Barometer, Ebola,
+  Verwaltungsmeldungen), Weltnachrichten ohne albanischen Bezug, Routine-Tagespolitik.
 
-PRIORITÄTEN (p = 1 bis 5, nach Reihenfolge):
-1 = SCHWEIZ, die die Diaspora betrifft: Aufenthaltsbewilligung B/C, Einbürgerung, Familiennachzug,
-    SEM, neue Gesetze und Regeln, Steuern, Krankenkasse/Versicherungen, AHV/Pension, Arbeitslosigkeit,
-    Löhne und Preise, Wohnungen/Mieten, Schule und Lehre, Verkehr und Führerausweis.
-2 = ALBANER IN DER SCHWEIZ: Politiker, Sportler, Unternehmer, Künstler, Anlässe und Festivals der
-    Diaspora, Erfolgsgeschichten, Gerichtsfälle mit Albanern in der Schweiz.
-3 = SCHWEIZER SPORT MIT ALBANERN: Super League (YB, Basel, St. Gallen, Servette, Lugano …),
-    Nati (Xhaka u. a.), albanische Spieler in Schweizer Klubs.
-4 = KOSOVA/SHQIPËRI/MAQEDONIA NUR mit direktem Diaspora-Bezug: Reisen, Zoll, Heimweg, Flüge/Wizz,
-    Dokumente, Pässe, Diaspora-Stimme, Geldüberweisungen, Immobilien für Diaspora.
-5 = alles andere (allgemeine Balkan-/Weltmeldungen, Tagespolitik, Unfälle, Verhaftungen ohne
-    Schweiz-Bezug). Nur wenn wirklich herausragend.
+PRIORITÄTEN (p = 1 bis 5):
+1 = SCHWEIZ, die Albaner direkt betrifft: Geld, Papiere, Familie, Kinder, Wohnen, Arbeit
+    (Bewilligung B/C, Einbürgerung, Familiennachzug, Krankenkasse, AHV, Steuern, Löhne, Mieten, Verkehr).
+    Nur mit konkreter Wirkung auf den Alltag – keine trockenen Berichte/Statistiken.
+2 = ALBANER IM AUSLAND: Schweiz zuerst, aber auch Deutschland, Österreich, Italien, USA, UK –
+    Erfolg, Schicksal, Skandal, Gerichtsfall, Politiker, Künstler, Diaspora-Anlässe.
+3 = SPORT MIT ALBANERN: Super League und Nati (Xhaka …), Kombëtarja e Kosovës / Shqipërisë,
+    albanische Spieler in grossen Ligen, Stars mit albanischen Wurzeln (auch Gesten wie Kosovo-Kennzeichen).
+4 = GROSSE GESCHICHTE AUS DER HEIMAT, über die alle reden: nationale Fragen und Stolz (Serbien–Kosova,
+    Rechte der Albaner in Serbien/MK/MZ, Preševo), schwere Kriminalfälle, Skandale bekannter Politiker
+    (Kurti, Rama, Veliaj …), emotionale Menschengeschichten, alles zu Reisen/Zoll/Pässen/Diaspora-Stimme.
+5 = alles andere: Routine-Tagespolitik, kleine Unfälle, Welt ohne albanischen Bezug, trockene Statistik.
 
-QUOTE: mindestens 80 % der Auswahl aus p = 1–3. Höchstens EINE Meldung mit p = 4 oder 5 pro Auswahl.
-Lieber weniger Meldungen als schwache allgemeine Meldungen.
+MISCHUNG pro Auswahl (z. B. 4 Meldungen):
+- etwa die Hälfte aus p = 1–2 (Schweiz/Diaspora), der Rest aus p = 3–4 (Sport, grosse Heimat-Geschichte).
+- höchstens EINE mit p = 5, und nur wenn sie wirklich aussergewöhnlich ist.
+- nicht zweimal dasselbe Thema; nicht nur Schweiz, nicht nur Balkan.
 
-WEITERE REGELN:
-- Schweizer Meldung nur, wenn sie für Albaner in der Schweiz praktisch etwas bedeutet (Geld, Papiere,
-  Arbeit, Familie, Kinder, Wohnen, Verkehr) – nicht jede Schweizer Innenpolitik.
-- Gute Geschichten mit Gefühl/Gesprächsstoff bevorzugen (Erfolg, Schicksal, Ungerechtigkeit, Geld),
-  aber nur echte Fakten, keine Gerüchte.
-- Vielfalt: nicht zweimal dasselbe Thema.
-- Ausschliessen: Werbung, reine Meinung ohne Nachricht, Gerüchte, schon publizierte Themen (siehe Liste).
-- Bei zwei Meldungen zum selben Ereignis: die ausführlichere / Schweizer Originalquelle wählen.
+AUSWAHL-REGEL: Würde ein Albaner in der Schweiz das auf Facebook teilen oder kommentieren?
+Gefühl, Stolz, Empörung, Geld, Familie, Überraschung → ja. Trocken, amtlich, weit weg → nein.
+Nur echte Fakten, keine Gerüchte. Ausschliessen: Werbung, reine Meinung, schon publizierte Themen (Liste).
+Bei zwei Meldungen zum selben Ereignis: die ausführlichere wählen.
 
 Antworte NUR mit JSON:
-{"zgjedhja": [{"i": Index, "p": 1-5, "pse": "1 Satz auf Deutsch: was es für Albaner in der Schweiz bedeutet"}],
+{"zgjedhja": [{"i": Index, "p": 1-5, "pse": "1 Satz auf Deutsch: warum Albaner in der Schweiz das lesen/teilen"}],
  "arsye": "kurze Gesamtbegründung auf Deutsch"}"""
 
 REWRITE_SYSTEM = f"""Du bist Redakteur bei UraPress.ch, einem albanischen Nachrichtenportal für
@@ -264,9 +267,9 @@ def select_stories(candidates: list[dict], n: int, already_posted: list[str], th
             prio = int(item.get("p", 5))
         except (TypeError, ValueError):
             prio = 5
-        if prio >= 4 and not theme:
+        if prio >= 5 and not theme:
             if general >= max_general:
-                log.info("Übersprungen (Quote p4–5): %s", candidates[i]["title"])
+                log.info("Übersprungen (Quote p5): %s", candidates[i]["title"])
                 continue
             general += 1
         story = dict(candidates[i], prioriteti=prio, pse=item.get("pse", ""))
