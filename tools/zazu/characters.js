@@ -2,8 +2,9 @@
 // ZaZu: British Shorthair, lilac (rauchig grau-rosa), kupfer-orange Augen, rundes Gesicht, dichtes Fell, 4 Zehen hinten.
 // Sara: blonde lange Haare, blau-grüne Augen, Hoodie in Petrol.
 const L = '#3B312C';                                   // Linie
-const ZF = '#B9ACA6', ZF2 = '#A1938D', ZF3 = '#CFC4BF', ZLIGHT = '#EDE6E2', ZNOSE = '#C98C8E', ZPAD = '#D99AA0';
-const ZEYE1 = '#F6B33E', ZEYE2 = '#D9781F';
+// Farben nach Fotos vom echten ZaZu (30.10.2026): warmes Fawn/Beige-Grau, Brust nur etwas heller, Bernstein-Augen
+const ZF = '#C4AE9E', ZF2 = '#A89180', ZF3 = '#D9C8BA', ZLIGHT = '#EADCCF', ZNOSE = '#C98C8E', ZPAD = '#D99AA0';
+const ZEYE1 = '#F4BE45', ZEYE2 = '#D98A22';
 const SKIN = '#F6D2B8', SKIN2 = '#E9B597', HAIR = '#EBC86E', HAIR2 = '#C99A3A', HAIR3 = '#F8E3A5';
 const HOOD = '#1F7A7A', HOOD2 = '#165E5E', BALL = '#2F55C4';
 const sw = (w = 4) => `stroke="${L}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
@@ -433,5 +434,40 @@ function zazuBack(x, y, opt = {}) {
   s += zLimb(40, 30, 20, -50, 32) + zLimb(90, 22, 96, -56, 32) + zLimb(150, 24, 168, -46, 32, ZF2) + zLimb(200, 36, 230, -30, 32, ZF2);
   for (const [a, b] of [[18, -62], [96, -68], [170, -58], [232, -42]]) s += `<ellipse cx="${a}" cy="${b}" rx="20" ry="14" fill="${ZLIGHT}" ${sw()}/>`;
   s += `<g transform="rotate(-18) translate(8 34)">${zazuHeadX(id, mode, look, mouth, brows)}</g>`;
+  return s + '</g>';
+}
+
+
+// ---- nach Fotos: Lieblingsplatz – Kopf und Pfoten hängen über den Rand der schwarzen Decke ----
+function zazuHang(x, y, opt = {}) {
+  const { mode = 'sleep', look = 0, mouth = 'flat', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="0" cy="214" rx="170" ry="12" fill="#000" opacity=".12"/>`;
+  s += `<path d="M-170 40 Q-180 0 -120 -6 Q0 -20 120 -6 Q180 0 170 40 L160 200 Q0 220 -160 200 Z" fill="#3A3634" ${sw()}/>`;
+  s += `<path d="M-140 70 Q-60 90 20 74 M40 120 Q100 130 150 110 M-150 150 Q-80 170 -10 150" stroke="#4E4946" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  s += `<ellipse cx="60" cy="40" rx="130" ry="44" fill="url(#${id}b)" ${sw()}/>`;
+  s += zLimb(-40, 70, -60, 150, 34) + zLimb(30, 74, 20, 158, 34);
+  s += `<ellipse cx="-62" cy="160" rx="22" ry="16" fill="${ZLIGHT}" ${sw()}/><ellipse cx="18" cy="168" rx="22" ry="16" fill="${ZLIGHT}" ${sw()}/>`;
+  s += `<path d="M-70 156 l0 10 M-56 156 l0 10 M10 164 l0 10 M24 164 l0 10" ${sw(2.5)}/>`;
+  s += `<g transform="translate(-10 20) rotate(-6)">${zazuHeadX(id, mode, look, mouth, brows)}</g>`;
+  return s + '</g>';
+}
+
+// ---- nach Fotos: «Boss ZaZu» mit Goldkette ----
+function zazuBoss(x, y, opt = {}) {
+  const { mode = 'half', look = 0, mouth = 'smirk', sc = 1, brows = false } = opt;
+  const id = uid('z');
+  let s = zOpen(x, y, sc, id);
+  s += `<ellipse cx="6" cy="202" rx="104" ry="12" fill="#000" opacity=".12"/>`;
+  s += zTail('M70 152 Q138 152 124 98 Q116 72 96 84');
+  s += zBody(id);
+  s += zFrontPaw(-36) + zFrontPaw(36);
+  s += zazuHeadX(id, mode, look, mouth, brows);
+  for (let i = 0; i <= 10; i++) {
+    const a = Math.PI * (0.12 + 0.76 * i / 10), cx = Math.cos(a) * 62, cy = 58 + Math.sin(a) * 26;
+    s += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="11" ry="8" fill="#D9DDE2" stroke="#6E7682" stroke-width="3" transform="rotate(${(i % 2 ? 30 : -30)} ${cx.toFixed(1)} ${cy.toFixed(1)})"/>`;
+  }
+  s += `<rect x="-14" y="80" width="28" height="22" rx="4" fill="#EEF1F4" stroke="#6E7682" stroke-width="3"/><path d="M-8 88 h16 M-8 95 h16" stroke="#6E7682" stroke-width="2"/>`;
   return s + '</g>';
 }

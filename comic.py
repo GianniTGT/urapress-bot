@@ -42,6 +42,8 @@ MOODS = {
              "kuti": "kuti", "fshehur": "kuti", "fshihet": "kuti",
              "kercen": "kercen", "frikesuar": "kercen", "tmerruar": "kercen", "panik": "kercen",
              "inat": "inat", "krahet kryq": "inat", "ofenduar keq": "inat", "xheloz": "inat",
+             "varur": "varur", "ne shtrat": "varur", "pergjumur": "varur",
+             "boss": "boss", "shef": "boss", "zinxhir": "boss", "i pasur": "boss",
              "shpine": "shpine", "dembel": "shpine", "lodhur": "shpine", "i vdekur": "shpine"},
     "gianni": {"": "normal", "normal": "normal", "gezuar": "normal", "lumtur": "normal",
                "merzitur": "merzitur", "serioz": "merzitur", "inatosur": "merzitur",
@@ -192,7 +194,7 @@ def _cloud(draw, text: str, sx: float, head_top: float, all_top: float | None = 
 
 
 # Körperhaltungen bleiben, auch wenn die Figur im nächsten Bild nichts sagt (Gesichter nicht)
-KEEP = {"shtrire", "fle", "ecen", "topi", "mbeshtetur", "mbeshtetur-kenaqur", "kuti", "shpine"}
+KEEP = {"shtrire", "fle", "ecen", "topi", "mbeshtetur", "mbeshtetur-kenaqur", "kuti", "shpine", "varur", "boss"}
 
 
 def _panel(p: dict, cast: list[str], meta: dict, last: dict | None = None, idx: int = 0) -> Image.Image:

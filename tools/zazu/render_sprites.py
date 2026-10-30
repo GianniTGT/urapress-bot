@@ -37,6 +37,8 @@ POSES = {
     "zazu-inat":      "zazuCross(0,0,{mode:'grumpy',mouth:'flat',brows:true})",
     "zazu-shpine":    "zazuBack(0,0,{mode:'joy',mouth:'w'})",
     "zazu-qesh":      "zazuIdea(0,0,{mode:'joy',mouth:'grin'})",
+    "zazu-varur":     "zazuHang(0,0,{mode:'sleep'})",
+    "zazu-boss":      "zazuBoss(0,0,{mode:'half',mouth:'smirk'})",
     "gianni-normal":   "gianni(0,0,{})",
     "gianni-merzitur": "gianni(0,0,{mouth:'flat',brow:4})",
     "gianni-habitur":  "gianni(0,0,{mouth:'o',brow:-3})",
