@@ -85,7 +85,7 @@ MAX_GENERAL_PER_SCAN = int(_get("MAX_GENERAL_PER_SCAN", "1"))  # höchstens so v
 
 SCAN_TIME = _get("SCAN_TIME", "07:30,17:30")    # HH:MM, mehrere mit Komma
 TIMEZONE = _get("TIMEZONE", "Europe/Zurich")
-ARTICLES_PER_DAY = int(_get("ARTICLES_PER_DAY", "4"))   # pro Scan
+ARTICLES_PER_DAY = int(_get("ARTICLES_PER_DAY", "3"))   # pro Scan (2 Scans → 6 Vorschläge, davon ~4 publizieren)
 MAX_AGE_HOURS = int(_get("MAX_AGE_HOURS", "48"))
 CATEGORIES = [c.strip() for c in _get(
     "CATEGORIES",
